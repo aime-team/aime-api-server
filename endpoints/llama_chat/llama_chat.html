@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
+
+    <title>AIME LLama Chat API Example</title>
+
+<script src="/model_api/js/model_api.js"></script>
+
+<script>
+
+
+modelAPI = new ModelAPI('llama_chat');
+
+async function initialize_tab() {
+	modelAPI.doAPILogin(function (data) {
+		console.log('Key: ' + modelAPI.client_session_auth_key)
+	});
+}
+
+window.onload = initialize_tab;
+
+function onSendAPIRequest() {
+
+	chat_log_textarea = document.getElementById('chat_log');
+	chat_input = document.getElementById('chat_input');
+
+	var text = chat_log_textarea.value;
+	text += 'User: ' + chat_input.value + '\nDave:'
+
+	params = new Object();
+	params['text'] = text
+	params['top_k'] = parseInt(document.getElementById('top_k_range').value)
+	params['top_p'] = parseFloat(document.getElementById('top_p_range').value)
+	params['temperature'] = parseFloat(document.getElementById('temperature_range').value)
+	params['seed'] = parseInt(document.getElementById('seed').value)
+
+	chat_input.value = ''
+    chat_log_textarea.value = text;
+    chat_log_textarea.scrollTop = chat_log_textarea.scrollHeight
+
+	modelAPI.doAPIRequest(params, function (data) {
+		console.log(data["text"])
+      	chat_log_textarea.value = data["text"];
+      	chat_log_textarea.scrollTop = chat_log_textarea.scrollHeight;
+	},
+	function (progress_info, progress_data) {
+		if(progress_data != null)
+		{
+			chat_log_textarea.value = text + ' ' + progress_data["text"];
+			chat_log_textarea.scrollTop = chat_log_textarea.scrollHeight;
+			document.getElementById('queue_position').innerText = 'Queue position: ' + progress_info['queue_position']
+		}
+    });
+}
+
+function handleKeyPress(event) {
+    if (event.keyCode === 13) { // Check if the Enter key was pressed
+      event.preventDefault(); // Prevent the default behavior of the Enter key
+      onSendAPIRequest();
+    }
+  }
+</script>
+</head>
+<link rel="stylesheet" href="/llama_chat.css">
+<body>
+	<div id="chat_box">
+	 <textarea id="chat_log">A dialog, where User interacts with an helpful, kind, obedient, honest and very reasonable assistant called Dave.
+User: Hello, Dave.
+Dave: How can I assist you today?
+</textarea>
+
+	 	 <div>
+			 <input id="chat_input"
+			      id="uname"
+			      name="chat_input"
+			      placeholder="Type your message..." 
+				  onkeydown="handleKeyPress(event)" />
+		  </div>		      
+		  <div>
+		    <button id="chat_send" onclick="onSendAPIRequest();">Send</button>
+		  </div>
+	  </div>
+	  <div class="slidecontainer">
+		<label id="queue_position"></label>
+		<p>Seed</p>
+		<textarea id="seed">1234</textarea>
+		<p>Top P</p>
+		<input type="range" min="0" max="1" value="0.9" class="slider" step="0.05" id="top_p_range" oninput="document.getElementById('top_p_label').innerHTML = this.value" />
+        <label for="top_p_range" id="top_p_label">0.9</label>
+		<p>Top K</p>
+		<input type="range" min="1" max="100" value="40" class="slider" id="top_k_range" oninput="document.getElementById('top_k_label').innerHTML = this.value">
+		<label for="top_k_range" id="top_k_label">40</label>
+		<p>Temperature</p>
+		<input type="range" min="0" max="1" value="0.8" class="slider" step="0.05" id="temperature_range" oninput="document.getElementById('temperature_label').innerHTML = this.value">
+		<label for="temperature_range" id="temperature_label">0.8</label>
+	  </div>
+</body>
+</html>

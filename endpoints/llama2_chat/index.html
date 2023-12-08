@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
+
+    <title>AIME LLama 2 Chat API Example</title>
+
+    <link rel="stylesheet" href="/model_api/frontend/css/font.css">
+    <link rel="stylesheet" href="/llama2-chat/static/css/highlight.css">
+    <link rel="stylesheet" href="/llama2-chat/static/css/style.css">
+
+    <script src="/model_api/js/model_api.js"></script>
+    <script src="/llama2-chat/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
+    <script src="/sdxl-txt2img/static/js/highlight.js"></script>
+    <script src="/llama2-chat/static/js/main.js"></script>
+</head>
+
+<body>
+	<div id="chat_box">
+	 <textarea id="chat_log">A dialog, where User interacts with an helpful, kind, obedient, honest and very reasonable assistant called Dave.
+    User: Hello, Dave.
+    Dave: How can I assist you today?
+    </textarea>
+
+	 	 <div>
+			 <input id="chat_input"
+			      id="uname"
+			      name="chat_input"
+			      placeholder="Type your message..." 
+				  onkeydown="handleKeyPress(event)" />
+		  </div>		      
+		  <div>
+		    <button id="chat_send" onclick="onSendAPIRequest();">Send</button>
+		  </div>
+		 
+	  </div>
+	  <div class="slidecontainer">
+		<label id="queue_position"></label>
+		<p>Seed</p>
+		<textarea id="seed">1234</textarea>
+		<p>Top P</p>
+		<input type="range" min="0" max="1" value="0.9" class="slider" step="0.05" id="top_p_range" oninput="document.getElementById('top_p_label').innerHTML = this.value" />
+        <label for="top_p_range" id="top_p_label">0.9</label>
+		<p>Top K</p>
+		<input type="range" min="1" max="100" value="40" class="slider" id="top_k_range" oninput="document.getElementById('top_k_label').innerHTML = this.value">
+		<label for="top_k_range" id="top_k_label">40</label>
+		<p>Temperature</p>
+		<input type="range" min="0" max="1" value="0.8" class="slider" step="0.05" id="temperature_range" oninput="document.getElementById('temperature_label').innerHTML = this.value">
+		<label for="temperature_range" id="temperature_label">0.8</label>
+	  </div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+pytest
+aiohttp
+numpy
+psutil
+hypothesis
+api_worker_interface @ git+https://github.com//aime-labs/api_worker_interface

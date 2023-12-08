@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Audio Uploader</title>
+    
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+</head>
+<body>
+
+	<h1><center>AIME Speech Recognition API</center></h1>
+
+	<div class="instructions">Record or upload Audiofile...</div>
+	
+	<div id="controls">
+		<button id="recordButton">Record</button>
+		<button id="pauseButton" disabled>Pause</button>
+		<button id="stopButton" disabled>Stop</button>
+    </div>
+    <div id="formats"><center>Format: start recording to see sample rate</center></div>
+
+	<div class="drop-area">
+	    <div id="dropZone"><span class="no-event">Drop audiofile here...</span></div>
+	</div>
+
+    
+
+  	<div id="allRecordings">
+  		<h3>Audiofile</h3>
+  		<ol id="recordingsList"></ol>
+  	</div>
+  	
+
+  	<script src="/js/recorder.js"></script>
+  	<script src="/js/AudioDrop.js"></script>
+	<script type="module" src="/js/main.js"></script>
+</body>
+</html>

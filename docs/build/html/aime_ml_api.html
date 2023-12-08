@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentation AIME ML API Server &mdash; AIME ML API Server 0.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=2389946f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Start AIME ML API Server" href="examples.html" />
+    <link rel="prev" title="Setup AIME ML API Server" href="setup.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AIME ML API Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#api_server.api_server.APIServer"><code class="docutils literal notranslate"><span class="pre">APIServer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_client_session_auth_key"><code class="docutils literal notranslate"><span class="pre">APIServer.get_client_session_auth_key()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_endpoint_descriptions"><code class="docutils literal notranslate"><span class="pre">APIServer.get_endpoint_descriptions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_http_methods"><code class="docutils literal notranslate"><span class="pre">APIServer.get_http_methods()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_param_config"><code class="docutils literal notranslate"><span class="pre">APIServer.get_param_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_worker_params"><code class="docutils literal notranslate"><span class="pre">APIServer.get_worker_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.load_server_configuration"><code class="docutils literal notranslate"><span class="pre">APIServer.load_server_configuration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_check_server_status"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_check_server_status()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_job_progress"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_job_progress()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_job_request_json"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_job_request_json()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_job_result_json"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_job_result_json()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint"><code class="docutils literal notranslate"><span class="pre">APIEndpoint</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.api_progress"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.api_progress()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.api_request"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.api_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.finalize_request"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.finalize_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.validate_input_parameters_for_job_data"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.validate_input_parameters_for_job_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#api_server.job_queue.JobQueue"><code class="docutils literal notranslate"><span class="pre">JobQueue</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.job_queue.JobQueue.get"><code class="docutils literal notranslate"><span class="pre">JobQueue.get()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.job_queue.JobQueue.put"><code class="docutils literal notranslate"><span class="pre">JobQueue.put()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#api_server.job_queue.JobState"><code class="docutils literal notranslate"><span class="pre">JobState</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Start AIME ML API Server</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Java Script API Client Interface:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="js_api_client_interface/js_api_client_interface.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="js_api_client_interface/examples.html">Usage</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AIME ML API Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Documentation AIME ML API Server</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/aime_ml_api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="documentation-aime-ml-api-server">
+<h1>Documentation AIME ML API Server<a class="headerlink" href="#documentation-aime-ml-api-server" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_server.</span></span><span class="sig-name descname"><span class="pre">APIServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer" title="Permalink to this definition"></a></dt>
+<dd><p>AIME ML API Server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>api_name</strong> (<em>str</em>) – Name of API server</p></li>
+<li><p><strong>args</strong> (<em>argparse.Namespace</em>) – Command line arguments parsed with argparse</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_client_session_auth_key">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_client_session_auth_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_client_session_auth_key" title="Permalink to this definition"></a></dt>
+<dd><p>Route for client interface to login to the API Server while receiving a client session
+authentication key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – _description_</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with the client session authentication key</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_endpoint_descriptions">
+<span class="sig-name descname"><span class="pre">get_endpoint_descriptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_endpoint_descriptions" title="Permalink to this definition"></a></dt>
+<dd><p>Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple (str, str, str, int, list)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_http_methods">
+<span class="sig-name descname"><span class="pre">get_http_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_http_methods" title="Permalink to this definition"></a></dt>
+<dd><p>Loads http methods defined in given endpoint config file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of http methods like [‘GET’, ‘POST’]</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_param_config">
+<span class="sig-name descname"><span class="pre">get_param_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_param_config" title="Permalink to this definition"></a></dt>
+<dd><p>Parses endpoint input-, output-, progress-, and session-parameter configuration from
+given endpoint config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Tuple of dictionaries with input-, output-, progress-,</dt><dd><p>and session-parameter configuration</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple (dict, dict, dict, dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_worker_params">
+<span class="sig-name descname"><span class="pre">get_worker_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_worker_params" title="Permalink to this definition"></a></dt>
+<dd><p>Parses worker parameters like job type and worker authorization key from endpoint config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of job_type and worker_auth_key</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple (str, str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.load_server_configuration">
+<span class="sig-name descname"><span class="pre">load_server_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.load_server_configuration" title="Permalink to this definition"></a></dt>
+<dd><p>Parses server configuration file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_check_server_status">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_check_server_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_check_server_status" title="Permalink to this definition"></a></dt>
+<dd><p>Route /worker_check_server_status for API worker interface to check
+server connection and queue validation for given job type and worker authentication.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – API worker interface request containing worker validation</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Example successful response json to API worker interface:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cmd&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Example response json if AIME ML API replied with warning:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;cmd&#39;</span><span class="p">:</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;msg&#39;</span><span class="p">:</span> <span class="s1">&#39;Message&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example response json if AIME ML API replied with warning:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;cmd&#39;</span><span class="p">:</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;msg&#39;</span><span class="p">:</span> <span class="s1">&#39;Message&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_job_progress">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_progress" title="Permalink to this definition"></a></dt>
+<dd><p>Receive progress results from api worker interface via route /worker_job_progress
+and put it to APIServer.progress_states[job_id] to make it available for APIEndpoint.api_progress().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – API worker interface request containing progress results</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response to API worker interface with ‘cmd’: ‘ok’ when API server received data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Examples request payload from API worker interface:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">request</span><span class="o">.</span><span class="n">json</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="s1">&#39;progress_data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;progress_images&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;base64-string&#39;</span><span class="p">,</span> <span class="s1">&#39;base64-string&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]},</span>
+    <span class="s1">&#39;start_time_compute&#39;</span><span class="p">:</span> <span class="mf">1700424731.9582381</span><span class="p">,</span>
+    <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="mf">1700424731.952994</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_job_request_json">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_request_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_request_json" title="Permalink to this definition"></a></dt>
+<dd><p>Request from API worker interface for a job on route /worker_job_request. If the worker is validated and a job is put in the job_queue
+within job_timeout the job data including ‘cmd’: ‘job’ is received from the job queue and send to API worker interface in the json response.
+If there is no job put in the within job_timeout ‘cmd’: ‘no_job’ is
+received from the job queue and send to API worker interface in the json response. If the validation failed ‘cmd’: ‘error’, or ‘warning’ with
+‘msg’ is sent to API worker interface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – Job request from API worker interface on route /worker_job_request.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response to API worker interface with job data or messages.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Example response json if client requested job:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;prompt&#39;</span><span class="p">:</span> <span class="s1">&#39;prompt&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cmd&#39;</span><span class="p">:</span> <span class="s1">&#39;job&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;start_time_compute&#39;</span><span class="p">:</span> <span class="mf">1700424731.9582381</span>
+    <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="mf">1700424731.952994</span><span class="p">,</span>
+    <span class="s1">&#39;wait_for_result&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="s1">&#39;endpoint_name&#39;</span><span class="p">:</span> <span class="s1">&#39;stable_diffusion_xl_txt2img&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress_descriptions&#39;</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;progress_images&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;image_list&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;image_format&#39;</span><span class="p">:</span> <span class="s1">&#39;JPEG&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;color_space&#39;</span><span class="p">:</span> <span class="s1">&#39;RGB&#39;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="s1">&#39;output_descriptions&#39;</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;image_list&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;image_format&#39;</span><span class="p">:</span> <span class="s1">&#39;JPEG&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;color_space&#39;</span><span class="p">:</span> <span class="s1">&#39;RGB&#39;</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;integer&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;prompt&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span><span class="p">}</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example response json if no client requested job within job_timeout:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;cmd&#39;</span><span class="p">:</span> <span class="s1">&#39;no_job&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example response json if AIME ML API replied with error:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;cmd&#39;</span><span class="p">:</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;msg&#39;</span><span class="p">:</span> <span class="s1">&#39;Message&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example response json if AIME ML API replied with warning:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;cmd&#39;</span><span class="p">:</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;msg&#39;</span><span class="p">:</span> <span class="s1">&#39;Message&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_job_result_json">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_result_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_result_json" title="Permalink to this definition"></a></dt>
+<dd><p>Receive final job result from API worker interface via route /worker_job_result.
+Processes the result and puts it to the future related to the job initialized in APIEndpoint.api_request
+to make it available by APIEndpoint.api_request and APIEndpoint.api_progress to send it to the client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – API worker interface request containing the job results.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response to API worker interface with ‘cmd’: ‘ok’ when API server received data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_endpoint.</span></span><span class="sig-name descname"><span class="pre">APIEndpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_request_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provide_worker_meta_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_input_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_output_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_progress_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_session_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_files</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint" title="Permalink to this definition"></a></dt>
+<dd><p>AIME ML API endpoint</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>app</strong> (<a class="reference internal" href="#api_server.api_server.APIServer" title="api_server.api_server.APIServer"><em>APIServer</em></a>) – Instance of APIServer()</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – Endpoint title</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Endpoint name</p></li>
+<li><p><strong>description</strong> (<em>str</em>) – Endpoint description</p></li>
+<li><p><strong>client_request_limit</strong> (<em>int</em>) – Request limit per client</p></li>
+<li><p><strong>provide_worker_meta_data</strong> (<em>bool</em>) – Whether to send data like worker name to the client</p></li>
+<li><p><strong>http_methods</strong> (<em>str</em>) – Allowed http methods on this endpoint</p></li>
+<li><p><strong>ep_input_param_config</strong> (<em>dict</em>) – Input parameter configuration from endpoint config file</p></li>
+<li><p><strong>ep_output_param_config</strong> (<em>dict</em>) – Output parameter configuration from endpoint config file</p></li>
+<li><p><strong>ep_progress_param_config</strong> (<em>dict</em>) – Progress parameter configuration from endpoint config file</p></li>
+<li><p><strong>ep_session_param_config</strong> (<em>dict</em>) – Session parameter configuration from endpoint config file</p></li>
+<li><p><strong>job_type</strong> (<em>str</em>) – Job type</p></li>
+<li><p><strong>worker_auth_key</strong> (<em>str</em>) – Allowed worker authentication key</p></li>
+<li><p><strong>static_files</strong> (<em>dict</em>) – Static routes</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.api_progress">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">api_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.api_progress" title="Permalink to this definition"></a></dt>
+<dd><p>Client request on route /self.endpoint_name/progress called periodically by the client interface
+to receive progress and end results if the input parameter ‘wait_for_result’ of the related api_request
+was False. Takes the progress results from APIServer.progress_states put there by
+APIServer.worker_job_progress() and sends it as response json to the client. When the job is finished the
+final job result is awaited and taken from the job queue in finalize_request() and sent as response json
+to the client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – Request with client_session_auth_key from client to
+receive progress and end result</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response to client with progress result and end result</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.api_request">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">api_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.api_request" title="Permalink to this definition"></a></dt>
+<dd><p>Client request on route /self.endpoint_name with input parameters for the workers related to the job type
+given in the input parameters. The client input parameters are validated and prepared for the worker job data.
+Next an asyncio.Future() for the job is initialized where the result will be put by APIServer.worker_job_result_json() when the job is finished.
+The job data is put to the job type related asyncio.Queue() to be accessed by the workers in APIServer().worker_job_request().
+If ‘wait_for_result’ is True the end result of the job is awaited via finalize_request and returned to the client. If False,
+the client gets a quick confirmation response and the result can be requested on route
+/self.endpoint_name/progress in the parameter ‘job_result’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – Request from client</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response to client</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.finalize_request">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_future</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.finalize_request" title="Permalink to this definition"></a></dt>
+<dd><p>Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future
+initialized in api_request() to get the results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<em>_type_</em>) – _description_</p></li>
+<li><p><strong>job_id</strong> (<em>_type_</em>) – _description_</p></li>
+<li><p><strong>job_future</strong> (<em>_type_</em>) – _description_</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.validate_input_parameters_for_job_data">
+<span class="sig-name descname"><span class="pre">validate_input_parameters_for_job_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.validate_input_parameters_for_job_data" title="Permalink to this definition"></a></dt>
+<dd><p>Check if worker input parameters received from client are as specified in the endpoint config file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="api_server.job_queue.JobQueue">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobQueue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue" title="Permalink to this definition"></a></dt>
+<dd><p>Job queue to manage jobs for the given job type. Assignes jobs offered from client on APIEndpoint.api_request
+via route /endpoint_name with a job_id and collects the job_data. The workers asking for jobs on worker_job_request_json get
+the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.job_queue.JobQueue.get">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.get" title="Permalink to this definition"></a></dt>
+<dd><p>Get job data of the next job in the queue. Timeout after self.job_timeout</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Job data of the next job in the queue</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.job_queue.JobQueue.put">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.put" title="Permalink to this definition"></a></dt>
+<dd><p>Put job_data from the client job offer to the job_queue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>job_data</strong> (<em>dict</em>) – Job data of the job</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="api_server.job_queue.JobState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobState" title="Permalink to this definition"></a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="setup.html" class="btn btn-neutral float-left" title="Setup AIME ML API Server" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="Start AIME ML API Server" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AIME GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

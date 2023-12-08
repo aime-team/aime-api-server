@@ -1,0 +1,10 @@
+sanic
+sanic_session
+aiohttp
+requests
+toml
+pillow
+Jinja2
+sanic-sass
+markdown
+Pygments

@@ -1,0 +1,30 @@
+
+.form-group .input-group input[type="number"] {
+    margin-left: 1rem;
+}
+.flex-centered {
+    display: flex;
+    align-items: center;
+}
+input.mlapi {
+    width: 300px;
+    padding: 10px;
+    color: aqua;
+    font-size: 15px;
+    font-family: monospace;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.mlapi textarea, 
+textarea.mlapi {
+    width: 400px;
+    height: 200px;
+    padding: 10px;
+    color: #DAF7A6;
+    font-size: 15px;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+progress.mlapi {
+    width: 400px;
+}

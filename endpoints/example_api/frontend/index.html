@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+
+		<title>AIME ML API Example</title>
+
+		<link rel="stylesheet" href="/model_api/frontend/vendor/bootstrap/531/css/bootstrap.min.css">
+		<link rel="stylesheet" href="/model_api/css/main.css">
+		<link rel="stylesheet" href="/static/css/style.css">
+
+		<script src="/model_api/frontend/vendor/jquery/jquery.min.js"></script>
+		<script src="/model_api/frontend/vendor/bootstrap/531/js/bootstrap.min.js"></script>
+		<script src="/model_api/js/model_api.js"></script>
+		<script src="/static/js/main.js"></script>
+		<script type="module" src="/static/js/form_widgets.js"></script>
+	</head>
+	<body>
+
+		<nav class="navbar navbar-expand-lg navbar-light bg-dark text-bg-dark p-3">
+			EXAMPLE API (some title)
+		</nav>
+
+		<div id="aime-widgets" class="container"></div>
+		<div id="aime-widgets-chatbox" class="container">
+			<div id="textarea-widget" class="col"></div>
+			<div id="slider-widgets" class="col"></div>
+		</div>
+
+
+		<div class="container">
+			<div id="chat_box" class="row">
+				<!-- CHATBOX -->
+				<div class="col">
+					<textarea class="mlapi" id="chat_log" readonly></textarea>
+					<input class="mlapi" id="chat_input"
+						name="chat_input"
+						placeholder="Type your message..." 
+						onkeydown="handleKeyPress(event)" 
+					/>
+					<div>
+						<button id="chat_send" type="button" class="btn btn-primary" onclick="onSendRequest();">Send</button>
+					</div>
+				</div>
+				<!-- /END CHATBOX -->
+
+				<!-- SLIDES -->
+				<div class="col">
+					<div class="form-group">
+						<label for="progress_steps">Progress Steps</label>
+						<div class="input-group slider-widget flex-centered">
+							<input type="range" class="form-control-range mt-sm-2 col-9" id="progress_steps" min="0" max="100" value="50">
+							<input type="number" class="form-control col-2" id="progress_steps_value" min="0" max="100">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="sleep_duration">Job Duration</label>
+						<div class="input-group slider-widget flex-centered">
+							<input type="range" class="form-control-range mt-sm-2 col-9" id="sleep_duration" min="0" max="60" value="3">
+							<input type="number" class="form-control col-2" id="sleep_duration_value" min="0" max="60">
+						</div>
+					</div>				
+				</div>
+				<!-- /END SLIDES -->			
+			</div>
+		</div> <!-- /END container -->	
+		
+		<div class="container mt-3">
+			<div> 
+				<div id="progress_status">Progress</div>
+				<progress id="progress_bar" class="mlapi" max="100" value="0">0%</progress>
+				<span id="progress_label">0%</span>
+			</div>
+		</div>
+
+		<div class="container bt">
+			<div class="row mb-1">
+				<p>UI Elements:</p>
+			</div>
+		</div>
+
+		<div class="container">
+			<!-- SLIDER WIDGET -->
+			<div class="container mt-5">
+				<div class="form-group">
+					<label for="slider">Slider Label</label>
+					<div class="input-group slider-widget flex-centered">
+						<input type="range" class="form-control-range mt-sm-2 col-9" id="slider" min="0" max="100" value="50">
+						<input type="number" class="form-control col-2" id="sliderValue" min="0" max="100">
+					</div>
+				</div>
+			</div>
+			<!-- /END SLIDER WIDGET -->
+		</div>
+
+		<div class="container mt-3">
+			<form id="form-example">
+				<div class="form-group mb-2">
+					<label for="name">Name:</label>
+					<input type="text" class="form-control" id="name" name="name" value="John">
+				</div>
+				<div class="form-group mb-2">
+					<label for="age">Age:</label>
+					<input type="number" class="form-control" id="age" name="age" value="30">
+				</div>
+				<div class="form-group mb-2">
+					<label for="email">E-Mail:</label>
+					<input type="email" class="form-control" id="email" name="email" value="john@example.com">
+				</div>
+				<div class="form-check mb-2">
+					<input type="checkbox" class="form-check-input" id="subscribed" name="subscribed" checked>
+					<label class="form-check-label" for="subscribed">Option 1</label>
+				</div>
+				<button type="button" class="btn btn-primary" onclick="getFormValues()">JSON erstellen</button>
+			</form>
+		</div>
+
+		<div class="container">		
+			<div class="">
+				<button type="button" class="btn btn-primary"">Button</button>
+				<button type="button" class="btn btn-primary" disabled>Button (disabled)</button>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="">
+				<label for="input">Formfield (4 to 8 characters):</label>
+				<input type="text" id="input" name="input" required minlength="4" maxlength="8" size="10" />
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="">
+				<label for="datalist">Datalist filled Input:</label>
+				<input list="datalist-list" id="ice-cream-choice" name="datalist" />
+
+				<datalist id="datalist-list">
+					<option value="Option 1"></option>
+					<option value="Option 2"></option>
+					<option value="Option 3"></option>
+					<option value="Option 4"></option>
+					<option value="Option 5"></option>
+				</datalist>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="">
+				<label for="dino-select">Choose from Optgroup:</label>
+				<select class="p-2">
+					<optgroup label="Group 1">
+						<option>G1 Option 1</option>
+						<option>G1 Option 2</option>
+						<option>G1 Option 3</option>
+					</optgroup>
+					<optgroup label="Group 2">
+						<option>G2 Option 1</option>
+						<option>G2 Option 2</option>
+						<option>G2 Option 3</option>
+					</optgroup>
+				</select>
+			</div>
+		</div>
+
+		<div class="container">
+			<form>
+				<fieldset>
+					<legend>Fieldset</legend>
+				
+					<input type="radio" id="fieldset1" name="fieldset-option" value="A" />
+					<label for="fieldset1">Option A</label><br />
+				
+					<input type="radio" id="fieldset2" name="fieldset-option" value="B" />
+					<label for="fieldset2">Option B</label><br />
+				
+					<input type="radio" id="fieldset3" name="fieldset-option" value="C" />
+					<label for="fieldset3">Option C</label>
+				</fieldset>
+			</form>
+		</div>
+
+		<div class="container">
+			<div class="row mb-1">
+				<div>
+					<label for="checkbox1">Do you like Option 1?</label>
+					<input type="checkbox" name="checkbox1" id="checkbox1" />
+				</div>
+				
+				<div>
+					<label for="checkbox2">Do you like Option 2?</label>
+					<input type="checkbox" name="checkbox2" id="checkbox2" />
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="row mb-1">
+				<label for="meter">Meter:</label>
+				<meter id="meter" min="0" max="100" low="33" high="66" optimum="80" value="50">at 50/100</meter>
+			</div>
+		</div>
+		
+
+		
+
+
+
+		<!-- FOOTER -->
+		<footer class="bg-info text-center text-lg-start">
+			<div class="text-center p-3" style="background-color: gray">
+			  © 2023 Copyright:
+			  <a class="text-dark" href="https://www.aime.info">AIME GmbH</a>
+			</div>
+		  </footer>
+		<!-- /END FOOTER -->
+	</body>
+</html>
