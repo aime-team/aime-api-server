@@ -170,7 +170,7 @@ async def worker_connection_json(request):
 
     result = await job_future
     logger.info("... got job result: " + str(result))
-    response = {"sucess": True}
+    response = {"success": True}
     response['result'] = str(result)
     return json(response)
 

@@ -1,3 +1,15 @@
+// How to use:
+
+// add 
+// <script type="module" src="/static/js/form_widgets.js"></script>
+// and 
+// <div id="aime-widgets" class="container"></div>
+// <div id="aime-widgets-chatbox" class="container">
+//     <div id="textarea-widget" class="col"></div>
+//     <div id="slider-widgets" class="col"></div>
+// </div>
+
+
 import WidgetManager from '/model_api/frontend/js/widgets/widgetManager.js';
 const wm = new WidgetManager({
     enpointURL: 'http://api.aime.info/api_endpoint',
