@@ -1,6 +1,6 @@
 
-AIME ML API Server
-==================
+AIME API Server
+===============
 
 **Setup:**
 
@@ -15,12 +15,12 @@ AIME ML API Server
    :hidden:
 
    Setup <setup>
-   Documentation <aime_ml_api>
+   Documentation <aime_api_server>
    examples
 
 .. toctree::
    :maxdepth: 4
-   :caption: Java Script API Client Interface:
+   :caption: JavaScript Client Interface:
    :hidden:
 
    Documentation <js_api_client_interface/js_api_client_interface>

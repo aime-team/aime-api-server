@@ -1,6 +1,6 @@
  
-Documentation AIME ML API Server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Documentation AIME API Server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 .. autoclass:: api_server.api_server.APIServer

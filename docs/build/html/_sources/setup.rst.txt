@@ -1,5 +1,5 @@
 
-Setup AIME ML API Server
-~~~~~~~~~~~~~~~~~~~~~~~~
+Setup AIME API Server
+~~~~~~~~~~~~~~~~~~~~~
 
 .. include:: setup.txt

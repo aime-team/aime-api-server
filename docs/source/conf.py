@@ -9,7 +9,7 @@
 import os 
 import sys 
 sys.path.insert(0, os.path.abspath('../..'))
-js_source_path = '../../js_api_client_interface'
+js_source_path = '../../frontend/static/js'
 
 project = 'AIME ML API Server'
 copyright = '2023, AIME GmbH'

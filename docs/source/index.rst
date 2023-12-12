@@ -1,6 +1,6 @@
 
-AIME ML API Server
-==================
+AIME API Server
+===============
 
 **Setup:**
 
@@ -15,7 +15,7 @@ AIME ML API Server
    :hidden:
 
    Setup <setup>
-   Documentation <aime_ml_api>
+   Documentation <aime_api_server>
    examples
 
 .. toctree::

@@ -1,4 +1,4 @@
-Start AIME ML API Server
-========================
+Start AIME API Server
+=====================
 
 .. include:: examples.txt
