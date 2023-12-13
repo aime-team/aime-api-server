@@ -648,6 +648,8 @@ class APIServer(Sanic):
 
         sanic_loggers = ('sanic.access', 'sanic.root', 'sanic.error')
         
+        # Bugged sanic loggers, even though the code doesn't look like it, sanic_loggers shows "INFO" messages only in "DEBUG" (args.dev = True) mode
+        
         for logger_name in sanic_loggers:
             logger = logging.getLogger(logger_name)
             self.set_logger_level(logger)
