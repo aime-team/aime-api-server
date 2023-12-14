@@ -9,7 +9,7 @@ import psutil
 import json
 import toml
 import aiohttp
-from api_client_interface.python_api_client_interface.python_api_client_interface import ModelAPI, do_api_request, do_api_request_async
+from aime_api_client_interface import ModelAPI, do_api_request, do_api_request_async
 import atexit
 from PIL import Image, UnidentifiedImageError
 import numpy as np
@@ -246,7 +246,7 @@ class ApiTest():
                 return obj
 
         print('response', shorten_strings(response.json(), 30))
-        worker_input_test_image = convert_base64_str_to_image_list(response.json().get('images'))[0]
+        worker_input_test_image = convert_base64_str_list_to_image_list(response.json().get('images'))[0]
         worker_input_test_image_width, worker_input_test_image_height = worker_input_test_image.size
         assert min_width <= worker_input_test_image_width <= max_width and worker_input_test_image_width % align_width == 0
         assert min_height <= worker_input_test_image_height <= max_height and worker_input_test_image_height % align_height == 0
@@ -467,11 +467,11 @@ class ApiTest():
         assert success, f'Test for async request on model_api with sync callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
         
         model_api_no_login = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0])
-        with pytest.raises(PermissionError) as excinfo:  
+        with pytest.raises(ConnectionRefusedError) as excinfo:  
             _ = model_api_no_login.do_api_request(params, callback.progress_callback, callback.progress_error_callback)
             assert excinfo
         
-        with pytest.raises(PermissionError) as excinfo:  
+        with pytest.raises(ConnectionRefusedError) as excinfo:  
             _ = asyncio.run(self.run_async_model_api_test_no_login(params, callback_async))
             assert excinfo
 
@@ -486,12 +486,12 @@ class ApiTest():
             assert excinfo
 
         with pytest.raises(ConnectionError) as excinfo:  
-            asyncio.run(self.run_test())
+            asyncio.run(self.run_async_model_invalid_url_test())
             assert excinfo
         
         return True
 
-    async def run_test(self):
+    async def run_async_model_invalid_url_test(self):
         model_api_invalid_url = ModelAPI(f'http://wrong_url', self.endpoint_names[0])
         await model_api_invalid_url.do_api_login_async()
         await model_api.close_session()
@@ -573,16 +573,16 @@ def main():
 
     api_test = ApiTest(args, EP_CONFIG_FILES, 1)
     invalid_parameters = api_test.get_invalid_parameters_from_main_endpoint_config()
-    """
+    
     if api_test.make_single_async_test_request_on_main_endpoint():
         print(f'Test for single async request on test worker with the endpoint {api_test.endpoint_names[0]}  successful')
     if all(api_test.make_request_with_invalid_parameters(parameters) for parameters in invalid_parameters):
         print('Test requests with invalid parameters return statuscode "400" as supposed')
-    """
+    
     success = api_test.run_model_api_test()
     if success:
         print(f'Test with python interface model_api.py successful')
-    """
+    
     success, message = api_test.init_main_test_worker_with_invalid_worker_auth_key()
     if success:
         print(f'Test with unauthorized worker key responded with exitcode 1 and the message "{message.strip()}" as supposed')
@@ -597,7 +597,7 @@ def main():
     if success:
         for single_message in message:
             print(single_message)
-    """
+    
     api_test.exit_processes()
     time.sleep(2)
     print()
@@ -639,12 +639,9 @@ def convert_image_list_to_base64_string(self, list_images, image_format):
     return image_64
 
 
-def convert_base64_str_to_image_list(base64_string):
-    base64_list = base64_string.split('$SEP$')
-    image_list = []
-    for base64_string in base64_list:
-        image_list.append(convert_base64_string_to_image(base64_string))
-    return image_list
+def convert_base64_str_list_to_image_list(base64_list):
+    return [convert_base64_string_to_image(base64_string) for base64_string in base64_list]
+
 
 
 def convert_base64_string_to_image(base64_string):

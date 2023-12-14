@@ -6,7 +6,7 @@ import urllib.request # Frage an Toine: Benötigt?
 import asyncio
 import io
 import time
-
+from pathlib import Path
 
 import base64
 from PIL import Image, UnidentifiedImageError
@@ -15,7 +15,7 @@ from mimetypes import guess_extension, guess_type
 
 
 from .job_queue import JobState
-
+from .utils import StaticRouteHandler, shorten_strings
 
 
 TYPES_DICT = {'string': str, 'integer':int, 'float':float, 'bool':bool, 'image':str}
@@ -56,7 +56,8 @@ class APIEndpoint():
         ep_progress_param_config,
         ep_session_param_config,
         job_type, worker_auth_key,
-        static_files
+        static_files,
+        ep_config_file_path
         ):
         self.title = title
         self.endpoint_name = name
@@ -69,6 +70,7 @@ class APIEndpoint():
         self.ep_output_param_config = ep_output_param_config
         self.ep_progress_param_config = ep_progress_param_config
         self.ep_session_param_config = ep_session_param_config
+        self.ep_config_file_path = ep_config_file_path
         self.worker_job_type = job_type
         self.worker_auth_key = worker_auth_key
         self.registered_client_session_auth_keys = dict()
@@ -80,11 +82,8 @@ class APIEndpoint():
 
 
     def add_server_static_routes(self, static_files):
-        num = 0
-        for static_file in static_files:
-            entry = static_files[static_file]
-            self.app.static(static_file, entry['file'], name=self.endpoint_name + "_static" + str(num))
-            num += 1
+        static_route_handler = StaticRouteHandler(Path(self.ep_config_file_path).parent, self.app, self.endpoint_name)
+        static_route_handler.setup_static_routes(static_files)
 
 
     async def api_request(self, request):
@@ -450,16 +449,3 @@ class APIEndpoint():
             image.save(buffer, format=expected_image_format)
             image_64 = f'data:image/{expected_image_format};base64,' + base64.b64encode(buffer.getvalue()).decode('utf-8')
         return image_64
-
-
-def shorten_strings(obj, max_length=30):
-    if isinstance(obj, dict):
-        return {key: shorten_strings(value, max_length) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [shorten_strings(item, max_length) for item in obj]
-    elif isinstance(obj, str) and len(obj) > max_length:
-        return obj[:max_length] + "..."
-    elif isinstance(obj, bytes) and len(obj) > max_length:
-        return obj[:max_length] + "..."
-    else:
-        return obj

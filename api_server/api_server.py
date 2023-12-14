@@ -4,22 +4,21 @@ from sanic import response as sanic_response
 from sanic.response import json as sanic_json
 from sanic.log import logging
 
-from sanic_sass import SassManifest
 
 from http import HTTPStatus
 import os
 import time
-import pathlib
+from pathlib import Path
 import toml
 import urllib.request
 import json
 import uuid
 import asyncio
 
-from .api_endpoint import APIEndpoint, shorten_strings
+from .api_endpoint import APIEndpoint
 from .job_queue import JobQueue, JobState
-from .markdown_compiler import MarkDownCompiler
 
+from .utils import StaticRouteHandler, shorten_strings
 
 
 logging.getLogger('asyncio').setLevel(logging.ERROR)
@@ -388,14 +387,6 @@ class APIServer(Sanic):
         return job_type, worker_auth_key   
 
 
-    def get_ep_static_files(self, config):
-        ep_static_files = config.get('HTML', {})
-        for static_file in ep_static_files:
-            entry = ep_static_files[static_file]
-            APIServer.logger.info(" - " + static_file + " -> " + entry['file'])
-        return ep_static_files
-
-
     def load_endpoint_configuration(self, config_file):
         APIServer.logger.info(f'Reading endpoint config: {config_file}')
         
@@ -409,20 +400,19 @@ class APIServer(Sanic):
 
         param_config = self.get_param_config(config)
         job_type, worker_auth_key = self.get_worker_params(config)
-        ep_static_files = self.get_ep_static_files(config)
 
         APIServer.endpoints[endpoint_description[1]] = APIEndpoint(
-            self, *endpoint_description, *param_config, job_type, worker_auth_key, ep_static_files
+            self, *endpoint_description, *param_config, job_type, worker_auth_key, config.get('HTML', {}), config_file
         )
         
 
     def load_endpoint_configurations(self, app):
         config_dir = APIServer.args.ep_config
         APIServer.logger.info('--- Searching endpoints configurations in {config_dir}')
-        if pathlib.Path(config_dir).is_dir():
-            for config_file in pathlib.Path(config_dir).glob('**/ml_api_endpoint.cfg'):
+        if Path(config_dir).is_dir():
+            for config_file in Path(config_dir).glob('**/ml_api_endpoint.cfg'):
                 self.load_endpoint_configuration(config_file)
-        elif pathlib.Path(config_dir).is_file():
+        elif Path(config_dir).is_file():
             self.load_endpoint_configuration(config_dir)
         elif ',' in config_dir:
             for config_file in config_dir.split(','):
@@ -451,7 +441,7 @@ class APIServer(Sanic):
                         'retry': False,
                         'last_request': time.time(),
                         'job_timeout': req_json.get('request_timeout', 60) * 0.9
-                        }
+                    }
                 else:
                     worker = queue.registered_workers[req_json.get('auth')]
                     worker['status'] = 'waiting'
@@ -591,44 +581,9 @@ class APIServer(Sanic):
 
    
     def setup_static_routes(self, app):
-        APIServer.logger.info("--- setup static routes")
-        config_file_path = os.path.dirname(APIServer.args.server_config)
-        for slug in APIServer.static_routes:
-            route = APIServer.static_routes[slug]
-            route_type = route.get("type", "file")
-            route_path = route.get("path", None)
-            num = 0
-            if not route_path:
-                route_path = route.get("file", None)
-            if route_path:
-                if not os.path.isabs(route_path):
-                    route_path = os.path.abspath(os.path.join(config_file_path, route_path))
-            if route_type == "file":
-                # add the static route
-                self.static(slug, route_path, name="app_static" + str(num))
-            elif route_type == "md":
-                # do markdown processing
-                APIServer.logger.info("MD")
-                compiled_path = route.get("compiled_path")
-                compiled_path = os.path.abspath(os.path.join(config_file_path, compiled_path))
-                css_file = route.get("css_file")
-                output_file = os.path.join(compiled_path, os.path.splitext(os.path.basename(route_path))[0] + ".html")
-                APIServer.logger.info("OUTPUT: " + compiled_path)
-                if not os.path.exists(compiled_path):
-                    os.makedirs(compiled_path)
-                MarkDownCompiler.compile(route_path, output_file, css_file)
-                self.static(slug, output_file, name="app_static" + str(num))
-                
-            elif route_type == 'scss':
-                # do scss processing
-                APIServer.logger.info("SCSS")
-                compiled_path = route.get("compiled_path")
-                compiled_path = os.path.abspath(os.path.join(config_file_path, compiled_path))
-                # compile SASS files
-                manifest = SassManifest(slug, compiled_path, route_path, css_type='scss')
-                manifest.compile_webapp(self, register_static=True)
-            num += 1
-            APIServer.logger.info("Static: " + slug + " -> [" + route_type + "] " + str(route_path))
+        app.logger.info("--- setup static routes")
+        static_route_handler = StaticRouteHandler(Path(app.args.server_config).parent, app)
+        static_route_handler.setup_static_routes(app.static_routes)
 
 
     def configure_logger(self):
@@ -656,10 +611,9 @@ class APIServer(Sanic):
             if not APIServer.args.hide_logging:
                 logger.addHandler(stream_handler)
 
-        APIServer.logger.debug("Command line arguments:\n" + str(APIServer.args))  
+        APIServer.logger.debug('Command line arguments:\n' + str(APIServer.args))  
+
 
     def set_logger_level(self, logger):
         logger.setLevel(logging.DEBUG) if APIServer.args.dev else logger.setLevel(logging.INFO)
-
-
 
