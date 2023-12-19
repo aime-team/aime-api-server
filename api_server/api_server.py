@@ -19,6 +19,7 @@ from .api_endpoint import APIEndpoint
 from .job_queue import JobQueue, JobState
 
 from .utils import StaticRouteHandler, shorten_strings
+from .__version import __version__
 
 
 logging.getLogger('asyncio').setLevel(logging.ERROR)
@@ -30,7 +31,6 @@ class APIServer(Sanic):
     Args:
         api_name (str): Name of API server
         args (argparse.Namespace): Command line arguments parsed with argparse
-
     """
     job_queues = {} # key: endpoint_name
     endpoints = {}  # key: endpoint_name
@@ -53,7 +53,6 @@ class APIServer(Sanic):
             api_name (str): Name of API server
             args (argparse.Namespace): Command line arguments parsed with argparse
         """
-        
         APIServer.args = args
         self.configure_logger()
         super().__init__(api_name, configure_logging=not args.no_sanic_logger)      
@@ -466,7 +465,7 @@ class APIServer(Sanic):
                 job_data = await queue.get(job_timeout=worker.get('job_timeout', 54))    # wait on queue for job
             except asyncio.TimeoutError:
                 worker['retry'] = True
-                return {'cmd': 'no_job'}
+                return {'cmd': 'no_job', 'api_server_version': __version__}
                 
             queue.task_done()   # take it out of the queue
             worker['status'] = 'processing'
@@ -481,7 +480,7 @@ class APIServer(Sanic):
         APIServer.job_states[job_id] = JobState.PROCESSING
         APIServer.logger.info(f"'{auth}' got job {job_id}")
         job_data['cmd'] = 'job'
-
+        job_data['api_server_version'] = __version__
         endpoint = APIServer.endpoints.get(job_data['endpoint_name'])
         job_data['progress_descriptions'] = endpoint.ep_progress_param_config
         job_data['output_descriptions'] = endpoint.ep_output_param_config

@@ -1,4 +1,4 @@
-from api_client_interface.python.model_api import do_api_request
+from aime_api_client_interface import do_api_request_async
 import toml
 import asyncio
 import argparse
@@ -56,11 +56,11 @@ class BenchmarkApi():
         params = self.get_default_values_from_config()
         loop = self.get_loop()
         start = time.time()
-        tasks = [asyncio.ensure_future(do_api_request(self.args.api_server, self.args.endpoint_name, params, self.result_callback, self.progress_callback)) for _ in range(self.args.total_requests)]
+        tasks = [asyncio.ensure_future(do_api_request_async(self.args.api_server, self.args.endpoint_name, params, self.result_callback, self.progress_callback)) for _ in range(self.args.total_requests)]
         loop.run_until_complete(asyncio.gather(*tasks))
         duration = round(time.time() - start)
         self.title_bar.close()
-        summary_string = f'\n{self.args.total_requests} requests on {self.args.api_server} took {duration} seconds.\nMean time per request: {duration/self.args.total_requests}s'
+        summary_string = f'\n{self.args.total_requests} requests on {self.args.api_server} took {duration} seconds.\nMean time per request: {round(duration/self.args.total_requests, 1)}s'
         if self.args.endpoint_name == 'llama2_chat':
             summary_string += f'; {round((self.args.total_requests*self.num_generated_tokens)/duration, 1)} tokens/s'
         else:
