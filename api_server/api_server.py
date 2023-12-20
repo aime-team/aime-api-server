@@ -587,7 +587,7 @@ class APIServer(Sanic):
 
     def configure_logger(self):
 
-        file_handler = logging.FileHandler(filename='api_server/log_api_server.log')
+        file_handler = logging.FileHandler(filename='api_server/log_api_server.log', mode='w')
         file_handler.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
         file_handler.setFormatter(formatter)
@@ -601,12 +601,12 @@ class APIServer(Sanic):
             APIServer.logger.addHandler(stream_handler)
 
         sanic_loggers = ('sanic.access', 'sanic.root', 'sanic.error')
-        
-        # Bugged sanic loggers, even though the code doesn't look like it, sanic_loggers shows "INFO" messages only in "DEBUG" (args.dev = True) mode
-        
+                
         for logger_name in sanic_loggers:
             logger = logging.getLogger(logger_name)
-            self.set_logger_level(logger)
+            self.set_logger_level(logger)  # Bugged logger sanic.access: "INFO" messages only appear in "DEBUG" (args.dev = True) mode
+            # But since these INFO messages are redundant and spamming the terminal, thats the desired behaviour
+            logger.addHandler(file_handler) # not working for sanic loggers
             if not APIServer.args.hide_logging:
                 logger.addHandler(stream_handler)
 
