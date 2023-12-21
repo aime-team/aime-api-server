@@ -38,7 +38,16 @@ Dave: How can I assist you today?
 		 
 	  </div>
 	  <div class="slidecontainer">
-		<label id="queue_position"></label>
+		<div id="progress_container" class="w100">
+			<p class="label">Progress</p>
+			<label id="progress_label" class="text-sm"></label>
+			<label id="tasks_to_wait_for" class="text-sm"></label>
+			<label id="estimate" class="text-sm"></label>
+			<label id="num_workers_online" class="text-sm"></label>
+		</div>
+		<p class="label mt-5">Info Box</p>
+		<textarea readonly id="info_box" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm"></textarea>
+
 		<p>Seed</p>
 		<textarea id="seed">1234</textarea>
 		<p>Top P</p>

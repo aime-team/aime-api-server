@@ -1,51 +1,94 @@
 modelAPI = new ModelAPI('llama2_chat');
 
-async function initialize_tab() {
+async function initializeTab() {
 	modelAPI.doAPILogin(function (data) {
-		console.log('Key: ' + modelAPI.client_session_auth_key)
+		console.log('Key: ' + modelAPI.clientSessionAuthKey)
 	});
 }
 
-window.onload = initialize_tab;
+window.onload = initializeTab;
 
 function onSendAPIRequest() {
 
-	chat_log_textarea = document.getElementById('chat_log');
-	chat_input = document.getElementById('chat_input');
+	chatLogTextarea = document.getElementById('chat_log');
+	chatInput = document.getElementById('chat_input');
 
-	var text = chat_log_textarea.value;
-	text += 'User: ' + chat_input.value + '\nDave:'
+	var text = chatLogTextarea.value;
+	text += 'User: ' + chatInput.value + '\nDave:'
 
 	params = new Object();
-	params['text'] = text
-	params['top_k'] = parseInt(document.getElementById('top_k_range').value)
-	params['top_p'] = parseFloat(document.getElementById('top_p_range').value)
-	params['temperature'] = parseFloat(document.getElementById('temperature_range').value)
-	params['seed'] = parseInt(document.getElementById('seed').value)
+	params.text = text
+	params.top_k = parseInt(document.getElementById('top_k_range').value)
+	params.top_p = parseFloat(document.getElementById('top_p_range').value)
+	params.temperature = parseFloat(document.getElementById('temperature_range').value)
+	params.seed = parseInt(document.getElementById('seed').value)
 
-	chat_input.value = ''
-    chat_log_textarea.value = text;
-    chat_log_textarea.scrollTop = chat_log_textarea.scrollHeight
+	chatInput.value = ''
+    chatLogTextarea.value = text;
+    chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight
 
-	modelAPI.doAPIRequest(params, function (data) {
-      	chat_log_textarea.value = data["text"];
-      	chat_log_textarea.scrollTop = chat_log_textarea.scrollHeight;
-	},
-	function (progress_info, progress_data) {
-		
-		if(progress_data != null)
-		{
-			chat_log_textarea.value = text + ' ' + progress_data["text"];
-			chat_log_textarea.scrollTop = chat_log_textarea.scrollHeight;
-			document.getElementById('queue_position').innerText = 'Queue position: ' + progress_info['queue_position']
-		}
-    });
+	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
 }
+
+
+function onResultCallback(data) {
+	infoBox = document.getElementById('info_box');
+	
+	if (data["error"]) {
+		infoBox.textContent = data.error;
+	}
+	else {
+		if (data.seed) {
+			infoBox.textContent += 'Seed: ' + data.seed + '\n';
+		}
+		if (data.total_duration) {
+			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n';
+		}
+		if (data.compute_duration) {
+			infoBox.textContent += 'Compute duration: ' + data.compute_duration + 's' + '\n';
+		}
+	}
+	if (data.auth) {
+		infoBox.textContent += 'Worker: ' + data.auth + '\n';
+	}
+	if (data.worker_interface_version) {
+		var versionNo = data.worker_interface_version.match(/\d+\.\d+\.\d+/);
+
+		if (versionNo) {
+			infoBox.textContent += 'AIME API Worker Interface version: ' + versionNo[0];
+		}
+	}
+	infoBox.style.height = 'auto';
+	// infoBox.style.height = infoBox.scrollHeight + 'px';
+	  chatLogTextarea.value = data.text;
+	  chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight;
+};
+
+
+function onProgressCallback(progressInfo, progressData) {
+
+	const queuePosition = progressInfo.queue_position;
+	const estimate = progressInfo.estimate;
+	const numWorkersOnline = progressInfo.num_workers_online;
+	const progress = progressInfo.progress;
+	
+	if(progressData != null)
+		{
+			chatLogTextarea.value += ' ' + progressData.text;
+			chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight;
+		}
+	document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
+	document.getElementById('estimate').innerText = ' | Estimate time: ' + estimate;
+	document.getElementById('num_workers_online').innerText = ' | Workers online: ' + numWorkersOnline;
+	document.getElementById('progress_label').innerText = ' | Generated tokens: ' + progress;
+};
+
+
 
 function handleKeyPress(event) {
     if (event.keyCode === 13) { // Check if the Enter key was pressed
       event.preventDefault(); // Prevent the default behavior of the Enter key
       onSendAPIRequest();
     }
-  }
+}
   
