@@ -165,7 +165,7 @@ class APIEndpoint():
 
     async def init_future_and_put_job_in_worker_queue(self, job_data):
         job_id = job_data.get('job_id')
-        APIEndpoint.logger.info(f"Client putting job {job_id} into the '{self.worker_job_type}' queue ... ")       
+        APIEndpoint.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {job_id} into the '{self.worker_job_type}' queue ... ")       
         self.app.job_states[job_id] = JobState.QUEUED
         job_future = asyncio.Future(loop=self.app.loop)
         self.app.job_result_futures[job_id] = job_future

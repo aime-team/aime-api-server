@@ -164,7 +164,7 @@ class APIServer(Sanic):
             APIServer.job_result_futures.get(job_id).set_result(result)
         except KeyError:
             job_id = 'unknown job'
-        APIServer.logger.info(f"{result.get('auth')}... processed job {job_id}")
+        APIServer.logger.info(f"Worker '{result.get('auth')}' processed job {job_id}")
         response = {'cmd': 'ok'}
         return sanic_json(response)
 
@@ -290,7 +290,7 @@ class APIServer(Sanic):
                 ep_version = endpoint.version
                 success = True
 
-        APIServer.logger.debug(f'Client login {client_version} with session auth key {client_session_auth_key} on endpoint {client_session_endpoint_name} version {ep_version}')
+        APIServer.logger.debug(f'Client login with {client_version} on endpoint {client_session_endpoint_name} in version {ep_version}. Assigned session authentication key: {client_session_auth_key}')
         response = {'success': success, 'ep_version': ep_version}
         if success:
             response['client_session_auth_key'] = client_session_auth_key
@@ -468,10 +468,11 @@ class APIServer(Sanic):
         auth = req_json.get('auth')
         worker = queue.registered_workers.get(auth)
         got_valid_job = False
+        logger_string = f"Worker '{auth}' in version {req_json.get('worker_version')} with {req_json.get('version')} waiting on '{req_json.get('job_type')}' queue for a job ... "
         if not worker.get('retry'):
-            APIServer.logger.info(f"worker '{auth}' with {req_json.get('version')} waiting on '{req_json.get('job_type')}' queue for a job ... ")
+            APIServer.logger.info(logger_string)
         else:
-            APIServer.logger.debug(f"worker '{auth}' with {req_json.get('version')} waiting on '{req_json.get('job_type')}' queue for a job ... ")
+            APIServer.logger.debug(logger_string)
         
         while not got_valid_job:
             try:
@@ -491,7 +492,7 @@ class APIServer(Sanic):
                 got_valid_job = (APIServer.job_states[job_id] == JobState.QUEUED)
 
         APIServer.job_states[job_id] = JobState.PROCESSING
-        APIServer.logger.info(f"'{auth}' got job {job_id}")
+        APIServer.logger.info(f"Worker '{auth}' got job {job_id}")
         job_data['cmd'] = 'job'
         job_data['api_server_version'] = __version__
         endpoint = APIServer.endpoints.get(job_data['endpoint_name'])

@@ -6,6 +6,8 @@
  */
 class ModelAPI {
 
+    static version = 'JavaScript AIME API Client Interface 0.0.1';
+    
     /**
     * Constructor of the class.
     * @constructor
@@ -26,7 +28,7 @@ class ModelAPI {
      */
     async fetchAuthKey(endpointName) {
         
-        const response = await this.fetchAsync(`/get_client_session_auth_key?endpoint_name=${encodeURIComponent(endpointName)}`);
+        const response = await this.fetchAsync(`/get_client_session_auth_key?endpoint_name=${encodeURIComponent(endpointName)}&version=${encodeURIComponent(ModelAPI.version)}`);
         
         if (response.success) {
             return response.client_session_auth_key;
