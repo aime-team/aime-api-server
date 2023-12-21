@@ -51,6 +51,7 @@ class APIEndpoint():
         client_request_limit,
         provide_worker_meta_data,
         http_methods,
+        version,
         ep_input_param_config,
         ep_output_param_config,
         ep_progress_param_config,
@@ -64,6 +65,7 @@ class APIEndpoint():
         self.description = description
         self.client_request_limit = client_request_limit
         self.provide_worker_meta_data = provide_worker_meta_data
+        self.version = version
         self.ep_input_param_config = ep_input_param_config
         self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
         self.ep_input_param_config['wait_for_result'] = { 'type': 'bool'}     # add implicit input 
@@ -120,7 +122,7 @@ class APIEndpoint():
         if input_args.get('wait_for_result', True):
             response = await self.finalize_request(request, job_data.get('job_id'), job_future) 
         else:
-            response = {"success": True, "job_id": job_data.get('job_id')}
+            response = {'success': True, 'job_id': job_data.get('job_id'), 'ep_version': self.version}
         return sanic_json(response)
 
 
@@ -146,7 +148,7 @@ class APIEndpoint():
         if validation_errors:
             return self.handle_validation_errors(validation_errors)
 
-        response = {"success": True, 'job_id': job_id}
+        response = {"success": True, 'job_id': job_id, 'ep_version': self.version}
         progress_state = self.get_and_validate_progress_data(job_id)
         job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
         if job_state == JobState.PROCESSING:
@@ -173,7 +175,7 @@ class APIEndpoint():
 
 
     def handle_validation_errors(self, validation_errors):
-        response = {'success': False, 'errors': validation_errors}
+        response = {'success': False, 'errors': validation_errors, 'ep_version': self.version}
         APIEndpoint.logger.debug(f'Aborted request: {", ".join(validation_errors)}')
         return sanic_json(response, status=400)
 
@@ -210,7 +212,7 @@ class APIEndpoint():
             _type_: _description_
         """        
 
-        response = {'success': True, 'job_id': job_id}
+        response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
         result = await job_future
 
         #--- extract and store session variables from job

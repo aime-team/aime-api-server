@@ -263,7 +263,7 @@ class APIServer(Sanic):
             req_json['status_check'] = True
             result = await self.validate_worker_queue(queue, req_json)
         else:
-            result = { 'cmd': "warning", 'msg': 'Api server still initializing'}
+            result = { 'cmd': "warning", 'msg': 'API Server still initializing'}
         return sanic_json(result)
 
 
@@ -277,15 +277,26 @@ class APIServer(Sanic):
         Returns:
             dict: Dictionary with the client session authentication key
         """
+        success = False
         client_session_auth_key = APIServer.generate_auth_key()
         client_session_endpoint_name = request.args.get('endpoint_name','No_endpoint_given_from_client')
         client_version = request.args.get('version','No version given from client')
-        APIServer.logger.debug(f'Client login {client_version} with session auth key {client_session_auth_key} on endpoint {client_session_endpoint_name}')
+        
         self.registered_client_sessions[client_session_auth_key] = client_session_endpoint_name
+        ep_version = None
         for endpoint in APIServer.endpoints.values():
             if endpoint.endpoint_name == client_session_endpoint_name:
-                endpoint.registered_client_session_auth_keys[client_session_auth_key] = 0
-        return sanic_json({'client_session_auth_key': client_session_auth_key}) # TODO: error handling
+                endpoint.registered_client_session_auth_keys[client_session_auth_key] = 0 # init counter for num requests
+                ep_version = endpoint.version
+                success = True
+
+        APIServer.logger.debug(f'Client login {client_version} with session auth key {client_session_auth_key} on endpoint {client_session_endpoint_name} version {ep_version}')
+        response = {'success': success, 'ep_version': ep_version}
+        if success:
+            response['client_session_auth_key'] = client_session_auth_key
+        else:
+            response['msg'] = f'Endpoint name {client_session_endpoint_name} not available'
+        return sanic_json(response)
 
 
     def load_server_configuration(self, app):
@@ -314,17 +325,19 @@ class APIServer(Sanic):
         Returns:
             tuple (str, str, str, int, list): Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.
         """
-        name = config['ENDPOINT']['name']             
-        title = config['ENDPOINT'].get('title', name)  
-        description = config['ENDPOINT'].get('description', title)
-        client_request_limit = config['ENDPOINT'].get('client_request_limit', 0)
-        provide_worker_meta_data = config['ENDPOINT'].get('provide_worker_meta_data', False)
-        http_methods = self.get_http_methods(config)               
+        ep_config = config['ENDPOINT']
+        name = ep_config['name']             
+        title = ep_config.get('title', name)  
+        description = ep_config.get('description', title)
+        client_request_limit = ep_config.get('client_request_limit', 0)
+        provide_worker_meta_data = ep_config.get('provide_worker_meta_data', False)
+        http_methods = self.get_http_methods(ep_config)
+        version = ep_config.get('version')
         APIServer.logger.info(f'----------- {title} - {name} {http_methods}')
-        return title, name, description, client_request_limit, provide_worker_meta_data, http_methods
+        return title, name, description, client_request_limit, provide_worker_meta_data, http_methods, version
 
 
-    def get_http_methods(self, config):
+    def get_http_methods(self, ep_config):
         """Loads http methods defined in given endpoint config file
 
         Args:
@@ -333,7 +346,7 @@ class APIServer(Sanic):
         Returns:
             list: List of http methods like ['GET', 'POST']
         """
-        http_methods_str = config['ENDPOINT'].get('methods', "GET, POST")
+        http_methods_str = ep_config.get('methods', "GET, POST")
         http_methods = []
         for http_method in http_methods_str.replace(" ", "").split(","):
             if http_method == "GET":

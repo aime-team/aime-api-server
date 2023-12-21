@@ -33,7 +33,6 @@ function onSendAPIRequest() {
 
 function onResultCallback(data) {
 	infoBox = document.getElementById('info_box');
-	
 	if (data["error"]) {
 		infoBox.textContent = data.error;
 	}
@@ -55,8 +54,11 @@ function onResultCallback(data) {
 		var versionNo = data.worker_interface_version.match(/\d+\.\d+\.\d+/);
 
 		if (versionNo) {
-			infoBox.textContent += 'AIME API Worker Interface version: ' + versionNo[0];
+			infoBox.textContent += 'Worker Interface version: ' + versionNo[0] + '\n';
 		}
+	}
+	if (data.ep_version != null) {
+		infoBox.textContent += 'Endpoint version: ' + data.ep_version;
 	}
 	infoBox.style.height = 'auto';
 	// infoBox.style.height = infoBox.scrollHeight + 'px';
