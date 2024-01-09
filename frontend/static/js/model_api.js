@@ -6,7 +6,7 @@
  */
 class ModelAPI {
 
-    static version = 'JavaScript AIME API Client Interface 0.0.1';
+    static version = 'JavaScript AIME API Client Interface 0.0.2';
     
     /**
     * Constructor of the class.
@@ -26,9 +26,9 @@ class ModelAPI {
      * @param {string} endpointName - The name of the API endpoint.
      * @returns {string} - The authentication key if successful
      */
-    async fetchAuthKey(endpointName) {
+    async fetchAuthKey() {
         
-        const response = await this.fetchAsync(`/get_client_session_auth_key?endpoint_name=${encodeURIComponent(endpointName)}&version=${encodeURIComponent(ModelAPI.version)}`);
+        const response = await this.fetchAsync(`/${this.endpointName}/get_client_session_auth_key?version=${encodeURIComponent(ModelAPI.version)}`);
         
         if (response.success) {
             return response.client_session_auth_key;
@@ -71,7 +71,7 @@ class ModelAPI {
      */
     async doAPILogin(resultCallback = null) {
         try {
-            const authKey = await this.fetchAuthKey(this.endpointName);
+            const authKey = await this.fetchAuthKey();
             this.clientSessionAuthKey = authKey;
             console.log(`Login successful. Got API Key: ${this.clientSessionAuthKey}`);
             if (resultCallback && typeof resultCallback === 'function') {
@@ -112,15 +112,20 @@ class ModelAPI {
                 estimate: -1,
                 num_workers_online: -1
             };
+            if (progressCallback){
+                progressCallback(progressInfo, null); // Initial progress update
 
-            progressCallback(progressInfo, null); // Initial progress update
-
-            if (progressStream) {
-                this.setupProgressStream(jobID, resultCallback, progressCallback);
-            } else {
-                this.pollProgress(url, jobID, resultCallback, progressCallback);
+                if (progressStream) {
+                    this.setupProgressStream(jobID, resultCallback, progressCallback);
+                } else {
+                    this.pollProgress(url, jobID, resultCallback, progressCallback);
+                }
             }
-        } else {
+            else {
+                resultCallback(response);
+            }
+        } 
+        else {
             resultCallback(response);
         }
     }

@@ -1,4 +1,5 @@
 from pathlib import Path
+import uuid
 from sanic_sass import SassManifest
 from .markdown_compiler import MarkDownCompiler
 
@@ -62,3 +63,7 @@ def shorten_strings(obj, max_length=30):
         return obj[:max_length] + "..."
     else:
         return obj
+
+
+def generate_auth_key():
+    return str(uuid.uuid4())

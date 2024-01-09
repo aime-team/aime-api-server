@@ -96,7 +96,7 @@ class ApiTest():
         client_session_auth_key_dict = {}
         for endpoint_name in self.ep_config_dict:
             try:
-                response = requests.get(f'http://{self.args.host}:{self.args.port}/get_client_session_auth_key?endpoint_name={endpoint_name}')
+                response = requests.get(f'http://{self.args.host}:{self.args.port}/{endpoint_name}/get_client_session_auth_key')
             except requests.exceptions.ConnectionError:
                 pytest.fail(f'Getting client session auth key failed. API server: http://{self.args.host}:{self.args.port} not available')
             client_session_auth_key_dict[endpoint_name] = response.json().get('client_session_auth_key')

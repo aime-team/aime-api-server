@@ -15,10 +15,10 @@ from mimetypes import guess_extension, guess_type
 
 
 from .job_queue import JobState
-from .utils import StaticRouteHandler, shorten_strings
+from .utils import StaticRouteHandler, shorten_strings, generate_auth_key
 
 
-TYPES_DICT = {'string': str, 'integer':int, 'float':float, 'bool':bool, 'image':str}
+TYPES_DICT = {'string': str, 'integer':int, 'float':float, 'bool':bool, 'image':str, 'audio':str}
 
 
 class APIEndpoint():
@@ -79,6 +79,7 @@ class APIEndpoint():
 
         app.add_route(self.api_request, "/" + self.endpoint_name, methods=http_methods, name=self.endpoint_name)
         app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=http_methods, name=self.endpoint_name + "$progress")
+        app.add_route(self.get_client_session_auth_key, "/" + self.endpoint_name + "/get_client_session_auth_key", methods=http_methods, name=self.endpoint_name + "$get_client_session_auth_key")
         self.app = app
         self.add_server_static_routes(static_files)
 
@@ -104,7 +105,7 @@ class APIEndpoint():
             sanic.response.types.JSONResponse: Response to client
         """
         start_time = time.time()   
-        input_args = request.json if request.method == "POST" else request.args     
+        input_args = request.json if request.method == "POST" else request.args
         validation_errors = self.validate_client(input_args)
 
         # fast exit if not authorized for request
@@ -163,6 +164,30 @@ class APIEndpoint():
         return sanic_json(response)
 
 
+    async def get_client_session_auth_key(self, request):
+        """Route for client interface to login to the API Server while receiving a client session 
+        authentication key.
+
+        Args:
+            request (sanic.request.types.Request): Request from client.
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client containing the client session authentication key.
+        """
+        client_session_auth_key = generate_auth_key()
+        client_version = request.args.get('version','No version given from client')
+        
+        self.app.registered_client_sessions[client_session_auth_key] = {self.endpoint_name: 0}
+
+        APIEndpoint.logger.debug(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
+        response = {
+            'success': True, 
+            'ep_version': self.version, 
+            'client_session_auth_key': client_session_auth_key
+        }
+        return sanic_json(response)
+
+
     async def init_future_and_put_job_in_worker_queue(self, job_data):
         job_id = job_data.get('job_id')
         APIEndpoint.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {job_id} into the '{self.worker_job_type}' queue ... ")       
@@ -185,7 +210,7 @@ class APIEndpoint():
 
         client_session_auth_key = input_args.get('client_session_auth_key', None)
 
-        if not client_session_auth_key in self.registered_client_session_auth_keys:
+        if not client_session_auth_key in self.app.registered_client_sessions:
             validation_errors.append(f'Client session authentication key not registered in API Server')
 
         job_id = input_args.get('job_id', None)
@@ -204,7 +229,7 @@ class APIEndpoint():
         initialized in api_request() to get the results.
 
         Args:
-            request (_type_): _description_
+            request (sanic.request.types.Request): _description_
             job_id (_type_): _description_
             job_future (_type_): _description_
 
@@ -285,7 +310,7 @@ class APIEndpoint():
                         if max_length is not None and len(value) > max_length:
                             validation_errors.append(f'Length of argument {ep_input_param_name} exceeds the maximum length ({max_length})')
 
-                APIEndpoint.logger.debug(f'Received for {ep_input_param_name}: {r"{}".format(value)}')
+                APIEndpoint.logger.debug(f'Received for {ep_input_param_name}: {r"{}".format(shorten_strings(value))}')
                 job_data[ep_input_param_name] = value
             elif not arg_required:
                 job_data[ep_input_param_name] = value_default
@@ -316,11 +341,11 @@ class APIEndpoint():
         client_session_auth_key = input_args.get('client_session_auth_key')
 
         validation_errors = []
-        if not client_session_auth_key in self.registered_client_session_auth_keys:
+        if not client_session_auth_key in self.app.registered_client_sessions:
             validation_errors.append(f'Client session authentication key not registered in API Server')
         else:
-            self.registered_client_session_auth_keys[client_session_auth_key] += 1
-            if self.client_request_limit and self.registered_client_session_auth_keys[client_session_auth_key] > self.client_request_limit:
+            self.app.registered_client_sessions[client_session_auth_key][self.endpoint_name] += 1
+            if self.client_request_limit and self.app.registered_client_sessions[client_session_auth_key] > self.client_request_limit:
                 validation_errors.append(f'Client has too much requests. Only {self.client_request_limit} requests per client allowed.')
         return validation_errors
 

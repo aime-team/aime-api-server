@@ -12,7 +12,6 @@ from pathlib import Path
 import toml
 import urllib.request
 import json
-import uuid
 import asyncio
 
 from .api_endpoint import APIEndpoint
@@ -267,38 +266,6 @@ class APIServer(Sanic):
         return sanic_json(result)
 
 
-    async def get_client_session_auth_key(self, request):
-        """Route for client interface to login to the API Server while receiving a client session 
-        authentication key.
-
-        Args:
-            request (sanic.request.types.Request): _description_
-
-        Returns:
-            dict: Dictionary with the client session authentication key
-        """
-        success = False
-        client_session_auth_key = APIServer.generate_auth_key()
-        client_session_endpoint_name = request.args.get('endpoint_name','No_endpoint_given_from_client')
-        client_version = request.args.get('version','No version given from client')
-        
-        self.registered_client_sessions[client_session_auth_key] = client_session_endpoint_name
-        ep_version = None
-        for endpoint in APIServer.endpoints.values():
-            if endpoint.endpoint_name == client_session_endpoint_name:
-                endpoint.registered_client_session_auth_keys[client_session_auth_key] = 0 # init counter for num requests
-                ep_version = endpoint.version
-                success = True
-
-        APIServer.logger.debug(f'Client login with {client_version} on endpoint {client_session_endpoint_name} in version {ep_version}. Assigned session authentication key: {client_session_auth_key}')
-        response = {'success': success, 'ep_version': ep_version}
-        if success:
-            response['client_session_auth_key'] = client_session_auth_key
-        else:
-            response['msg'] = f'Endpoint name {client_session_endpoint_name} not available'
-        return sanic_json(response)
-
-
     def load_server_configuration(self, app):
         """Parses server configuration file.
         """
@@ -315,6 +282,7 @@ class APIServer(Sanic):
         APIServer.default_authorization_keys = clients_config.get("default_authorization_keys", {})
 
         APIServer.static_routes = config.get('STATIC', {})
+
 
     def get_endpoint_descriptions(self, config):
         """Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.
@@ -561,9 +529,7 @@ class APIServer(Sanic):
         return sanic_response.ResponseStream(stream_sse, headers=headers)
 
 
-    @staticmethod
-    def generate_auth_key():
-        return str(uuid.uuid4())
+
 
 
     def init(self, args):
@@ -589,10 +555,9 @@ class APIServer(Sanic):
         self.add_route(self.worker_job_result_json, "/worker_job_result", methods=["POST"])
         self.add_route(self.worker_job_progress, "/worker_job_progress", methods=["POST", "GET"])
         self.add_route(self.worker_check_server_status, "/worker_check_server_status", methods=["POST"])
-        self.add_route(self.get_client_session_auth_key, "/get_client_session_auth_key", methods=["POST", "GET"])
         self.add_route(self.stream_progress_to_client ,"/stream_progress", methods=["POST", "GET"], stream=True)
 
-   
+
     def setup_static_routes(self, app):
         app.logger.info("--- setup static routes")
         static_route_handler = StaticRouteHandler(Path(app.args.server_config).parent, app)
@@ -615,7 +580,7 @@ class APIServer(Sanic):
             APIServer.logger.addHandler(stream_handler)
 
         sanic_loggers = ('sanic.access', 'sanic.root', 'sanic.error')
-                
+        
         for logger_name in sanic_loggers:
             logger = logging.getLogger(logger_name)
             self.set_logger_level(logger)  # Bugged logger sanic.access: "INFO" messages only appear in "DEBUG" (args.dev = True) mode
