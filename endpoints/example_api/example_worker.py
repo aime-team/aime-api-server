@@ -2,7 +2,7 @@
 
 import sys
 sys.path.append('../..')
-from api_worker_interface import APIWorkerInterface
+from aime_api_worker_interface import APIWorkerInterface
 import time
 
 WORKER_JOB_SERVER = 'http://localhost:7777'
