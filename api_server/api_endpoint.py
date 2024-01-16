@@ -10,7 +10,6 @@ import time
 from pathlib import Path
 
 import base64
-import ffmpeg
 
 import subprocess
 
