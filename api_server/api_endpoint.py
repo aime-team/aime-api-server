@@ -3,12 +3,17 @@ from sanic.response import json as sanic_json
 
 import urllib.request # Frage an Toine: Benötigt?
 
+import sys
 import asyncio
 import io
 import time
 from pathlib import Path
 
 import base64
+import ffmpeg
+
+import subprocess
+
 from PIL import Image, UnidentifiedImageError
 import pickle
 from mimetypes import guess_extension, guess_type
@@ -305,7 +310,9 @@ class APIEndpoint():
                 elif isinstance(value, str):
                     if arg_type == 'image':
                         value = self.rescale_image(value, arg_definition)
-                    else:
+                    elif arg_type == 'audio':
+                        value = self.convert_audio(value, arg_definition)
+                    elif arg_type == 'string':
                         max_length = arg_definition.get('max_length', None)
                         if max_length is not None and len(value) > max_length:
                             validation_errors.append(f'Length of argument {ep_input_param_name} exceeds the maximum length ({max_length})')
@@ -412,6 +419,53 @@ class APIEndpoint():
 
         return queue_position, estimate, num_workers_online
 
+
+    def convert_audio(self, base64_string, arg_definition):
+        if arg_definition.get('option_auto_convert'):
+            header, body = base64_string.split(',')
+            audio_bytes = base64.b64decode(body)
+            bit_depth_dict = {
+                8: 'u8',
+                16: 's16',
+                32: 's32',
+                64: 's64'
+            }
+            input_duration = self.get_audio_duration(audio_bytes)
+            command = [
+                'ffmpeg',
+                '-i', 'pipe:0',
+                '-f', arg_definition.get('audio_format', 'wav'),
+                '-ar', str(arg_definition.get('sample_rate', 16000)),
+                '-ac', str(arg_definition.get('channels', 1)),
+                '-sample_fmt', bit_depth_dict.get(arg_definition.get('sample_bit_depth', 16)),
+                'pipe:1'
+            ]
+            if input_duration > arg_definition.get('max_length', 120):
+                command.insert(-1, '-t')
+                command.insert(-1, str(arg_definition.get('max_length', 120)))
+
+            process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            audio, _ = process.communicate(input=audio_bytes)
+            base64_string = f'data:audio/wav;base64,' + base64.b64encode(audio).decode('utf-8')
+        return base64_string
+
+
+    def get_audio_duration(self, audio_bytes):
+
+        try:
+            ffprobe_command = ['ffprobe', '-i', 'pipe:0', '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=p=0']
+            process = subprocess.Popen(ffprobe_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            result = process.communicate(input=audio_bytes)
+            input_duration = float(result[0].decode().strip())
+        except ValueError:
+            ffprobe_command = ['ffprobe', '-i', 'pipe:0', '-show_entries', 'format=bit_rate', '-v', 'quiet', '-of', 'csv=p=0']
+            process = subprocess.Popen(ffprobe_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            result = process.communicate(input=audio_bytes)
+            bit_rate = float(result[0].decode().strip())
+            size = sys.getsizeof(audio_bytes)
+            input_duration = size/(bit_rate/8)
+        return input_duration
+            
 
     def rescale_image(self, value, arg_definition):
         expected_color_space = arg_definition.get('color_space', 'RGB')

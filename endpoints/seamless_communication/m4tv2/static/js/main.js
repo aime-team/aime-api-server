@@ -42,6 +42,7 @@ let audioOutputElement = new Audio();
 var audioInputBlob;
 let mediaRecorder;
 let audioChunks = [];
+let timerInterval;
 
 modelAPI = new ModelAPI('sc_m4tv2');
 
@@ -52,7 +53,7 @@ function downloadHandler() {
 
 	const a = document.createElement('a');
 	a.href = url;
-	a.download = 'audio.wav';
+	a.download = 'audio_output.wav';
 	document.body.appendChild(a);
 	a.click();
 	document.body.removeChild(a);
@@ -71,47 +72,56 @@ function base64ToArrayBuffer(base64) {
 	return bytes.buffer;
 }
 
-function startRecording() {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.ondataavailable = event => {
-                if (event.data.size > 0) {
-                    audioChunks.push(event.data);
-                }
-            };
-            mediaRecorder.onstop = () => {
-                audioInputBlob = new Blob(audioChunks, { type: 'audio/wav' });
-				document.getElementById('audioPlayerInput').src = URL.createObjectURL(audioInputBlob);
-            };
+function startStopRecording() {
+    const recordButton = document.getElementById('recordButton');
 
-            mediaRecorder.start();
-            document.getElementById('startRecordingButton').disabled = true;
-            document.getElementById('stopRecordingButton').disabled = false;
-        })
-        .catch(error => console.error('Error accessing microphone:', error));
-}
-
-function stopRecording() {
-    if (mediaRecorder.state === 'recording') {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
-        document.getElementById('startRecordingButton').disabled = false;
-        document.getElementById('stopRecordingButton').disabled = true;
+    }
+    else {    
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                var dropzoneLabel = document.getElementById('dropzoneLabel');
+                
+                dropzoneLabel.textContent = '`Recording Audio... 00:00:00';
+
+
+                let startTime = Date.now();
+                timerInterval = setInterval(() => {
+                    const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                    const formattedTime = formatTime(elapsedTime);
+                    dropzoneLabel.textContent = `Recording Audio... ${formattedTime}`;
+                }, 1000);
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                mediaRecorder.onstop = () => {
+                    clearInterval(timerInterval);
+                    audioInputBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    dropzoneLabel.textContent = 'File: recorded_audio.wav' + ' | Size: ' + formatFileSize(audioInputBlob.size);
+                    document.getElementById('audioPlayerInput').src = URL.createObjectURL(audioInputBlob);
+                    recordButton.classList.remove('bg-red-500');
+                    recordButton.classList.add('bg-aime_orange');
+
+                };
+                mediaRecorder.start();
+                recordButton.classList.remove('bg-aime_orange');
+                recordButton.classList.add('bg-red-500');
+            })
+            .catch(error => console.error('Error accessing microphone:', error));
     }
 }
 
-function downloadAudio(blob) {
-    const url = URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'audio_recording.wav';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+function formatTime(seconds) {
+    const date = new Date(seconds * 1000);
+    return date.toISOString().substr(11, 8);
 }
-
 
 
 function populateDropdown(dropdownId) {
@@ -137,7 +147,9 @@ function onSendAPIRequest() {
 	const textInput = document.getElementById('textInput').value;
 
 	params.generate_audio = document.getElementById('generateAudio').checked;
-	if (audioInputBlob) {
+    const audioTabButton= document.getElementById('tab_button_audio_input');
+
+	if (audioTabButton.classList.contains('active') && audioInputBlob) {
 		const reader = new FileReader();
 		reader.onload = function (e) {
 			const base64Audio = e.target.result
@@ -153,7 +165,7 @@ function onSendAPIRequest() {
 		modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
 	}
 	else {
-		alert('Please select an audio file or give text input.');
+		alert('Please upload/record an audio file or give text input.');
 	}
 	
 }
@@ -161,33 +173,39 @@ function onSendAPIRequest() {
 function onResultCallback(data) {
 	enableSendButton();
     removeSpinner();
-	console.log(data.audio_output)
+	console.log(data.text_output)
 	document.getElementById('textOutput').textContent = data.text_output;
+    infoBox = document.getElementById('infoBox');
 
+    if (data["error"]) {
+        infoBox.textContent = data.error;
+    }
+    else {
+        infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's';
+    }
+    if (data.task) {
+        infoBox.textContent += '\nTask: ' + data.task;
+    }
+    if (data.auth) {
+        infoBox.textContent += '\nWorker: ' + data.auth;
+    }
+    if (data.worker_interface_version) {
+        infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
+    }
+    infoBox.style.height = 'auto';
 
+    document.getElementById('audioOutputContainer').classList.remove('hidden');
 	if (data.audio_output) {
-
-		infoBox = document.getElementById('infoBox');
-		
-		if (data["error"]) {
-			infoBox.textContent = data.error;
-		}
-		else {
-			infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's';
-		}
-		if (data.auth) {
-			infoBox.textContent += '\nWorker: ' + data.auth;
-		}
-		if (data.worker_interface_version) {
-			infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
-		}
-		infoBox.style.height = 'auto';
-
 		audioOutputElement.src = data.audio_output;
     	document.getElementById('audioPlayerOutput').src = data.audio_output;
-		document.getElementById('audioOutputContainer').style.display = 'block';
+        
 
 	}
+    else {
+        audioOutputElement.src = '';
+    	document.getElementById('audioPlayerOutput').src = '';
+        document.getElementById('audioOutputContainer').classList.add('hidden');
+    }
 }
 
 function onProgressCallback(progress_info, progress_data) {
@@ -199,24 +217,9 @@ function onProgressCallback(progress_info, progress_data) {
     document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queue_position;
     document.getElementById('estimate').innerText = ' | Estimate time: ' + estimate;
     document.getElementById('num_workers_online').innerText = ' | Workers online: ' + num_workers_online;
-    document.getElementById('progress_bar').value = progress;
     document.getElementById('progress_label').innerText = progress+'%';
 }
 
-function setupAudioPlayerInput() {
-	const audioPlayerInput = document.getElementById('audioPlayerInput');
-	const audioUpload = document.getElementById('audioUpload');
-
-	audioUpload.addEventListener('change', function (event) {
-	  const file = event.target.files[0];
-
-	  if (file) {
-		const objectUrl = URL.createObjectURL(file);
-		audioPlayerInput.src = objectUrl;
-		audioInputBlob = file
-	  }
-	});
-  }
 
 function addSpinner() {
     var spinner = document.createElement('div');
@@ -320,13 +323,54 @@ function refreshRangeInputLayout() {
 function handleKeyPress(event) {
     if (event && event.keyCode === 13) {
         event.preventDefault();
-        onButtonClick();
+        onSendAPIRequest();
     }
- }
+}
+
+
+function formatFileSize(size) {
+    if (size < 1024) {
+        return size + ' bytes';
+    } else if (size < 1024 * 1024) {
+        return (size / 1024).toFixed(2) + ' KB';
+    } else {
+        return (size / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    var audioPlayer = document.getElementById("audioPlayerInput");
+  
+    dropzone.addEventListener('dragover', function() {
+        dropzone.classList.add('hover');
+    });
+  
+    dropzone.addEventListener('dragleave', function() {
+        dropzone.classList.remove('hover');
+    });
+  
+    dropzone.querySelector('input').addEventListener('change', function(e) {
+        var file = this.files[0];
+        console.log(file)
+        dropzone.classList.remove('hover');
+  
+        dropzone.classList.add('dropped');
+        if ((/^audio\/(wav|mp3|mpeg)$/i).test(file.type) || /^audio\/vnd\.wave$/i.test(file.type)) {
+            document.getElementById('audioPlayerInput').src = URL.createObjectURL(file);
+            audioInputBlob = file
+            dropzone.querySelector('div').textContent = 'File: ' + file.name + ' | Size: ' + formatFileSize(file.size);
+
+        } else {
+            alert("Only wav and mp3 files are allowed")
+        }
+    });
+});
+  
+
+
 
 window.addEventListener('load', function() {
-
-	document.getElementById('audioOutputContainer').style.display = 'none'
 
     // Styling with Tailwind CSS
     tailwind.config = {
@@ -371,17 +415,23 @@ window.addEventListener('load', function() {
 
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
-        const tabName = button.getAttribute('data-tab');
+            const tabName = button.getAttribute('data-tab');
+            const tabGroup = button.getAttribute('data-tab-group');
+            
 
-        tabButtons.forEach(tabButton => {
-            tabButton.classList.remove('active');
-        });
-        tabContents.forEach(tabContent => {
-            tabContent.classList.add('hidden');
-        });
+            tabButtons.forEach(tabButton => {
+                if (tabButton.getAttribute('data-tab-group') === tabGroup) {
+                    tabButton.classList.remove('active');
+                }
+            });
+            tabContents.forEach(tabContent => {
+                if (tabContent.getAttribute('data-tab-group') === tabGroup) {
+                    tabContent.classList.add('hidden');
+                }
+            });
 
-        button.classList.add('active');
-        document.getElementById(tabName).classList.remove('hidden');
+            button.classList.add('active');            
+            document.getElementById(tabName).classList.remove('hidden');
         });
     });
 
@@ -395,7 +445,6 @@ window.addEventListener('load', function() {
     initializeSizeSwapButton();
     refreshRangeInputLayout();
     modelAPI.doAPILogin();
-	setupAudioPlayerInput();
 
 });
 

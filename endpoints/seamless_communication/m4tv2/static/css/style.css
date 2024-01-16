@@ -11,9 +11,7 @@ h1, h2, h3, h4, h5, h6 {
 h3, h5 {
   font-weight: 700;
 }
-h1 {
 
-}
 select {
     margin-bottom: 15px !important;
     border-color: #efefef !important;
@@ -56,7 +54,7 @@ textarea.form-input:focus {
 }
 button:focus {
     border: none;
-    outline: 1px solid #263743;
+    outline: none;
 }
 
 .tab-button {
@@ -94,6 +92,10 @@ button:focus {
     width: 100%;
 }
 
+.custom-audio-player {
+    background-color: #F6BE5C;
+}
+
 #top {
     padding: 5px 20px;
 }
@@ -126,17 +128,20 @@ button:focus {
 #radio-group label {
     font-size: .85rem !important;
 }
+
 #infoBox {
     color: #bbb;
     background-color: #f2f6f2;
+    min-height:100px;
     font-size: 80%;
     line-height: 1.2;
     font-family: 'Monaco';
 }
 
 #textOutput {
-    color: #bbb;
+    color: #000000;
     background-color: #f2f6f2;
+    min-height:100px;
     font-size: 80%;
     line-height: 1.2;
     font-family: 'Monaco';
@@ -152,7 +157,7 @@ button:focus {
 
 #textInput {
     width: 100%;
-    min-height:70px;
+    min-height:195px;
     padding: 10px;
     color: #fff;
     font-size: 15px;
@@ -163,16 +168,19 @@ button:focus {
 }
 
 #sendButton {
-    width: 100px;
+    width: 200px;
+    padding: 10px;
+    font-size: 20px;
+}
+
+
+#recordButton {
+    width: 80px;
+    height: 80px;
     padding: 10px;
     font-size: 15px;
 }
 
-#playButton {
-    width: 100px;
-    padding: 10px;
-    font-size: 15px;
-}
 
 #downloadButton {
     width: 100px;
@@ -184,9 +192,6 @@ button:focus {
     margin: 20px 0;
 }
 
-#progress_container {
-    
-}
 
 #progress_bar {
     width: 100%;
@@ -196,9 +201,66 @@ button:focus {
     padding: 5px;
 }
 
-#image_container {
-    
+#dropZoneLabel {
+    margin: 0px auto;
 }
+
+#dropzone {
+    position: relative;
+    background-color: #bedcbb57;
+    border: 2px dotted #4FBFD7;
+    border-radius: 20px;
+    color: #4FBFD7;
+    min-height: 120px;
+    margin: 20px auto;
+    text-align: center;
+    width: 100%;
+}
+
+#dropzone.hover {
+    border: 10px solid #FE5;
+    color: #FE5;
+}
+
+
+#dropzone div {
+    color:#4FBFD7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+
+#dropzone [type="file"] {
+    cursor: pointer;
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+#audioPlayerInput {
+    display: flex;
+}
+
+#audioPlayerInput::shadow audio {
+    background-color: red !important; /* Change this to your desired color */
+  }
+
+#audioPlayerDiv {
+    display: flex;
+}
+
+
 
 progress[value]::-webkit-progress-bar {
     background-color: #eee;
@@ -310,4 +372,8 @@ input[type="range"] {
 
 ::-ms-tooltip { 
     display: none;
+}
+.recordButton:focus,
+.recordButton:active {
+    outline: none;
 }

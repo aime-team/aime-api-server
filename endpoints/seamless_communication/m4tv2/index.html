@@ -26,8 +26,12 @@
 		<div id="layout" class="columns flex flex-col md:flex-row">
 			<!-- LEFT COLUMN -->
 			<form class="column md:container input-col relative md:flex-1 pb-4 min-w-0" onsubmit="return false;">
-				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">Text Input</h3>
-				<div id="textInputContainer">
+				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">Input</h3>
+					<div class="flex">
+						<button id="tab_button_text_input" class="tab-button active" data-tab="tab_text_input" data-tab-group="input"><h3 class="text-lg pr-4">Text</h3></button>
+						<button id="tab_button_audio_input" class="tab-button" data-tab="tab_audio_input" data-tab-group="input"><h3 class="text-lg pl-4">Audio</h3></button>
+					</div>
+				<div id="tab_text_input" class="tab-content" data-tab-group="input">
 					<textarea id="textInput" 
 								name="textInput" 
 								class="rounded form-input border p-2 border-black w-full disabled:cursor-not-allowed disabled:opacity-50" 
@@ -36,37 +40,52 @@
 								onkeydown="handleKeyPress(event)" 
 					></textarea>
 				</div>
-				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">Audio Input</h3>
-				<div id="audioInputContainer">
-					
-					<input type="file" id="audioUpload" accept=".wav" class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg"/>
-					<div  class="flex space-x-4">
-						<button id="startRecordingButton" onclick=startRecording() class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg">⏺</button>
-						<button id="stopRecordingButton" onclick=stopRecording() class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" disabled>⏹</button>
-						<audio id="audioPlayerInput" class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold rounded-lg" controls>
-							Your browser does not support the audio element.
-						</audio>
+				<div id="tab_audio_input" class="hidden tab-content" data-tab-group="input">
+					<div class="w100 columns flex flex-col md:flex-row">
+						<div class="flex-grow">
+							<div id="dropzone" class="flex-grow w100 justify-center">
+								<div id="dropzoneLabel">Drag your .wav or .mp3 file here</div>		
+								<input type="file" accept="audio/wav, audio/mp3" />
+							</div>
+							<div id=audioPlayerDiv class="flex-grow justify-center">
+								<audio id="audioPlayerInput" class="flex-grow text-aime_darkblue hover:text-white font-bold rounded-lg" controls height="1">
+									Your browser does not support the audio element.
+								</audio>
+							</div>
+						</div>
+						<div class="mt-5 ml-10">
+							<button id="recordButton" 
+								type="button" 
+								class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold px-4 py-1 rounded-lg mt-5"
+								onclick=startStopRecording() >
+								<img src="/sc-m4tv2/static/js/microphone_icon.svg" alt="Record">
+							</button>
+						</div>
 					</div>
+
 				</div>
 				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">Settings</h3>
-				<div class="flex space-x-4">
-					<div class="w-2/5">
+				<div class="w100 flex space-x-4">
+					<div class="w-2/5 mb-3">
 						<input type="checkbox" id="generateAudio" class="form-checkbox rounded text-aime_blue">
-						<label for="generateAudio">Generate Audio</label>
-					</div>
-					<div class="w100 flex justify-end mb-5 mt-1">
-						<button id="sendButton" 
-								type="button" 
-								class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" 
-								onclick="onSendAPIRequest();">Translate</button>
+						<label for="generateAudio">Generate Audio Output</label>
+						
 					</div>
 				</div>
-				<div>
-					<label for="srcLang">Select the source language:</label>
-					<select class="form-select w100 rounded" id="srcLang" name="srcLang"></select>
-					
-					<label for="tgtLang">Select the target language:</label>
-					<select class="form-select w100 rounded" id="tgtLang" name="tgtLang"></select>
+				<div class="w100 columns flex flex-col md:flex-row">
+					<div class="flex-grow">
+						<label for="srcLang">Select the source language:</label>
+						<select class="form-select w100 rounded mt-2" id="srcLang" name="srcLang"></select>
+						
+						<label for="tgtLang">Select the target language:</label>
+						<select class="form-select w100 rounded mt-2" id="tgtLang" name="tgtLang"></select>
+					</div>
+					<div class="flex justify-end mb-10 mt-12 ml-10">
+						<button id="sendButton" 
+								type="button" 
+								class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold rounded-lg" 
+								onclick="onSendAPIRequest();">Translate</button>
+					</div>
 				</div>
 
 			</form> <!-- /END LEFT COLUMN -->
@@ -85,7 +104,6 @@
 				<div id="tab_output" class="tab-content">
 					<div id="progress_container" class="w100">
 						<p class="label">Progress</p>
-						<progress id="progress_bar" class="rounded" value="0" max="100"></progress>
 						<span id="progress_label" class="text-sm"></span>
 						<label id="tasks_to_wait_for" class="text-sm"></label>
 						<label id="estimate" class="text-sm"></label>
@@ -98,17 +116,19 @@
 					<p class="label mt-5">Text Output</p>
 					<textarea readonly id="textOutput" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm"></textarea>
 
-					<div id="audioOutputContainer" class="w">
+					<div id="audioOutputContainer" class="w hidden">
 						<p class="label mt-5">Audio Output</p>
-						<audio id="audioPlayerOutput" controls class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold rounded-lg">
-							Your browser does not support the audio element.
-						</audio>
-						<button id="downloadButton" 
-							type="button" 
-							class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" 
-							onclick="downloadHandler();">Download</button>
-
-					<div>
+						<div class="audio-controls-container flex items-center">
+							<audio id="audioPlayerOutput" controls class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold rounded-lg">
+								Your browser does not support the audio element.
+							</audio>
+							<button id="downloadButton" 
+									type="button" 
+									class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" 
+									onclick="downloadHandler();">Download</button>
+						</div>
+					</div>
+					
 
 				</div>
 				<div id="tab_json" class="hidden tab-content"></div>
