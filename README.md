@@ -20,6 +20,7 @@ Available example endpoints including workers:
 * [LLama Chat](/llama_chat.html)
 * [Stable Diffusion XL](/sdxl-txt2img/)
 * [Stable Diffusion](/stable_diffusion_txt2img.html)
+* [Seamless Communication](/sc-m4tv2/)
 
 
 ## API Server Setup
