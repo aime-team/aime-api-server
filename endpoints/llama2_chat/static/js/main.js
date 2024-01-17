@@ -16,7 +16,7 @@ function onSendAPIRequest() {
 	chatInput = document.getElementById('chat_input');
 
 	text_status = chatLogTextarea.value;
-	text_status += 'User: ' + chatInput.value + '\nDave:'
+	text_status += 'User: ' + chatInput.value + '\nDave: '
 
 	params = new Object();
 	params.text = text_status
