@@ -25,6 +25,14 @@ Available example endpoints including workers:
 
 ## API Server Setup
 
+### Install ffmpeg
+
+Ubuntu/Debian:
+
+```bash
+sudo apt install ffmpeg
+```
+
 ### Virtual Environment
 
 We recommend creating a virtual environment for local development:
