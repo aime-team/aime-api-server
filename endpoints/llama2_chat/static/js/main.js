@@ -76,7 +76,7 @@ function onProgressCallback(progressInfo, progressData) {
 	
 	if(progressData != null)
 		{
-			chatLogTextarea.value += ' ' + progressData.text;
+			chatLogTextarea.value = progressData.text;
 			chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight;
 		}
 	document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
