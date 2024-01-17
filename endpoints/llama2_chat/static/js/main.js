@@ -8,16 +8,18 @@ async function initializeTab() {
 
 window.onload = initializeTab;
 
+var start_text = None;
+
 function onSendAPIRequest() {
 
 	chatLogTextarea = document.getElementById('chat_log');
 	chatInput = document.getElementById('chat_input');
 
-	var text = chatLogTextarea.value;
-	text += 'User: ' + chatInput.value + '\nDave:'
+	start_text = chatLogTextarea.value;
+	start_text += 'User: ' + chatInput.value + '\nDave:'
 
 	params = new Object();
-	params.text = text
+	params.text = start_text
 	params.top_k = parseInt(document.getElementById('top_k_range').value)
 	params.top_p = parseFloat(document.getElementById('top_p_range').value)
 	params.temperature = parseFloat(document.getElementById('temperature_range').value)
@@ -76,7 +78,7 @@ function onProgressCallback(progressInfo, progressData) {
 	
 	if(progressData != null)
 		{
-			chatLogTextarea.value = progressData.text;
+			chatLogTextarea.value = start_text + progressData.text;
 			chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight;
 		}
 	document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
