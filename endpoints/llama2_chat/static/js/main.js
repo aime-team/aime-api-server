@@ -8,26 +8,26 @@ async function initializeTab() {
 
 window.onload = initializeTab;
 
-var start_text = None;
+var text_status = "";
 
 function onSendAPIRequest() {
 
 	chatLogTextarea = document.getElementById('chat_log');
 	chatInput = document.getElementById('chat_input');
 
-	start_text = chatLogTextarea.value;
-	start_text += 'User: ' + chatInput.value + '\nDave:'
+	text_status = chatLogTextarea.value;
+	text_status += 'User: ' + chatInput.value + '\nDave:'
 
 	params = new Object();
-	params.text = start_text
+	params.text = text_status
 	params.top_k = parseInt(document.getElementById('top_k_range').value)
 	params.top_p = parseFloat(document.getElementById('top_p_range').value)
 	params.temperature = parseFloat(document.getElementById('temperature_range').value)
 	params.seed = parseInt(document.getElementById('seed').value)
 
 	chatInput.value = ''
-    chatLogTextarea.value = text;
-    chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight
+  chatLogTextarea.value = text_status;
+  chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight
 
 	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
 }
@@ -78,7 +78,7 @@ function onProgressCallback(progressInfo, progressData) {
 	
 	if(progressData != null)
 		{
-			chatLogTextarea.value = start_text + progressData.text;
+			chatLogTextarea.value = text_status + progressData.text;
 			chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight;
 		}
 	document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
