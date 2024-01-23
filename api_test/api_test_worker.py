@@ -1,7 +1,7 @@
-from api_worker_interface import APIWorkerInterface
+from aime_api_worker_interface import APIWorkerInterface
 import argparse
 import time
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import numpy as np
 import base64
 import io
@@ -17,7 +17,6 @@ class ApiTestWorker():
         self.api_worker_interface = APIWorkerInterface(self.args.api_server, self.args.worker_job_type, self.args.worker_auth_key, print_server_status=False)
         while True:
             self.job_data = self.check_job_request()
-            #print(self.job_data)
             self.error_handling()
             #time.sleep(0.1)
             self.send_test_job_result_with_progress()
@@ -25,7 +24,6 @@ class ApiTestWorker():
 
     def check_job_request(self):
         job_data = self.api_worker_interface.job_request()
-        #print('XXXX', job_data['image'])
         return job_data
 
 
@@ -70,10 +68,10 @@ def load_flags():
 def convert_base64_string_to_image(base64_string):
     base64_data = base64_string.split(',')[1]
     image_data = base64.b64decode(base64_data)
-
     with io.BytesIO(image_data) as buffer:
         image = Image.open(buffer)
         return image.copy()
+
 
 
 def main():

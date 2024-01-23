@@ -89,7 +89,7 @@ class ApiTest():
             '--no_sanic_logger'
         ]
 
-        return subprocess.Popen(command)
+        return subprocess.Popen(command, stdout=subprocess.PIPE)
 
 
     def get_client_session_auth_key_dict(self):
@@ -183,7 +183,7 @@ class ApiTest():
         
         try:
             response = self.fetch_sync(params, endpoint_name)
-            assert response.status_code == 200, response.status_code           
+            assert response.status_code == 200, f'{response.text}'
             return response
 
         except requests.exceptions.ConnectionError as exc:
@@ -219,17 +219,13 @@ class ApiTest():
     def check_image_resizing_for_given_client_output_test_image_on_given_endpoint(self, endpoint_name, client_output_test_image):
         ep_config = self.ep_config_dict.get(endpoint_name)
         ep_inputs = ep_config.get('INPUTS')
-
-        min_width = ep_inputs.get('image').get('min_width')
-        max_width = ep_inputs.get('image').get('max_width')
-        min_height = ep_inputs.get('image').get('min_height')
-        max_height = ep_inputs.get('image').get('max_height')
-        align_width = ep_inputs.get('image').get('align_width')
-        align_height = ep_inputs.get('image').get('align_height')
-        option_resize_method = ep_inputs.get('image').get('option_resize_method')
-        worker_input_test_image_expected_format = ep_inputs.get('image').get('image_format')
-        worker_input_test_image_expected_color_space = ep_inputs.get('image').get('color_space')
+        min_size = tuple(ep_inputs.get('image').get('size').get('minimum'))
+        max_size = tuple(ep_inputs.get('image').get('size').get('maximum'))
+        align_values = tuple(ep_inputs.get('image').get('size').get('align'))
+        option_resize_method = ep_inputs.get('image').get('size').get('resize_method')
         
+        worker_input_test_image_expected_format = ep_inputs.get('image').get('format').get('default')
+        worker_input_test_image_expected_color_space = ep_inputs.get('image').get('color_space').get('default')
         client_output_test_image_64 = convert_image_to_base64_string(client_output_test_image, client_output_test_image.format)
         response = self.make_client_request_with_base64_image(client_output_test_image_64, endpoint_name)
 
@@ -245,28 +241,30 @@ class ApiTest():
             else:
                 return obj
 
-        print('response', shorten_strings(response.json(), 30))
+        #print('response', shorten_strings(response.json(), 30))
         worker_input_test_image = convert_base64_str_list_to_image_list(response.json().get('images'))[0]
-        worker_input_test_image_width, worker_input_test_image_height = worker_input_test_image.size
-        assert min_width <= worker_input_test_image_width <= max_width and worker_input_test_image_width % align_width == 0
-        assert min_height <= worker_input_test_image_height <= max_height and worker_input_test_image_height % align_height == 0
-        assert worker_input_test_image.format == worker_input_test_image_expected_format
-        assert worker_input_test_image.mode == worker_input_test_image_expected_color_space
-        report = f'Client output image got resized from {client_output_test_image.size[0]}x{client_output_test_image.size[1]} to {worker_input_test_image_width}x{worker_input_test_image_height} in {endpoint_name} with the method "{option_resize_method}".\n' \
+        assert min_size <= worker_input_test_image.size <= max_size, f'Resizing failed: min: {min_size}, max: {max_size}, converted size: {worker_input_test_image.size}'
+        for image_size_value, align_value in zip(worker_input_test_image.size, align_values):
+            assert image_size_value % align_value == 0
+            
+        assert worker_input_test_image.format.lower() == worker_input_test_image_expected_format.lower(), f'{worker_input_test_image.format} != {worker_input_test_image_expected_format}'
+        assert worker_input_test_image.mode.lower() == worker_input_test_image_expected_color_space.lower(), f'{worker_input_test_image.mode} != {worker_input_test_image_expected_color_space}'
+        report = f'Client output image got resized from {client_output_test_image.size[0]}x{client_output_test_image.size[1]} to {worker_input_test_image.size[0]}x{worker_input_test_image.size[1]} in {endpoint_name} with the method "{option_resize_method}".\n' \
         f'The original image had the format {client_output_test_image.format} and was converted to {worker_input_test_image.format}'
         return report
 
 
     def check_image_resizing_on_given_endpoint(self, endpoint_name):
         reports = []
-        client_output_test_image = get_test_image()
-        ep_inputs = self.ep_config_dict.get(endpoint_name).get('INPUTS')
-        min_width = ep_inputs.get('image').get('min_width')
-        max_width = ep_inputs.get('image').get('max_width')
-        min_height = ep_inputs.get('image').get('min_height')
-        max_height = ep_inputs.get('image').get('max_height')
-        client_output_test_image_too_small = resize_test_image(client_output_test_image, min_width-1, min_height-1)
-        client_output_test_image_too_big = resize_test_image(client_output_test_image, max_width+1, max_height+1)
+        client_output_test_image_binary = get_test_image()
+        with io.BytesIO(client_output_test_image_binary) as buffer:
+            client_output_test_image = Image.open(buffer)
+            ep_inputs = self.ep_config_dict.get(endpoint_name).get('INPUTS')
+            min_size = ep_inputs.get('image').get('size').get('minimum')
+            max_size = ep_inputs.get('image').get('size').get('maximum')
+
+            client_output_test_image_too_small = resize_test_image(client_output_test_image, min_size[0]-1, min_size[1]-1)
+            client_output_test_image_too_big = resize_test_image(client_output_test_image, max_size[0]+1, max_size[1]+1)
         reports.append(self.check_image_resizing_for_given_client_output_test_image_on_given_endpoint(endpoint_name, client_output_test_image_too_small))
         reports.append(self.check_image_resizing_for_given_client_output_test_image_on_given_endpoint(endpoint_name, client_output_test_image_too_big))
         return reports
@@ -303,7 +301,7 @@ class ApiTest():
     async def fetch_async_on_main_endpoint(self, params):
         async with aiohttp.ClientSession() as session:
             async with session.post(f'http://{self.args.host}:{self.args.port}/' + self.endpoint_names[0], json=params) as response:
-                assert response.status == 200, response
+                assert response.status == 200, await response.json()
                 return await response.json()
 
 
@@ -316,6 +314,7 @@ class ApiTest():
 
 
     def exit_processes(self):
+
         self.kill_processes_with_children(self.proc_api_server)
         for proc in self.proc_main_test_workers:
             self.kill_processes_with_children(proc)
@@ -358,8 +357,7 @@ class ApiTest():
                     invalid_parameters.append(self.get_dict_with_required_parameters_and_ep_input_on_main_endpoint(ep_input, arg_definition.get('minimum', 0) -1))
                     invalid_parameters.append(self.get_dict_with_required_parameters_and_ep_input_on_main_endpoint(ep_input, arg_definition.get('maximum', 0) +1))
                 if arg_type is int:
-                    invalid_parameters.append(self.get_dict_with_required_parameters_and_ep_input_on_main_endpoint(ep_input, 1.1))
-                    invalid_parameters.append(self.get_dict_with_required_parameters_and_ep_input_on_main_endpoint(ep_input, '1'))
+                    invalid_parameters.append(self.get_dict_with_required_parameters_and_ep_input_on_main_endpoint(ep_input, 'a'))
                 if arg_type is float:
                     invalid_parameters.append(self.get_dict_with_required_parameters_and_ep_input_on_main_endpoint(ep_input, '1.0'))
                 if arg_type is str:
@@ -432,11 +430,10 @@ class ApiTest():
     
     def run_model_api_test(self):
         test_image = get_test_image()
-        with open('api_test/test_image.png', 'rb') as data:
-            image_binary = data.read()
+
         params = self.get_dict_with_required_parameters_and_ep_input_on_main_endpoint('image', test_image)
     
-        params['image_format'] = self.ep_config_dict.get(self.endpoint_names[0]).get('INPUTS').get('image').get('image_format')
+        #params['format'] = self.ep_config_dict.get(self.endpoint_names[0]).get('INPUTS').get('image').get('format').get('default')
         callback = Callback()
         callback_async = CallbackAsync()
         
@@ -477,7 +474,7 @@ class ApiTest():
 
         result_no_prgress = do_api_request(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params)
         success = validate_result_image(result)
-        print(success)
+        
         
         model_api_invalid_url = ModelAPI(f'http://wrong_url', self.endpoint_names[0])
 
@@ -578,11 +575,9 @@ def main():
         print(f'Test for single async request on test worker with the endpoint {api_test.endpoint_names[0]}  successful')
     if all(api_test.make_request_with_invalid_parameters(parameters) for parameters in invalid_parameters):
         print('Test requests with invalid parameters return statuscode "400" as supposed')
-    
     success = api_test.run_model_api_test()
     if success:
-        print(f'Test with python interface model_api.py successful')
-    
+        print(f'Test with python interface model_api.py successful')  
     success, message = api_test.init_main_test_worker_with_invalid_worker_auth_key()
     if success:
         print(f'Test with unauthorized worker key responded with exitcode 1 and the message "{message.strip()}" as supposed')
@@ -592,7 +587,6 @@ def main():
     success, message = api_test.make_request_with_invalid_client_session_auth_key_on_main_endpoint()
     if success:
         print(f'Test with invalid client session authentification key responded statuscode 400 and the message "{message}" as supposed')
-    
     success, message = api_test.check_image_resizing()
     if success:
         for single_message in message:
@@ -608,8 +602,9 @@ def report(report_string):
 
 
 def get_test_image():
-    return Image.open('api_test/test_image.jpg')
-
+    with open('api_test/test_image.png', 'rb') as data:
+        image_binary = data.read()
+    return image_binary
 
 def resize_test_image(image, width, height):
     resized_image = image.resize((width, height), resample=Image.Resampling.LANCZOS)

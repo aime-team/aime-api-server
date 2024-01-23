@@ -39,6 +39,7 @@ class APIServer(Sanic):
     registered_client_sessions = {} # key: client_session_auth_key
     args = None
     static_routes = {}
+    settings = {}
     default_authentification = "None"
     default_authorization = "None"
     default_authorization_keys = {}
@@ -89,14 +90,14 @@ class APIServer(Sanic):
                     'progress_descriptions' = {
                         'progress_images': {
                             'type': 'image_list',
-                            'image_format': 'JPEG',
+                            'format': 'JPEG',
                             'color_space': 'RGB'
                         }
                     }
                     'output_descriptions' = {
                         'images': {
                             'type': 'image_list',
-                            'image_format': 'JPEG',
+                            'format': 'JPEG',
                             'color_space': 'RGB'
                         },
                         'seed': {'type': 'integer'},
@@ -282,6 +283,7 @@ class APIServer(Sanic):
         APIServer.default_authorization_keys = clients_config.get("default_authorization_keys", {})
 
         APIServer.static_routes = config.get('STATIC', {})
+        APIServer.settings = config.get('SETTINGS')
 
 
     def get_endpoint_descriptions(self, config):
@@ -441,6 +443,7 @@ class APIServer(Sanic):
             APIServer.logger.info(logger_string)
         else:
             APIServer.logger.debug(logger_string)
+            worker['retry'] = False
         
         while not got_valid_job:
             try:
