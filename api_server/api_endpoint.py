@@ -3,23 +3,15 @@ from sanic.response import json as sanic_json
 
 import urllib.request # Frage an Toine: Benötigt?
 
-import sys
 import asyncio
-import io
+
 import time
 from pathlib import Path
 
-import base64
-
-import subprocess
-
-from PIL import Image, UnidentifiedImageError
-import pickle
-from mimetypes import guess_extension, guess_type
-
 
 from .job_queue import JobState
-from .utils import StaticRouteHandler, shorten_strings, generate_auth_key
+from .utils import StaticRouteHandler, shorten_strings, generate_auth_key, calculate_estimate_time, InputValidationHandler
+
 
 
 TYPES_DICT = {'string': str, 'integer':int, 'float':float, 'bool':bool, 'image':str, 'audio':str}
@@ -116,7 +108,7 @@ class APIEndpoint():
         if validation_errors:
             return self.handle_validation_errors(validation_errors)
 
-        job_data, validation_errors = self.validate_input_parameters_for_job_data(input_args, start_time)
+        job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
         if validation_errors:
             return self.handle_validation_errors(validation_errors)
 
@@ -271,57 +263,13 @@ class APIEndpoint():
         return response
 
     
-    def validate_input_parameters_for_job_data(self, input_args, start_time):
+
+    async def validate_input_parameters_for_job_data(self, input_args):
         """Check if worker input parameters received from client are as specified in the endpoint config file
         """
-        validation_errors = []
-        for param in input_args.keys():
-            if param not in self.ep_input_param_config:
-                validation_errors.append(f'Invalid parameter: {param}')
-        job_data = dict()
-        for ep_input_param_name in self.ep_input_param_config:
-            arg_definition = self.ep_input_param_config[ep_input_param_name]
-            arg_required = arg_definition.get('required', False)
-            arg_type = arg_definition.get('type', 'string')
-            expected_value_type = TYPES_DICT[arg_type]
-            value_default = arg_definition.get('default', None)
-            value = input_args.get(ep_input_param_name, None)
-
-            if arg_required and value is None:
-                validation_errors.append(f'Missing required argument: {ep_input_param_name}')
-            if value is not None and not isinstance(value, expected_value_type):
-                if expected_value_type is str:
-                    validation_errors.append(f'Invalid argument type {ep_input_param_name}. Expected: {expected_value_type} but got {type(value)}')
-                else:
-                    if not value == float(value) or not value == int(value):
-                        validation_errors.append(f'Invalid argument type {ep_input_param_name}. Expected: {expected_value_type} but got {type(value)}')
-
-            if value is not None:
-                if isinstance(value, (int, float)):
-                    minimum = arg_definition.get('minimum', None)
-                    maximum = arg_definition.get('maximum', None)
-
-                    if minimum is not None and value < minimum:
-                        validation_errors.append(f'Value for argument {ep_input_param_name} is below the minimum ({minimum})')
-
-                    if maximum is not None and value > maximum:
-                        validation_errors.append(f'Value for argument {ep_input_param_name} is above the maximum ({maximum})')
-                elif isinstance(value, str):
-                    if arg_type == 'image':
-                        value = self.rescale_image(value, arg_definition)
-                    elif arg_type == 'audio':
-                        value = self.convert_audio(value, arg_definition)
-                    elif arg_type == 'string':
-                        max_length = arg_definition.get('max_length', None)
-                        if max_length is not None and len(value) > max_length:
-                            validation_errors.append(f'Length of argument {ep_input_param_name} exceeds the maximum length ({max_length})')
-
-                APIEndpoint.logger.debug(f'Received for {ep_input_param_name}: {r"{}".format(shorten_strings(value))}')
-                job_data[ep_input_param_name] = value
-            elif not arg_required:
-                job_data[ep_input_param_name] = value_default
-
-        return job_data, validation_errors
+        input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.settings)
+        return await input_validator.validate_input_parameter()
+           
 
 
     def add_session_variables_to_job_data(self, request, job_data):
@@ -380,10 +328,6 @@ class APIEndpoint():
         return progress_state
 
 
-    def calculate_estimate_time(self, estimate_duration, start_time):
-        return round(estimate_duration - (time.time() - start_time), 1)
-
-
     def get_queue_parameters(self, job_id, queue, progress_state):
                 
         job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
@@ -396,11 +340,11 @@ class APIEndpoint():
             queue_position = queue.get_rank_for_job_id(job_id)
             if num_workers_online and queue_position:                
                 estimate = max(
-                    self.calculate_estimate_time(
+                    calculate_estimate_time(
                         queue.mean_job_duration['compute_duration'] * (queue_position + 1) / num_workers_online,
                         queue.get_start_time_for_job_id(job_id)
                     ),
-                    self.calculate_estimate_time(
+                    calculate_estimate_time(
                         queue.mean_job_duration['total_duration'], 
                         queue.get_start_time_for_job_id(job_id))
                 )
@@ -409,7 +353,7 @@ class APIEndpoint():
         elif job_state == JobState.PROCESSING and progress_state and progress_state.get('start_time_compute'):
             estimate = max(
                 0,
-                self.calculate_estimate_time(
+                calculate_estimate_time(
                     queue.mean_job_duration['compute_duration'], 
                     progress_state.get('start_time_compute'))
             )
@@ -417,115 +361,3 @@ class APIEndpoint():
             estimate = queue.mean_job_duration['compute_duration']
 
         return queue_position, estimate, num_workers_online
-
-
-    def convert_audio(self, base64_string, arg_definition):
-        if arg_definition.get('option_auto_convert'):
-            header, body = base64_string.split(',')
-            audio_bytes = base64.b64decode(body)
-            bit_depth_dict = {
-                8: 'u8',
-                16: 's16',
-                32: 's32',
-                64: 's64'
-            }
-            input_duration = self.get_audio_duration(audio_bytes)
-            command = [
-                'ffmpeg',
-                '-i', 'pipe:0',
-                '-f', arg_definition.get('audio_format', 'wav'),
-                '-ar', str(arg_definition.get('sample_rate', 16000)),
-                '-ac', str(arg_definition.get('channels', 1)),
-                '-sample_fmt', bit_depth_dict.get(arg_definition.get('sample_bit_depth', 16)),
-                'pipe:1'
-            ]
-            if input_duration > arg_definition.get('max_length', 120):
-                command.insert(-1, '-t')
-                command.insert(-1, str(arg_definition.get('max_length', 120)))
-
-            process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            audio, _ = process.communicate(input=audio_bytes)
-            base64_string = f'data:audio/wav;base64,' + base64.b64encode(audio).decode('utf-8')
-        return base64_string
-
-
-    def get_audio_duration(self, audio_bytes):
-
-        try:
-            ffprobe_command = ['ffprobe', '-i', 'pipe:0', '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=p=0']
-            process = subprocess.Popen(ffprobe_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            result = process.communicate(input=audio_bytes)
-            input_duration = float(result[0].decode().strip())
-        except ValueError:
-            ffprobe_command = ['ffprobe', '-i', 'pipe:0', '-show_entries', 'format=bit_rate', '-v', 'quiet', '-of', 'csv=p=0']
-            process = subprocess.Popen(ffprobe_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            result = process.communicate(input=audio_bytes)
-            bit_rate = float(result[0].decode().strip())
-            size = sys.getsizeof(audio_bytes)
-            input_duration = size/(bit_rate/8)
-        return input_duration
-            
-
-    def rescale_image(self, value, arg_definition):
-        expected_color_space = arg_definition.get('color_space', 'RGB')
-        expected_image_format = arg_definition.get('image_format', 'PNG')
-        #original_extension = guess_extension(guess_type(value)[0]).strip('.')
-        image = APIEndpoint.convert_base64_string_to_image(value, expected_color_space)
-        width, height = APIEndpoint.get_valid_image_size(image, arg_definition)
-        if arg_definition.get('option_auto_resize'):
-            resize_method = arg_definition.get('option_resize_method', 'scale')
-            if resize_method == 'scale':
-                image = image.resize((width, height), resample=Image.Resampling.LANCZOS)
-            elif resize_method == 'crop':
-                image = APIEndpoint.crop_center(image, width, height)
-        image_64 = APIEndpoint.convert_image_to_base64_string(image, expected_image_format)
-        return image_64
-
-
-    @staticmethod
-    def get_valid_image_size(image, arg_definition):
-        min_width = arg_definition.get('min_width', 0)
-        max_width = arg_definition.get('max_width', 5000)
-        min_height = arg_definition.get('min_height', 0)
-        max_height = arg_definition.get('max_height', 5000)
-        align_width = arg_definition.get('align_width', 1)
-        align_height = arg_definition.get('align_height', 1)
-        
-        width, height = image.size
-        width = min_width if width < min_width else width
-        width = max_width if width > max_width else width
-        height = min_height if height < min_height else height
-        height = max_height if height > max_height else height
-        width = width - width % align_width
-        height = height - height % align_height
-        return width, height
-
-        
-    @staticmethod
-    def crop_center(image, crop_width, crop_height):
-        img_width, img_height = image.size
-        left = (img_width - crop_width) / 2
-        top = (img_height - crop_height) / 2
-        right = (img_width + crop_width) / 2
-        bottom = (img_height + crop_height) / 2
-        return image.crop((left, top, right, bottom))
-
-
-    @staticmethod
-    def convert_base64_string_to_image(base64_string, expected_color_space):
-        base64_data = base64_string.split(',')[1]
-        image_data = base64.b64decode(base64_data)
-        try:
-            with io.BytesIO(image_data) as buffer:
-                image = Image.open(buffer).convert(expected_color_space)
-                return image.copy()
-        except UnidentifiedImageError:
-            return pickle.loads(image_data)
-
-
-    @staticmethod
-    def convert_image_to_base64_string(image, expected_image_format):
-        with io.BytesIO() as buffer:
-            image.save(buffer, format=expected_image_format)
-            image_64 = f'data:image/{expected_image_format};base64,' + base64.b64encode(buffer.getvalue()).decode('utf-8')
-        return image_64

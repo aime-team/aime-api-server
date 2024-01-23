@@ -85,7 +85,6 @@ function startStopRecording() {
                 
                 dropzoneLabel.textContent = '`Recording Audio... 00:00:00';
 
-
                 let startTime = Date.now();
                 timerInterval = setInterval(() => {
                     const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
@@ -102,8 +101,8 @@ function startStopRecording() {
                 };
                 mediaRecorder.onstop = () => {
                     clearInterval(timerInterval);
-                    audioInputBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    dropzoneLabel.textContent = 'File: recorded_audio.wav' + ' | Size: ' + formatFileSize(audioInputBlob.size);
+                    audioInputBlob = new Blob(audioChunks);
+                    dropzoneLabel.textContent = 'File: recorded_audio.ogg' + ' | Size: ' + formatFileSize(audioInputBlob.size);
                     document.getElementById('audioPlayerInput').src = URL.createObjectURL(audioInputBlob);
                     recordButton.classList.remove('bg-red-500');
                     recordButton.classList.add('bg-aime_orange');
@@ -137,6 +136,8 @@ function populateDropdown(dropdownId) {
 
 
 function onSendAPIRequest() {
+    infoBox = document.getElementById('infoBox');
+    infoBox.textContent = 'Request sent.\nWaiting for response...';
 	disableSendButton();
     addSpinner();
 	params = new Object();
@@ -148,27 +149,39 @@ function onSendAPIRequest() {
 
 	params.generate_audio = document.getElementById('generateAudio').checked;
     const audioTabButton= document.getElementById('tab_button_audio_input');
-
+    
 	if (audioTabButton.classList.contains('active') && audioInputBlob) {
-		const reader = new FileReader();
-		reader.onload = function (e) {
-			const base64Audio = e.target.result
-			params.audio_input = base64Audio;
-			modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
-		};
+        
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const base64Audio = e.target.result
+            params.audio_input = base64Audio;
+            modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback)
+                .catch((error) => {
+                    removeSpinner();
+                    enableSendButton();
+                });
+        };
 
-		reader.readAsDataURL(audioInputBlob);
-
+        reader.readAsDataURL(audioInputBlob);
 	}
 	else if (textInput) {
-		params.text_input = textInput;
-		modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
+        try {
+            params.text_input = textInput;
+            modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
+        }
+        catch (error) {
+            removeSpinner();
+            enableSendButton();
+        }
 	}
 	else {
 		alert('Please upload/record an audio file or give text input.');
-	}
-	
+        removeSpinner();
+        enableSendButton();
+	}	
 }
+
 
 function onResultCallback(data) {
 	enableSendButton();
@@ -178,7 +191,7 @@ function onResultCallback(data) {
     infoBox = document.getElementById('infoBox');
 
     if (data["error"]) {
-        infoBox.textContent = data.error;
+        infoBox.textContent = 'Error: ' + data.error;
     }
     else {
         infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's';
@@ -198,8 +211,6 @@ function onResultCallback(data) {
 	if (data.audio_output) {
 		audioOutputElement.src = data.audio_output;
     	document.getElementById('audioPlayerOutput').src = data.audio_output;
-        
-
 	}
     else {
         audioOutputElement.src = '';
@@ -207,6 +218,7 @@ function onResultCallback(data) {
         document.getElementById('audioOutputContainer').classList.add('hidden');
     }
 }
+
 
 function onProgressCallback(progress_info, progress_data) {
     const progress = progress_info.progress;
@@ -356,13 +368,13 @@ document.addEventListener('DOMContentLoaded', function() {
         dropzone.classList.remove('hover');
   
         dropzone.classList.add('dropped');
-        if ((/^audio\/(wav|mp3|mpeg)$/i).test(file.type) || /^audio\/vnd\.wave$/i.test(file.type)) {
+        if (true) {
             document.getElementById('audioPlayerInput').src = URL.createObjectURL(file);
             audioInputBlob = file
             dropzone.querySelector('div').textContent = 'File: ' + file.name + ' | Size: ' + formatFileSize(file.size);
 
         } else {
-            alert("Only wav and mp3 files are allowed")
+            alert("Only wav, mp3 and ogg files are allowed")
         }
     });
 });

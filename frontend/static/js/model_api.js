@@ -58,7 +58,11 @@ class ModelAPI {
         const response = await fetch(url, { method, headers, body });
 
         if (!response.ok) {
+            response.json().then((data) => {
+                alert(`Failed to fetch data from ${url}. Response: ${JSON.stringify(data)}`);
+            })
             throw new Error(`Failed to fetch data from ${url}. Response ${response}`);
+            
         }
 
         return response.json();
