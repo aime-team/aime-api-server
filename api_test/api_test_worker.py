@@ -37,7 +37,7 @@ class ApiTestWorker():
             test_results['images'] = image_list
         steps = 10
         for step in range(steps):
-            time.sleep(0.2) # Simulate calculation
+            #time.sleep(0.2) # Simulate calculation
             progress = (step+1)*100/steps
             if self.api_worker_interface.progress_data_received:
                 self.api_worker_interface.send_progress(progress, test_results)

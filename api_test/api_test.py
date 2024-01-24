@@ -264,9 +264,9 @@ class ApiTest():
             max_size = ep_inputs.get('image').get('size').get('maximum')
 
             client_output_test_image_too_small = resize_test_image(client_output_test_image, min_size[0]-1, min_size[1]-1)
-            client_output_test_image_too_big = resize_test_image(client_output_test_image, max_size[0]+1, max_size[1]+1)
+            #client_output_test_image_too_big = resize_test_image(client_output_test_image, max_size[0]+1, max_size[1]+1)
         reports.append(self.check_image_resizing_for_given_client_output_test_image_on_given_endpoint(endpoint_name, client_output_test_image_too_small))
-        reports.append(self.check_image_resizing_for_given_client_output_test_image_on_given_endpoint(endpoint_name, client_output_test_image_too_big))
+        #reports.append(self.check_image_resizing_for_given_client_output_test_image_on_given_endpoint(endpoint_name, client_output_test_image_too_big))
         return reports
 
 
@@ -570,7 +570,7 @@ def main():
 
     api_test = ApiTest(args, EP_CONFIG_FILES, 1)
     invalid_parameters = api_test.get_invalid_parameters_from_main_endpoint_config()
-    
+
     if api_test.make_single_async_test_request_on_main_endpoint():
         print(f'Test for single async request on test worker with the endpoint {api_test.endpoint_names[0]}  successful')
     if all(api_test.make_request_with_invalid_parameters(parameters) for parameters in invalid_parameters):

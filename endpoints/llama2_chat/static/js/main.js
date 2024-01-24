@@ -17,7 +17,7 @@ function onSendAPIRequest() {
 	chatInput = document.getElementById('chat_input');
 
 	currentText = chatLogTextarea.value;
-	currentText += 'User: ' + chatInput.value + '\nDave: '
+	currentText += 'User: ' + chatInput.value + '\nDave:'
 
 	params = new Object();
 	params.text = currentText
@@ -79,7 +79,7 @@ function onProgressCallback(progressInfo, progressData) {
 	
 	if(progressData != null)
 		{
-			chatLogTextarea.value = currentText + progressData.text;
+			chatLogTextarea.value = currentText + ' ' + progressData.text;
 			chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight;
 		}
 	document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;

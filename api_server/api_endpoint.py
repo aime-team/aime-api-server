@@ -197,7 +197,7 @@ class APIEndpoint():
 
     def handle_validation_errors(self, validation_errors):
         response = {'success': False, 'errors': validation_errors, 'ep_version': self.version}
-        APIEndpoint.logger.debug(f'Aborted request: {", ".join(validation_errors)}')
+        APIEndpoint.logger.debug(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
         return sanic_json(response, status=400)
 
 
