@@ -2,13 +2,20 @@ Title: AIME Model API
 
 # AIME Model API
 
-Deploying Pytorch/Tensorflow models through a job queue as Web-API endpoint. 
+Deploying Pytorch/Tensorflow models through a job queue as scalable Web-API endpoint made easy.
 
 ## Features
 
+* Fast - asynchronous and multi process API server
+* Scalable - cluster ready architecture
+* Secure & Robust - type safe interface and input validation
+* Easy integratable into exisiting Python and Tensorflow projects
+* High performance intergrated image and audio processing and conversion for common web formats
+* Pythonic - easily extendable in your favourite programming language
+
 ## Illustration of the architecture
 
-![Alt text](./doc/images/image.jpg "title")
+![Alt text](/docs/images/image.jpg "AIME API Architecture")
 
 
 ## Example Endpoints
@@ -25,13 +32,7 @@ Available example endpoints including workers:
 
 ## API Server Setup
 
-### Install ffmpeg
-
-Ubuntu/Debian:
-
-```bash
-sudo apt install ffmpeg
-```
+How to start up the API Server.
 
 ### Virtual Environment
 
@@ -47,14 +48,28 @@ Create and activate a virtual environment, like 'venv'. Then install required pi
 pip install -r requirements.txt
 ```
 
+### Install ffmpeg
+
+Ubuntu/Debian:
+
+```bash
+sudo apt install ffmpeg
+```
+
+### Starting the server
+
 To start the API server run:
 
 ```bash
 python3 run api_server.py [-H HOST] [-p PORT] [-c EP_CONFIG] [--debug]
 ```
 
+### Connecting it to Apache, NGinx, etc.
 
-## How to run a Stable Diffusion Worker
+
+## Compute Workers
+
+### How to run a Stable Diffusion Worker
 
 Create an AIME ML container:
 
