@@ -2,15 +2,17 @@ Title: AIME Model API
 
 # AIME Model API
 
-Deploying Pytorch/Tensorflow models through a job queue as scalable Web-API endpoint made easy.
+You have a running deep learning model in your console or notebook and would like to make it available to your company or deploy it to the world? AIME API is the easy and scalable solution to do so. With a few steps one can turn a console Python script to a secure and robust web API which can act as your interface to the mobile, browser and desktop world.
+
+With AIME API one deploys Pytorch, Tensorflow models through a job queue as scalable API endpoint capable of serving millions of requests.
 
 ## Features
 
 * Fast - asynchronous and multi process API server
-* Scalable - cluster ready architecture
-* Secure & Robust - type safe interface and input validation
+* Scalable & Robust- distributed cluster ready architecture
+* Secure - type safe interface and input validation
 * Easy integratable into exisiting Python and Tensorflow projects
-* High performance intergrated image and audio processing and conversion for common web formats
+* High performance image and audio input/ouput conversion for common web formats
 * Pythonic - easily extendable in your favourite programming language
 
 ## Illustration of the architecture
@@ -32,7 +34,7 @@ Available example endpoints including workers:
 
 ## API Server Setup
 
-How to start up the API Server.
+How to setup and start the AIME API Server.
 
 ### Virtual Environment
 
