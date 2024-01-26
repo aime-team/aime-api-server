@@ -6,11 +6,14 @@ import asyncio
 import base64
 import io
 import os
+import sys
 import operator
 from functools import partial
 from enum import Enum
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
+import json
+import random
 
 
 from sanic_sass import SassManifest
@@ -33,6 +36,7 @@ class MediaParams:
     SAMPLE_BIT_DEPTH = 'sample_bit_depth'
     COLOR_SPACE = 'color_space'
     SIZE = 'size'
+    AUDIO_BIT_RATE = 'audio_bit_rate'
 
 
 FFMPEG_CMD_DICT = {
@@ -40,7 +44,8 @@ FFMPEG_CMD_DICT = {
     MediaParams.DURATION: '-t',
     MediaParams.SAMPLE_RATE: '-ar',
     MediaParams.CHANNELS: '-ac',
-    MediaParams.SAMPLE_BIT_DEPTH: '-sample_fmt'
+    MediaParams.SAMPLE_BIT_DEPTH: '-sample_fmt',
+    MediaParams.AUDIO_BIT_RATE: '-b:a'
 }
 BIT_DEPTH_DICT = {
     8: ('u8', 'u8p'),
@@ -59,16 +64,6 @@ TYPES_DICT = {
     'image': str, 
     'audio': str
     }
-
-
-
-
-
-
-
-
-
-
 
 
 class StaticRouteHandler:
@@ -154,8 +149,6 @@ class InputValidationHandler():
                     job_data[ep_input_param_name] = self.validate_string(value)
                 else:
                     job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
-            elif value and not self.validation_errors: # check if necessary?
-                job_data[ep_input_param_name] = value
         return job_data, self.validation_errors
 
     
@@ -306,30 +299,47 @@ class InputValidationHandler():
     async def get_audio_parameters(self, audio_binary):
         process = await asyncio.create_subprocess_exec(*make_ffprobe_command('pipe:0'), stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         result, _ = await process.communicate(input=audio_binary)
+        if result:
+            result = json.loads(result.decode())
+            media_format = result.get('format').get('format_name').replace('matroska,', '')
         try:
             await process.stdin.wait_closed()
         except BrokenPipeError:
             pass    # Non-critical issue in asyncio.create_subprocess_exec, see https://github.com/python/cpython/issues/104340
                     # Didn't find solution for process being closed before input is fully received.
                     # BrokenPipeError only handable in process.stdin.wait_closed() but is ignored anyway. Result is still present.
-        if b'N/A' in result or not result:
+
+        """
+        if True:#not result or b'N/A' in result:
             async with aiofiles.tempfile.NamedTemporaryFile(delete=False) as temp_file:
                 await temp_file.write(audio_binary)
             process_2 = await asyncio.create_subprocess_exec(*make_ffprobe_command(temp_file.name), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
             result, _ = await process_2.communicate() 
             await run_in_executor(os.unlink, temp_file.name)
-        
-        if result and b'N/A' not in result:
-            result_lines = result.decode().strip().split('\n')
-            bit_depth, sample_rate, channels, duration = result_lines[0].split(',')
+        """
+        temp_file_name = f'{str(uuid.uuid4())[:8]}.{media_format}'
+        process = await asyncio.create_subprocess_exec(*['ffmpeg', '-i', 'pipe:0', '-vcodec', 'copy', '-acodec', 'copy', temp_file_name], stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        await process.communicate(input=audio_binary)
+        process = await asyncio.create_subprocess_exec(*make_ffprobe_command(temp_file_name), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        result, _ = await process.communicate()
+        await aiofiles.os.remove(temp_file_name)
+
+        if result:
+            result = json.loads(result.decode())
+            streams_dict = result.get('streams')[0]
+            #if result.get('format').get('duration') == 'N/A':
+            #    bit_size = sys.getsizeof(audio_binary)
+            #    duration = bit_size/ (float(bit_rate)/8)
+
             media_params = {
-                MediaParams.FORMAT: result_lines[1], 
-                MediaParams.DURATION: round(float(duration)), 
-                MediaParams.CHANNELS: int(channels),
-                MediaParams.SAMPLE_RATE: int(sample_rate), 
-                MediaParams.SAMPLE_BIT_DEPTH: str(bit_depth)
-            }
-            logger.debug(f'ffprobe analysis audio parameters: {str(media_params)}')
+                MediaParams.FORMAT: media_format, 
+                MediaParams.DURATION: round(float(result.get('format').get('duration'))), 
+                MediaParams.CHANNELS: int(streams_dict.get('channels')),
+                MediaParams.SAMPLE_RATE: int(streams_dict.get('sample_rate')), 
+                MediaParams.SAMPLE_BIT_DEPTH: streams_dict.get('sample_fmt'),
+                MediaParams.AUDIO_BIT_RATE: result.get('format').get('bit_rate')
+                }
+            logger.info(f'ffprobe analysis audio parameters: {str(media_params)}')
             return media_params
         else:
             logger.info(f'Parameter {self.ep_input_param_name} denied. Format not recognized by ffprobe.')
@@ -338,7 +348,8 @@ class InputValidationHandler():
                 MediaParams.DURATION: None, 
                 MediaParams.CHANNELS: None,
                 MediaParams.SAMPLE_RATE: None, 
-                MediaParams.SAMPLE_BIT_DEPTH: None
+                MediaParams.SAMPLE_BIT_DEPTH: None,
+                MediaParams.AUDIO_BIT_RATE: None
             }
 
 
@@ -351,6 +362,9 @@ class InputValidationHandler():
         if self.conversion_command:
             if '-f' not in self.conversion_command:
                 self.conversion_command += ['-f', target_audio_params.get(MediaParams.FORMAT, 'wav')] # using 'pipe:x' needs explicit format definition
+            if '-ac' not in self.conversion_command:
+                self.conversion_command += ['-ac', str(target_audio_params.get(MediaParams.CHANNELS, 1))] # If not specifies sometimes output has different channels then source
+
             conversion_command = ['ffmpeg', '-i', 'pipe:0'] + self.conversion_command + ['pipe:1']
             print(conversion_command)
             process = await asyncio.create_subprocess_exec(*conversion_command, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
@@ -454,27 +468,30 @@ class InputValidationHandler():
 
 
     def validate_numerical_value(self, param_value, param_name, definition):
-        param_value = self.convert_to_limit(
-            param_value,
-            param_name,
-            definition.get('max') or definition.get('maximum'),
-            definition.get('auto_convert'),
-            'max'
-        )
-        param_value = self.convert_to_limit(
-            param_value,
-            param_name,
-            definition.get('min') or definition.get('minimum'),
-            definition.get('auto_convert'),
-            'min'
-        )
-        return self.convert_to_align_value(
-            param_value,
-            param_name,
-            definition.get('align'),
-            definition.get('min') or definition.get('minimum'),
-            definition.get('auto_convert')
-        )
+        if definition:
+            param_value = self.convert_to_limit(
+                param_value,
+                param_name,
+                definition.get('max') or definition.get('maximum'),
+                definition.get('auto_convert'),
+                'max'
+            )
+            param_value = self.convert_to_limit(
+                param_value,
+                param_name,
+                definition.get('min') or definition.get('minimum'),
+                definition.get('auto_convert'),
+                'min'
+            )
+            return self.convert_to_align_value(
+                param_value,
+                param_name,
+                definition.get('align'),
+                definition.get('min') or definition.get('minimum'),
+                definition.get('auto_convert')
+            )
+        else:
+            return param_value
 
 
     def convert_to_limit(self, param_value, param_name, param_limit, auto_convert, mode):
@@ -515,16 +532,17 @@ class InputValidationHandler():
 
 
 def make_ffprobe_command(input_source):
+    
     return (
         'ffprobe',
         '-i',
         input_source,
         '-show_entries',
-        'format=format_name:stream=duration,channels,sample_rate,sample_fmt',
+        'format=format_name,bit_rate,duration:stream=channels,sample_rate,sample_fmt',
         '-v',
         'quiet',
         '-of',
-        'csv=p=0'
+        'json'
     )
 
 

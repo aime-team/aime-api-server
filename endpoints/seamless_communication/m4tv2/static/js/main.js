@@ -108,6 +108,9 @@ function startStopRecording() {
                     recordButton.classList.add('bg-aime_orange');
 
                 };
+                mediaRecorder.onerror = (event) => {
+                    console.error(`error recording stream: ${event.error.name}`);
+                };
                 mediaRecorder.start();
                 recordButton.classList.remove('bg-aime_orange');
                 recordButton.classList.add('bg-red-500');
@@ -206,6 +209,7 @@ function onResultCallback(data) {
         infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
     }
     infoBox.style.height = 'auto';
+    infoBox.style.height = infoBox.scrollHeight + 'px';
 
     document.getElementById('audioOutputContainer').classList.remove('hidden');
 	if (data.audio_output) {

@@ -54,14 +54,16 @@ function onResultCallback(data) {
     enableSendButton();
     removeSpinner();
     if (data.images) {
-        console.log(data);
         info_box = document.getElementById('info_box');
         
         if (data["error"]) {
             info_box.textContent = data.error;
         }
         else {
-            info_box.textContent = 'Prompt: ' +  data.prompt + '\nSeed: ' + data.seed + '\nTotal job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's';
+            num_images = parseInt(document.getElementById('num_samples_range').value);
+            imagesPerSec = num_images / data.total_duration
+            info_box.textContent = 'Prompt: ' +  data.prompt + '\nSeed: ' + data.seed + '\nTotal job duration: ' + 
+                data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's' + '\nImages per second: ' + imagesPerSec.toFixed(1);
         }
         if (data.auth) {
             info_box.textContent += '\nWorker: ' + data.auth;
@@ -70,7 +72,7 @@ function onResultCallback(data) {
             info_box.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
         }
         info_box.style.height = 'auto';
-        // info_box.style.height = info_box.scrollHeight + 'px';
+        info_box.style.height = info_box.scrollHeight + 'px';
         
         var imageContainer = document.getElementById('image_container');
         var images = data.images;
