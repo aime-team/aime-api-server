@@ -15,6 +15,8 @@ function onSendAPIRequest() {
 
 	chatLogTextarea = document.getElementById('chat_log');
 	chatInput = document.getElementById('chat_input');
+	info_box = document.getElementById('info_box');
+    info_box.textContent = 'Request sent.\nWaiting for response...';
 
 	currentText = chatLogTextarea.value;
 	currentText += 'User: ' + chatInput.value + '\nDave:'
@@ -27,8 +29,8 @@ function onSendAPIRequest() {
 	params.seed = parseInt(document.getElementById('seed').value)
 
 	chatInput.value = ''
-  chatLogTextarea.value = currentText;
-  chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight
+  	chatLogTextarea.value = currentText;
+  	chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight
 
 	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
 }
@@ -40,8 +42,12 @@ function onResultCallback(data) {
 		infoBox.textContent = data.error;
 	}
 	else {
+		console.log(data)
+		//num_images = parseInt(document.getElementById('num_samples_range').value);
+
+		//imagesPerSec = num_images / data.total_duration
 		if (data.seed) {
-			infoBox.textContent += 'Seed: ' + data.seed + '\n';
+			infoBox.textContent = 'Seed: ' + data.seed + '\n';
 		}
 		if (data.total_duration) {
 			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n';
@@ -49,6 +55,14 @@ function onResultCallback(data) {
 		if (data.compute_duration) {
 			infoBox.textContent += 'Compute duration: ' + data.compute_duration + 's' + '\n';
 		}
+		if (data.num_generated_tokens) {
+			infoBox.textContent += 'Generated tokens: ' + data.num_generated_tokens + '\n';
+		}
+		if (data.compute_duration && data.num_generated_tokens) {
+			tokensPerSec = data.num_generated_tokens / data.compute_duration
+			infoBox.textContent += 'Tokens per second: ' + tokensPerSec.toFixed(1) + '\n';
+		}
+	
 	}
 	if (data.auth) {
 		infoBox.textContent += 'Worker: ' + data.auth + '\n';
@@ -63,10 +77,11 @@ function onResultCallback(data) {
 	if (data.ep_version != null) {
 		infoBox.textContent += 'Endpoint version: ' + data.ep_version;
 	}
+
 	infoBox.style.height = 'auto';
-	// infoBox.style.height = infoBox.scrollHeight + 'px';
-	  chatLogTextarea.value = data.text;
-	  chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight;
+	infoBox.style.height = infoBox.scrollHeight + 'px';
+	chatLogTextarea.value = data.text;
+	chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight;
 };
 
 
