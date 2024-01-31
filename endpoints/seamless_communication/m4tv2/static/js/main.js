@@ -199,6 +199,9 @@ function onResultCallback(data) {
     else {
         infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's';
     }
+    if (data.model_name) {
+        infoBox.textContent += '\nModel name: ' + data.model_name;
+    }
     if (data.task) {
         infoBox.textContent += '\nTask: ' + data.task;
     }

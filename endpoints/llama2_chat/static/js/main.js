@@ -62,6 +62,9 @@ function onResultCallback(data) {
 			tokensPerSec = data.num_generated_tokens / data.compute_duration
 			infoBox.textContent += 'Tokens per second: ' + tokensPerSec.toFixed(1) + '\n';
 		}
+	if (data.model_name) {
+		infoBox.textContent += '\nModel name: ' + data.model_name +'\n';
+	}
 	
 	}
 	if (data.auth) {
