@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dropzone.classList.remove('hover');
   
         dropzone.classList.add('dropped');
-        if (true) {
+        if ((/^audio\/(wav|mp3|mpeg)$/i).test(file.type) || /^audio\/vnd\.wave$/i.test(file.type)) {
             document.getElementById('audioPlayerInput').src = URL.createObjectURL(file);
             audioInputBlob = file
             dropzone.querySelector('div').textContent = 'File: ' + file.name + ' | Size: ' + formatFileSize(file.size);
