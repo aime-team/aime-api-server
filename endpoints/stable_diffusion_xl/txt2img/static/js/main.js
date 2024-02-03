@@ -53,6 +53,7 @@ function onSendAPIRequest() {
 function onResultCallback(data) {
     enableSendButton();
     removeSpinner();
+    readyToSendRequest = true;
     if (data.images) {
         info_box = document.getElementById('info_box');
         
@@ -251,41 +252,48 @@ function handleKeyPress(event) {
     }
  }
 
+ let readyToSendRequest = true;
+
  function onButtonClick() {
-    info_box = document.getElementById('info_box');
-    info_box.textContent = 'Request sent.\nWaiting for response...';
     
-    disableSendButton();
-    addSpinner();
-    initializeImageContainer();
+    if(readyToSendRequest) {
+        readyToSendRequest = false;
 
-    const image_placeholder = document.getElementById('image_placeholder');
-    if(image_placeholder) {
-        image_placeholder.classList.add('animate-bounce');
-    }
+        info_box = document.getElementById('info_box');
+        info_box.textContent = 'Request sent.\nWaiting for response...';
 
-    const img_gen_msg = document.getElementById('img_gen_msg');
-    if(img_gen_msg) {
-        img_gen_msg.textContent = 'Your image will now be generated. Please wait...';
-    }
-
-    // set Tabs to output section
-    const output_btn =  document.getElementById('tab_button_output');
-    if(!output_btn.active) {
-        output_btn.click();
-    }
-    document.getElementById('tab_button_output').click();
+        disableSendButton();
+        addSpinner();
+        initializeImageContainer();
     
-    // scroll output_section into view when on mobile
-    if (window.innerWidth <= 768) {
-        const outputElement = document.getElementById('output_section');
-        if (outputElement) {
-            outputElement.scrollIntoView({ behavior: 'smooth', block: "start" });
-            // window.scrollTo({ top: outputElement.offsetTop, left: 0, behavior: 'smooth' });
+        const image_placeholder = document.getElementById('image_placeholder');
+        if(image_placeholder) {
+            image_placeholder.classList.add('animate-bounce');
         }
-    }
     
-    onSendAPIRequest();
+        const img_gen_msg = document.getElementById('img_gen_msg');
+        if(img_gen_msg) {
+            img_gen_msg.textContent = 'Your image will now be generated. Please wait...';
+        }
+    
+        // set Tabs to output section
+        const output_btn =  document.getElementById('tab_button_output');
+        if(!output_btn.active) {
+            output_btn.click();
+        }
+        document.getElementById('tab_button_output').click();
+        
+        // scroll output_section into view when on mobile
+        if (window.innerWidth <= 768) {
+            const outputElement = document.getElementById('output_section');
+            if (outputElement) {
+                outputElement.scrollIntoView({ behavior: 'smooth', block: "start" });
+                // window.scrollTo({ top: outputElement.offsetTop, left: 0, behavior: 'smooth' });
+            }
+        }
+        
+        onSendAPIRequest();
+    }
  }
 
  function refreshRangeInputLayout() {
