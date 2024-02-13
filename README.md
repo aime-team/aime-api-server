@@ -4,7 +4,7 @@ Title: AIME API Server
 
 # AIME API Server - Scalable Model Inference API Server
 
-With AIME API one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable inference API endpoint capable of serving millions of model inference requests.
+With AIME API one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.
 
 Turn a console Python script to a secure and robust web API acting as your interface to the mobile, browser and desktop world.
 
@@ -36,12 +36,12 @@ You can easily turn your existing Pytorch and Tensorflow script into an API comp
 
 ### Clients
 
-Clients, like web browsers, smartphones, desktop apps or other servers using the API as service can send request through a simple, secure and efficient JSON HTTPS interface.
+Clients, like web browsers, smartphones, desktop apps can easily integrating model inference API calss with the [AIME API Client Interfaces](https://github.com/aime-team/aime-api-client-interfaces).
 
 
 ## Example Endpoints
 
-To illustrate the usage and capabilities of AIME API we currently run following demo api servers:
+To illustrate the usage and capabilities of AIME API we currently run following demo api services:
 
 ### LLaMa2 Chat
 
@@ -65,7 +65,7 @@ Create photo realistic images from text prompts.
 
 [![AIME Seamless Communication Demo](/docs/images/aime_seamless_communication.jpg "AIME Seamless Communication Demo")](https://api.aime.info/sc-m4tv2/)
 
-Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, Text-to-Speech and Spech-to-Speech! 
+Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, Text-to-Speech and Speech-to-Speech! 
 
 * Demo: [Seamless Communication](https://api.aime.info/sc-m4tv2/)
 * Source: [https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication)
@@ -73,21 +73,28 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 
 ## How to setup and start the AIME API Server
 
-### Virtual Environment
+### Setup the environment
 
-We recommend creating a virtual environment for local development:
+We recommend creating a virtual environment for local development. Create and activate a virtual environment, like 'venv' with:
+
 ```bash
 python -m venv venv
 source ./venv/bin/activate
 ```
 
-Create and activate a virtual environment, like 'venv'. Then install required pip packages:
+Download or clone the api server:
+
+```bash
+git clone https://github.com/aime-team/aime-api-server.git
+```
+
+Then install required pip packages:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Install ffmpeg (required for image and audio conversion)
+### Optional: install ffmpeg (required for image and audio conversion)
 
 Ubuntu/Debian:
 
@@ -103,9 +110,11 @@ To start the API server run:
 python3 run api_server.py [-H HOST] [-p PORT] [-c EP_CONFIG] [--debug]
 ```
 
-The server is started and is reachable at http://localhost:7777 (or the port given). As default it servers this README.md file and the example endpoints defined in the /endpoints directory.
+The server is booting and loading the example endpoints configurations defined in the "/endpoints" directory.
 
-You are now ready to start up compute workers to connect to your API server.
+When started it is reachable at http://localhost:7777 (or the port given). As default this README.md file is serverd. The example endpoints are available and are taking requests.
+
+The server is now ready to connect corresponding compute workers.
 
 
 ## Compute Workers
@@ -153,3 +162,4 @@ We are currently working on sample interfaces for: iOS, Android, Java, PHP, Ruby
 See the full documentation at:
 
 More information at:
+
