@@ -6,7 +6,7 @@ AIME API Server
 
    .. include:: setup.txt
 
-**Start AIME ML API Server:**
+**Start AIME API Server:**
 
    .. include:: examples.txt
 
@@ -20,9 +20,16 @@ AIME API Server
 
 .. toctree::
    :maxdepth: 4
-   :caption: JavaScript Client Interface:
    :hidden:
 
-   Documentation <js_api_client_interface/js_api_client_interface>
-   Usage <js_api_client_interface/examples>
+   api_worker_interface/index_api_worker_interface
 
+.. toctree::
+   :maxdepth: 6
+   :caption: Client Interfaces:
+   :hidden:
+
+   Python <client_interfaces/python_api_client_interface/index_python_api_client_interface>
+   HTTP <client_interfaces/http_interface>
+   JavaScript <client_interfaces/js_api_client_interface/index_js_api_client_interface>
+   More coming soon<client_interfaces/more>
