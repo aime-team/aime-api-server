@@ -1,4 +1,4 @@
-modelAPI = new ModelAPI('stable_diffusion_xl_txt2img');
+const modelAPI = new ModelAPI('stable_diffusion_xl_txt2img');
 
 function onSendAPIRequest() {
     params = new Object({
@@ -32,7 +32,7 @@ function onSendAPIRequest() {
         refine_discretization:  document.getElementById('refine_discretization').value
     });
 
-    prompt_input = document.getElementById('prompt_input').value
+    let prompt_input = document.getElementById('prompt_input').value
     // set default prompts if empty
     // if (prompt_input === '') {
     //     prompt_input = 'Astronaut on Mars During sunset sitting on a giant rubber duck, ultra realistic, 8k, Mirrorless, 28mm lens, f/2.5 aperture, ISO 400, natural daylight'

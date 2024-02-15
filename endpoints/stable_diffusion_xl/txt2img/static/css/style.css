@@ -50,9 +50,9 @@ select.form-select:active,
 textarea:focus,
 .form-input:focus, 
 textarea.form-input:focus {
-    border: 2px solid #F6BE5C;
-    outline: none;
-    --tw-ring-color: transparent;
+    border: 2px solid #F6BE5C !important;
+    outline: none !important;
+    --tw-ring-color: transparent !important;
 }
 button:focus {
     border: none;
