@@ -161,6 +161,6 @@ We are currently working on sample interfaces for: iOS, Android, Java, PHP, Ruby
 
 For more information about the AIME read our blog article about [AIME API](https://www.aime.info/blog).
 
-Or read consult the [AIME API documentation](https://api.aime.info/docs/index.html) at: [/docs/index.html](/docs/index.html)
+Or consult the [AIME API documentation](https://api.aime.info/docs/index.html) at: [/docs/index.html](/docs/index.html)
 
 
