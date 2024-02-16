@@ -1,7 +1,67 @@
  
-Run
+Setup the environment
+^^^^^^^^^^^^^^^^^^^^^
+
+We recommend creating a virtual environment for local development. Create and activate a virtual environment, like 'venv' with:
 
 .. highlight:: shell
 .. code-block:: shell
 
-    git clone 
+    python -m venv venv
+    source ./venv/bin/activate
+
+Download or clone the api server:
+
+.. highlight:: shell
+.. code-block:: shell
+
+    git clone https://github.com/aime-team/aime-api-server.git
+
+Then install required pip packages:
+
+.. highlight:: shell
+.. code-block:: shell
+
+    pip install -r requirements.txt
+
+Optional: install ffmpeg (required for image and audio conversion)
+
+Ubuntu/Debian:
+
+.. highlight:: shell
+.. code-block:: shell
+
+    sudo apt install ffmpeg
+
+ 
+Start the API server
+^^^^^^^^^^^^^^^^^^^^^
+
+To start the API server run:
+
+.. highlight:: shell
+.. code-block:: shell
+
+    python3 run api_server.py [-H HOST] [-p PORT] [-c EP_CONFIG] [--debug]
+
+
+Optional command line parameters:
+
+.. highlight:: shell
+.. code-block:: shell
+
+   [-H, --host]: Host address of AIME ML API Server. Default: '0.0.0.0'
+   
+   [-p, --port]: Port of AIME ML API Server. Default : 7777
+
+   [-s, --server_config]: Destination of server config file. Default: 'model_api_server.cfg'
+
+   [-c, --ep_config]: Destination of endpoint config file or folder. Default: './endpoints'
+
+   [--dev]: Run the server in debug/development mode
+                           
+   [-wp, --worker_processes]: Number of api server worker processes. Default: 1
+
+   [--hide_logging]: Hide logging in console
+
+   [--no_sanic_logger]: Hide sanic logger in console

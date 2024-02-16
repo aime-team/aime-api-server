@@ -1,21 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AIME API Server &mdash; AIME ML API Server 0.1.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>AIME API Server &mdash; AIME API Server 0.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=2389946f"></script>
+        <script src="_static/documentation_options.js?v=486e5634"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -31,7 +33,7 @@
           
           
           <a href="#" class="icon icon-home">
-            AIME ML API Server
+            AIME API Server
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -42,14 +44,18 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="aime_api_server.html">Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Start AIME API Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup &amp; Start API Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aime_api_server.html">Source Documentation</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">JavaScript Client Interface:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="js_api_client_interface/js_api_client_interface.html">Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="js_api_client_interface/examples.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Client Interfaces:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="client_interfaces/python_api_client_interface/index_python_api_client_interface.html">Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_interfaces/http_interface.html">HTTP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_interfaces/js_api_client_interface/index_js_api_client_interface.html">JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_interfaces/more.html">More coming soon</a></li>
 </ul>
 
         </div>
@@ -58,7 +64,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">AIME ML API Server</a>
+          <a href="#">AIME API Server</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -77,43 +83,25 @@
            <div itemprop="articleBody">
              
   <section id="aime-api-server">
-<h1>AIME API Server<a class="headerlink" href="#aime-api-server" title="Permalink to this heading"></a></h1>
-<p><strong>Setup:</strong></p>
-<blockquote>
-<div><p>Run</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone
-</pre></div>
-</div>
-</div></blockquote>
-<p><strong>Start AIME ML API Server:</strong></p>
-<blockquote>
-<div><p>Run</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>run_api_server.py
-</pre></div>
-</div>
-<p>Optional command line parameters:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>-H,<span class="w"> </span>--host<span class="o">]</span>:<span class="w"> </span>Host<span class="w"> </span>address<span class="w"> </span>of<span class="w"> </span>AIME<span class="w"> </span>ML<span class="w"> </span>API<span class="w"> </span>Server.<span class="w"> </span>Default:<span class="w"> </span><span class="s1">&#39;0.0.0.0&#39;</span>
-
-<span class="o">[</span>-p,<span class="w"> </span>--port<span class="o">]</span>:<span class="w"> </span>Port<span class="w"> </span>of<span class="w"> </span>AIME<span class="w"> </span>ML<span class="w"> </span>API<span class="w"> </span>Server.<span class="w"> </span>Default<span class="w"> </span>:<span class="w"> </span><span class="m">7777</span>
-
-<span class="o">[</span>-s,<span class="w"> </span>--server_config<span class="o">]</span>:<span class="w"> </span>Destination<span class="w"> </span>of<span class="w"> </span>server<span class="w"> </span>config<span class="w"> </span>file.<span class="w"> </span>Default:<span class="w"> </span><span class="s1">&#39;model_api_server.cfg&#39;</span>
-
-<span class="o">[</span>-c,<span class="w"> </span>--ep_config<span class="o">]</span>:<span class="w"> </span>Destination<span class="w"> </span>of<span class="w"> </span>endpoint<span class="w"> </span>config<span class="w"> </span>file<span class="w"> </span>or<span class="w"> </span>folder.<span class="w"> </span>Default:<span class="w"> </span><span class="s1">&#39;./endpoints&#39;</span>
-
-<span class="o">[</span>--dev<span class="o">]</span>:<span class="w"> </span>Run<span class="w"> </span>the<span class="w"> </span>server<span class="w"> </span><span class="k">in</span><span class="w"> </span>debug/development<span class="w"> </span>mode
-
-<span class="o">[</span>-wp,<span class="w"> </span>--worker_processes<span class="o">]</span>:<span class="w"> </span>Number<span class="w"> </span>of<span class="w"> </span>api<span class="w"> </span>server<span class="w"> </span>worker<span class="w"> </span>processes.<span class="w"> </span>Default:<span class="w"> </span><span class="m">1</span>
-
-<span class="o">[</span>--hide_logging<span class="o">]</span>:<span class="w"> </span>Hide<span class="w"> </span>logging<span class="w"> </span><span class="k">in</span><span class="w"> </span>console
-
-<span class="o">[</span>--no_sanic_logger<span class="o">]</span>:<span class="w"> </span>Hide<span class="w"> </span>sanic<span class="w"> </span>logger<span class="w"> </span><span class="k">in</span><span class="w"> </span>console
-</pre></div>
-</div>
-</div></blockquote>
+<h1>AIME API Server<a class="headerlink" href="#aime-api-server" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
 </div>
+<div class="toctree-wrapper compound">
+</div>
+<p>With AIME API one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.</p>
+<p>Turn a console Python script to a secure and robust web API acting as your interface to the mobile, browser and desktop world.</p>
+<p>The central part is the AIME API Server, an efficient asynchronous HTTP/HTTPS web server which can be used stand-alone web server or integrated into Apache, NGINX or similar web servers. It takes the client requests, load balances the requests and distributes them to the API compute workers.</p>
+<p><strong>Features</strong></p>
+<ul class="simple">
+<li><p>Fast - asynchronous and multi process API server</p></li>
+<li><p>Scalable &amp; Robust- distributed cluster ready architecture</p></li>
+<li><p>Secure - type safe interface and input validation</p></li>
+<li><p>Easy integratable into exisiting Python and Tensorflow projects</p></li>
+<li><p>High performance image and audio input/ouput conversion for common web formats</p></li>
+<li><p>Pythonic - easily extendable in your favourite programming language</p></li>
+</ul>
 </section>
 
 

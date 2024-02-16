@@ -159,7 +159,7 @@ We are currently working on sample interfaces for: iOS, Android, Java, PHP, Ruby
 
 ## Documentation
 
-See the full documentation at:
+See the [full AIME API documentation](https://api.aime.info/docs/index.html) at: [/docs/index.html](/docs/index.html)
 
 More information at:
 

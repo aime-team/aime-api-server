@@ -2,21 +2,12 @@
 AIME API Server
 ===============
 
-**Setup:**
-
-   .. include:: setup.txt
-
-**Start AIME API Server:**
-
-   .. include:: examples.txt
-
 .. toctree::
    :maxdepth: 1
    :hidden:
 
-   Setup <setup>
-   Documentation <aime_api_server>
-   examples
+   Setup & Start API Server <setup>
+   Source Documentation <aime_api_server>
 
 .. toctree::
    :maxdepth: 4
@@ -33,3 +24,19 @@ AIME API Server
    HTTP <client_interfaces/http_interface>
    JavaScript <client_interfaces/js_api_client_interface/index_js_api_client_interface>
    More coming soon<client_interfaces/more>
+
+
+With AIME API one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.
+
+Turn a console Python script to a secure and robust web API acting as your interface to the mobile, browser and desktop world.
+
+The central part is the AIME API Server, an efficient asynchronous HTTP/HTTPS web server which can be used stand-alone web server or integrated into Apache, NGINX or similar web servers. It takes the client requests, load balances the requests and distributes them to the API compute workers.
+
+**Features**
+
+* Fast - asynchronous and multi process API server
+* Scalable & Robust- distributed cluster ready architecture
+* Secure - type safe interface and input validation
+* Easy integratable into exisiting Python and Tensorflow projects
+* High performance image and audio input/ouput conversion for common web formats
+* Pythonic - easily extendable in your favourite programming language
