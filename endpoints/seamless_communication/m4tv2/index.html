@@ -19,7 +19,7 @@
 </head>
 
 <body>
-    <div class="pl-5 pr-5">
+    <div class="pl-5 pr-5 max-w-7xl mx-auto">
         <div id="top">
             <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Example: Seamless Communication m4tv2</h2>
         </div>
@@ -38,6 +38,7 @@
 								style="height: 66px !important;"
 								placeholder="Enter text for translation..."
 								oninput="updateWordCount()"
+								onkeydown="handleKeyPress(event)"
 					></textarea>
 					<div id="wordCount" class="text-xs text-gray-400 italic">0 words (putput max_seq_len: 1024 subword tokens)</div>
 				</div>
@@ -80,7 +81,7 @@
 					<button id="sendButton" 
 							type="button" 
 							class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" 
-							onclick="onSendAPIRequest();">Translate</button>
+							onclick="onButtonClick();">Translate</button>
 				</div>
 				
 			</form> <!-- /END LEFT COLUMN -->
@@ -105,8 +106,8 @@
 						<label id="num_workers_online" class="text-sm"></label>
 					</div>
 
-					<p class="label mt-5">Info Box</p>
-					<textarea readonly id="infoBox" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm"></textarea>
+					<p class="label mt-5">Console Output</p>
+					<textarea readonly id="infoBox" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm text-aime_blue">>_</textarea>
 
 					<p class="label mt-5">Text Output</p>
 					<textarea readonly id="textOutput" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm"></textarea>
@@ -163,7 +164,7 @@
                         <pre><code class="info-field code language-json rounded">
 		{
 			"success":true,
-			"job_id":"JI...5",
+			"job_id":"JID85",
 			"ep_version":0,
 			"job_state":"processing",
 			"progress":{
@@ -183,7 +184,7 @@
 			"ep_version":0,
 			"job_result":{
 				"success":true,
-				"job_id":"JI...5",
+				"job_id":"JID85",
 				"ep_version":0,
 				"text_output":"Translated text...",
 				"audio_output":"data:audio/wav;base64,UklGR.../2X/cf8=",
@@ -192,19 +193,29 @@
 				"compute_duration":0.2,
 				"total_duration":0.5,
 				"auth":"instance_06_NVIDIA GeForce RTX 3090 Ti_0",
-				"worker_interface_version":"AIME-API-Worker-Interface 0.3.8"},
-				"job_state":"done",
-				"progress":{
-					"progress":0,
-					"estimate":0.54,
-					"queue_position":0,
-					"num_workers_online":1
-				}
+				"worker_interface_version":"AIME-API-Worker-Interface 0.3.8"
+			},
+			"job_state":"done",
+			"progress":{
+				"progress":0,
+				"estimate":0.54,
+				"queue_position":0,
+				"num_workers_online":1
 			}
+		}
                         </code></pre>
                     </div>
 				</div>
 			</div>
+		</div>
+
+		<div class="flex justify-end">
+			<button id="scrollToTopBtn" class="ml-auto bg-aime_green hover:bg-aime_blue active:bg-aime_blue mb-2 p-2 rounded-full cursor-pointer md:hidden">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+					<path fill-rule="evenodd" d="M11.47 10.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 12.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
+					<path fill-rule="evenodd" d="M11.47 4.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 6.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
+				</svg>
+			</button>
 		</div>
 	</div>
 

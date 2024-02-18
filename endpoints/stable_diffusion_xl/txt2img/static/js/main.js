@@ -153,8 +153,6 @@ function disableSendButton() {
       button.disabled = true;
       button.classList.add('disabled:opacity-50');
       button.classList.add('disabled:cursor-not-allowed');
-
-      
     }
 }
 function enableSendButton() {
@@ -281,7 +279,6 @@ function handleKeyPress(event) {
         if(!output_btn.active) {
             output_btn.click();
         }
-        document.getElementById('tab_button_output').click();
         
         // scroll output_section into view when on mobile
         if (window.innerWidth <= 768) {
@@ -296,7 +293,7 @@ function handleKeyPress(event) {
     }
  }
 
- function refreshRangeInputLayout() {
+function refreshRangeInputLayout() {
     const selectLabelElements = document.querySelectorAll('p.select-label');
     selectLabelElements.forEach((selectLabelElement) => {
         const inputElement = selectLabelElement.nextElementSibling;
@@ -366,7 +363,7 @@ window.addEventListener('load', function() {
         //     padding: '2rem',
         //   },
         }
-    }
+    };
     hljs.highlightAll();
 
     const sliderInputs = document.querySelectorAll('.slider-widget input[type="range"]');

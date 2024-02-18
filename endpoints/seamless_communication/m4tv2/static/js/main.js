@@ -383,7 +383,7 @@ function initializeDropZone() {
             <p class="text-grey text-sm font-semibold">(wav, mp3 or ogg)</p>
             <p class="text-grey text-xs mt-2 italic">Or press the record button.</p>
         </div>
-        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="audio/wav, audio/x-wav, audio/mp3, audio/mpeg, audio/ogg, audio/ogg; codecs=vorbis">
+        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="audio/wav, audio/x-wav, audio/mp3, audio/mp4, audio/mpeg, audio/ogg, audio/ogg; codecs=vorbis">
     `; // Audio MIME Types to handle: audio/mp3, audio/mpeg, audio/wav, audio/x-wav, audio/aac, audio/ogg, audio/flac, audio/amr, audio/x-ms-wma
     document.getElementById('dropzone').insertAdjacentElement('afterbegin', dropzone);
 
@@ -476,18 +476,31 @@ function onButtonClick() {
         disableSendButton();
         addSpinner();
 
+        // set Tabs to output section
+        const output_btn =  document.getElementById('tab_button_output');
+        if(!output_btn.active) {
+            output_btn.click();
+        }
+
         // scroll output_section into view when on mobile
         if (window.innerWidth <= 768) {
             const outputElement = document.getElementById('output_section');
             if (outputElement) {
                 outputElement.scrollIntoView({ behavior: 'smooth', block: "start" });
-                // window.scrollTo({ top: outputElement.offsetTop, left: 0, behavior: 'smooth' });
+                window.scrollTo({ top: outputElement.offsetTop, left: 0, behavior: 'smooth' });
             }
         }
 
         onSendAPIRequest();
     }
 }
+
+function handleKeyPress(event) {
+    if (event && event.keyCode === 13) {
+        event.preventDefault();
+        onButtonClick();
+    }
+ }
 
 window.addEventListener('load', function() {
     // Styling with Tailwind CSS
@@ -508,22 +521,22 @@ window.addEventListener('load', function() {
                     'aime_red': '#D55151',
                     'aime_orange': '#F6BE5C',
                     'aime_green': '#CBE4C9'
-            },
-            'animation': {
-                'blink': 'blink 4s infinite ease-in-out',
-              },
-              'keyframes': {
-                'blink': {
-                  '0%, 50%, 100%': { 'opacity': 1 },
-                  '25%, 75%': { 'opacity': 0.6 },
                 },
-              },
-        },
+                'animation': {
+                    'blink': 'blink 4s infinite ease-in-out',
+                },
+                'keyframes': {
+                    'blink': {
+                    '0%, 50%, 100%': { 'opacity': 1 },
+                    '25%, 75%': { 'opacity': 0.6 },
+                    },
+                },
+            },
         //   container: {
         //     padding: '2rem',
         //   },
         }
-    }
+    };
     hljs.highlightAll();
 
     populateDropdowns();
@@ -539,7 +552,17 @@ window.addEventListener('load', function() {
                 onButtonClick();
             }
         }
-      });
+    });
+    
+    document.getElementById('scrollToTopBtn').addEventListener('click', function() {
+        // document.body.scrollTop = 0; // For Safari
+        // document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE, and Opera
+        var textarea = document.getElementById('textInput');
+        textarea.scrollIntoView({ behavior: 'smooth', block: "start" });
+        window.scrollTo({ top: textarea.offsetTop, left: 0, behavior: 'smooth' });
+        textarea.focus();
+        textarea.select();
+    });
 
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');

@@ -19,7 +19,11 @@ select {
     border-color: #efefef !important;
     background-color: #dae5d957 !important;
 }
-.form-input, .form-textarea, .form-select, .form-multiselect {
+
+.form-input, 
+.form-textarea, 
+.form-select, 
+.form-multiselect {
     border-color: #cbe4c9 !important;
 }
 
@@ -126,8 +130,8 @@ button:focus {
 #radio-group label {
     font-size: .85rem !important;
 }
+
 #info_box {
-    color: #bbb;
     background-color: #f2f6f2;
     font-size: 80%;
     line-height: 1.2;
