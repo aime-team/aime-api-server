@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentation AIME API Client Interface &mdash; AIME API Server 0.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=486e5634"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Examples Python API Client Interface" href="examples.html" />
+    <link rel="prev" title="Setup Python API Client Interface" href="setup.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            AIME API Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../setup.html">Setup &amp; Start API Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../aime_api_server.html">Source Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Client Interfaces:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index_python_api_client_interface.html">Python</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Documentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#aime_api_client_interface.ModelAPI"><code class="docutils literal notranslate"><span class="pre">ModelAPI</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.api_server"><code class="docutils literal notranslate"><span class="pre">ModelAPI.api_server</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.endpoint_name"><code class="docutils literal notranslate"><span class="pre">ModelAPI.endpoint_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.client_session_auth_key"><code class="docutils literal notranslate"><span class="pre">ModelAPI.client_session_auth_key</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.do_api_login_async"><code class="docutils literal notranslate"><span class="pre">ModelAPI.do_api_login_async()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.do_api_login"><code class="docutils literal notranslate"><span class="pre">ModelAPI.do_api_login()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.do_api_request_async"><code class="docutils literal notranslate"><span class="pre">ModelAPI.do_api_request_async()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.do_api_request"><code class="docutils literal notranslate"><span class="pre">ModelAPI.do_api_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.setup_session"><code class="docutils literal notranslate"><span class="pre">ModelAPI.setup_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.close_session"><code class="docutils literal notranslate"><span class="pre">ModelAPI.close_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.check_if_valid_base64_string"><code class="docutils literal notranslate"><span class="pre">ModelAPI.check_if_valid_base64_string()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.get_version"><code class="docutils literal notranslate"><span class="pre">ModelAPI.get_version()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#aime_api_client_interface.do_api_request_async"><code class="docutils literal notranslate"><span class="pre">do_api_request_async()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#aime_api_client_interface.do_api_request"><code class="docutils literal notranslate"><span class="pre">do_api_request()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../http_interface.html">HTTP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../js_api_client_interface/index_js_api_client_interface.html">JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../more.html">More coming soon</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">AIME API Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index_python_api_client_interface.html">Python API Client Interface</a></li>
+      <li class="breadcrumb-item active">Documentation AIME API Client Interface</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/client_interfaces/python_api_client_interface/python_api_client_interface.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="documentation-aime-api-client-interface">
+<h1>Documentation AIME API Client Interface<a class="headerlink" href="#documentation-aime-api-client-interface" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aime_api_client_interface.</span></span><span class="sig-name descname"><span class="pre">ModelAPI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'base64'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI" title="Link to this definition"></a></dt>
+<dd><p>An interface for interacting with the AIME ML API server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>api_server</strong> (<em>str</em>) – The base URL of the API server.</p></li>
+<li><p><strong>endpoint_name</strong> (<em>str</em>) – The name of the API endpoint.</p></li>
+<li><p><strong>session</strong> (<em>aiohttp.ClientSession</em>) – Give existing session to ModelApi API to make login request in given session. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.api_server">
+<span class="sig-name descname"><span class="pre">api_server</span></span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.api_server" title="Link to this definition"></a></dt>
+<dd><p>The base URL of the API server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.endpoint_name">
+<span class="sig-name descname"><span class="pre">endpoint_name</span></span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.endpoint_name" title="Link to this definition"></a></dt>
+<dd><p>The name of the specific API endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.client_session_auth_key">
+<span class="sig-name descname"><span class="pre">client_session_auth_key</span></span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.client_session_auth_key" title="Link to this definition"></a></dt>
+<dd><p>The authentication key for the client session, obtained from do_api_login.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<p>Synchronous with progress callback:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">python_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
+
+<span class="k">def</span> <span class="nf">progress_callback</span><span class="p">(</span><span class="n">progress_info</span><span class="p">,</span> <span class="n">progress_data</span><span class="p">):</span>
+    <span class="n">process_progress_info</span><span class="p">(</span><span class="n">progress_info</span><span class="p">)</span>
+    <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
+
+<span class="n">model_api</span> <span class="o">=</span> <span class="n">ModelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">)</span>
+<span class="n">model_api</span><span class="o">.</span><span class="n">do_api_login</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<span class="n">result_2</span> <span class="o">=</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>Asynchronous with asynchronous callbacks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">python_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">result_callback</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+    <span class="k">await</span> <span class="n">process_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">progress_callback</span><span class="p">(</span><span class="n">progress_info</span><span class="p">,</span> <span class="n">progress_data</span><span class="p">):</span>
+    <span class="k">await</span> <span class="n">process_progress_info</span><span class="p">(</span><span class="n">progress_info</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">progress_error_callback</span><span class="p">(</span><span class="n">error_description</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">error_description</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">model_api</span> <span class="o">=</span> <span class="n">modelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_login</span><span class="p">()</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
+    <span class="n">result2</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
+    <span class="o">...</span>
+    <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">close_session</span><span class="p">()</span>
+
+<span class="n">asynchio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Asynchronous with synchronous callbacks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">python_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
+
+<span class="n">sync</span> <span class="k">def</span> <span class="nf">result_callback</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+    <span class="n">process_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">progress_callback</span><span class="p">(</span><span class="n">progress_info</span><span class="p">,</span> <span class="n">progress_data</span><span class="p">):</span>
+    <span class="n">process_progress_info</span><span class="p">(</span><span class="n">progress_info</span><span class="p">)</span>
+    <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">progress_error_callback</span><span class="p">(</span><span class="n">error_description</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">error_description</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">model_api</span> <span class="o">=</span> <span class="n">modelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_login</span><span class="p">()</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
+    <span class="n">result2</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
+    <span class="o">...</span>
+    <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">close_session</span><span class="p">()</span>
+
+<span class="n">asynchio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.do_api_login_async">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">do_api_login_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.do_api_login_async" title="Link to this definition"></a></dt>
+<dd><p>Asynchronous client login to API server and obtain an authentication key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result_callback</strong> (<em>callable</em><em> or </em><em>coroutine</em>) – Callback function or coroutine with the obtained client_session_auth_key as argument.
+Accepts synchronous functions and asynchrouns couroutines. Defaults to None.</p></li>
+<li><p><strong>error_callback</strong> (<em>callable</em><em> or </em><em>coroutine</em>) – Accepts synchronous functions and asynchrouns couroutines. Prevents ConnectionError. Defaults to None.</p></li>
+<li><p><strong>session</strong> (<em>aiohttp.ClientSession</em>) – Give existing session to ModelApi API to make login request in given session. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ConnectionError</strong> – If there is a connection issue with the API server and no error_callback given.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Client session authentication key</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.do_api_login">
+<span class="sig-name descname"><span class="pre">do_api_login</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.do_api_login" title="Link to this definition"></a></dt>
+<dd><p>Client login to API server and obtain an authentication key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ConnectionError</strong> – If there is a connection issue with the API server.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Client session authentication key</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.do_api_request_async">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">do_api_request_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_stream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'base64'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.do_api_request_async" title="Link to this definition"></a></dt>
+<dd><p>Do an asynchronous API request with optional progress data via asynchronous or synchronous callbacks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionary with parameters for the the API request like ‘prompt’ or ‘image’.</p></li>
+<li><p><strong>result_callback</strong> (<em>callable</em><em> or </em><em>coroutine</em><em>, </em><em>optional</em>) – Callback function or coroutine with argument result (dict) to handle the API request result.
+Accepts synchronous functions and asynchrouns couroutines. Defaults to None</p></li>
+<li><p><strong>progress_callback</strong> (<em>callable</em><em> or </em><em>coroutine</em><em>, </em><em>optional</em>) – Callback function or coroutine with arguments progress_info (dict) and
+progress_data (dict) for tracking progress. Accepts synchronous functions and asynchrouns couroutines. Default is None.</p></li>
+<li><p><strong>request_error_callback</strong> (<em>callable</em><em> or </em><em>coroutine</em><em>, </em><em>optional</em>) – Callback function or coroutine with argument error_description (str)
+for catching request errors. Accepts synchronous functions and asynchrouns couroutines.
+Prevents ConnectionError and PermissionError. Defaults to None.</p></li>
+<li><p><strong>progress_error_callback</strong> (<em>callable</em><em> or </em><em>coroutine</em><em>, </em><em>optional</em>) – Callback function or coroutine with argument error_description (str) for catching
+progress errors with successful initial request. Accepts synchronous functions and asynchrouns couroutines.
+Prevents ConnectionErrors during Transmitting. Defaults to None.</p></li>
+<li><p><strong>progress_interval</strong> (<em>int</em><em>, </em><em>optional</em>) – Interval in seconds at which progress is checked. Default is {DEFAULT_PROGRESS_INTERVAL}.</p></li>
+<li><p><strong>progress_stream</strong> (<em>bool</em><em>, </em><em>optional</em>) – Not implemented yet</p></li>
+<li><p><strong>session</strong> (<em>aiohttp.ClientSession</em>) – Give existing session to ModelApi API to make login request in given session. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ConnectionError</strong> – Raised if client couldn’t connect with API sserver and no request_error_callback is given. Also raised if client lost
+    connection during transmitting and no progress_error_callback is given.</p></li>
+<li><p><strong>PermissionError</strong> – Raised if client is not logged in the API server and no error_callback given.</p></li>
+<li><p><strong>NotImplementedError</strong> – If progress_stream != None.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary with job results</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Example job result dict in result callback argument or return value:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;auth&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;name_of_worker&gt;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;compute_duration&#39;</span><span class="p">:</span> <span class="mf">2.4</span><span class="p">,</span>
+    <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image/PNG;base64,...&#39;</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="mi">1234413214</span><span class="p">,</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test output...&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;total_duration&#39;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example progress_callback arguments progress_info and progress_data dictionaries:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_info</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;estimate&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span>
+<span class="p">}</span>
+<span class="n">progress_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;info&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;infos from worker about progress&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image/PNG;base64,...&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test outpu...&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.do_api_request">
+<span class="sig-name descname"><span class="pre">do_api_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_stream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.do_api_request" title="Link to this definition"></a></dt>
+<dd><p>Do an synchronous API request with optional progress data via callbacks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionary with parameters for the the API request like ‘prompt’ or ‘image’</p></li>
+<li><p><strong>progress_callback</strong> (<em>callable</em><em>, </em><em>optional</em>) – Callback function or coroutine with arguments  progress_info (dict) and
+progress_data (dict) for receiving progress data. Defaults to None.</p></li>
+<li><p><strong>progress_error_callback</strong> (<em>callable</em><em>, </em><em>optional</em>) – Callback function or coroutine with argument error_description (str) for catching
+progress errors with successful initial request. Prevents ConnectionErrors during Transmitting. Defaults to None.</p></li>
+<li><p><strong>progress_interval</strong> (<em>int</em><em>, </em><em>optional</em>) – Interval in seconds at which progress is checked. Default is 300.</p></li>
+<li><p><strong>progress_stream</strong> (<em>int</em><em>, </em><em>optional</em>) – Not implemented yet</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ConnectionError</strong> – Raised if client couldn’t connect with API server. Also raised if client lost connection during transmitting
+    and no progress_error_callback given.</p></li>
+<li><p><strong>PermissionError</strong> – Raised if client is not logged in the API server</p></li>
+<li><p><strong>NotImplementedError</strong> – If progress_stream != None</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary with request result parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Example job result dict:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;auth&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;name_of_worker&gt;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;compute_duration&#39;</span><span class="p">:</span> <span class="mf">2.4</span><span class="p">,</span>
+    <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image/PNG;base64,...&#39;</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="mi">1234413214</span><span class="p">,</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test output...&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;total_duration&#39;</span><span class="p">:</span> <span class="mi">2</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example progress_callback arguments progress_info and progress_data dictionaries:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_info</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;estimate&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span>
+<span class="p">}</span>
+<span class="n">progress_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;info&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;infos from worker about progress&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image/PNG;base64,...&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test outpu...&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.setup_session">
+<span class="sig-name descname"><span class="pre">setup_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.setup_session" title="Link to this definition"></a></dt>
+<dd><p>Open a new session if session is</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>session</strong> (<em>aiohttp.ClientSession</em>) – Give existing session to ModelApi API to make upcoming requests in given session.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.close_session">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">close_session</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.close_session" title="Link to this definition"></a></dt>
+<dd><p>Close the aiohttp client session saved in ModelApi().session.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.check_if_valid_base64_string">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_if_valid_base64_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_string</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.check_if_valid_base64_string" title="Link to this definition"></a></dt>
+<dd><p>Check if given string is a valid base64-encoded string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>test_string</strong> (<em>str</em>) – The string to test.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the string is a valid base64-encoded string, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.get_version">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.get_version" title="Link to this definition"></a></dt>
+<dd><p>Parses name and version of AIME API Client Interface with pkg_resources</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Name and version of AIME API Client Interface</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aime_api_client_interface.do_api_request_async">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aime_api_client_interface.</span></span><span class="sig-name descname"><span class="pre">do_api_request_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.do_api_request_async" title="Link to this definition"></a></dt>
+<dd><p>A simplified interface for making a single asynchronous API request with do_api_login included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>api_server</strong> (<em>str</em>) – The address of the API server.</p></li>
+<li><p><strong>endpoint_name</strong> (<em>str</em>) – The name of the API endpoint.</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Parameters for the API request.</p></li>
+<li><p><strong>result_callback</strong> (<em>callback</em><em>, </em><em>optional</em>) – Callback function with argument result (dict) to handle the API request result. Defaults to None.</p></li>
+<li><p><strong>progress_callback</strong> (<em>callback</em><em>, </em><em>optional</em>) – Callback function with arguments progress_info (dict). Defaults to None.
+and progress_data (dict) for tracking progress. Defaults to None.</p></li>
+<li><p><strong>request_error_callback</strong> (<em>callback</em><em>, </em><em>optional</em>) – Callback function with arguments error_description (str)
+for catching request errors. Defaults to None.</p></li>
+<li><p><strong>progress_error_callback</strong> (<em>callable</em><em> or </em><em>coroutine</em><em>, </em><em>optional</em>) – Callback function with arguments error_description (str) for catching
+progress errors with successful initial request. Accepts synchronous functions and asynchrouns couroutines. Defaults to None.</p></li>
+<li><p><strong>session</strong> (<em>aiohttp.ClientSession</em>) – Give existing session to ModelApi API to make login request in given session. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with request result parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ConnectionError</strong> – Raised if client couldn’t connect with API server and no request_error_callback is given. Also raised if client lost connection during transmitting
+    and no progress_error_callback is given.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Example usage with synchronous callbacks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+
+<span class="k">def</span> <span class="nf">result_callback</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+    <span class="n">process_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">progress_callback</span><span class="p">(</span><span class="n">progress_info</span><span class="p">,</span> <span class="n">progress_data</span><span class="p">):</span>
+    <span class="n">process_progress_info</span><span class="p">(</span><span class="n">progress_info</span><span class="p">)</span>
+    <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
+
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">}),</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Example usage with asynchronous callbacks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">result_callback</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+    <span class="k">await</span> <span class="n">process_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">progress_callback</span><span class="p">(</span><span class="n">progress_info</span><span class="p">,</span> <span class="n">progress_data</span><span class="p">):</span>
+    <span class="k">await</span> <span class="n">process_progress_info</span><span class="p">(</span><span class="n">progress_info</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
+
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">}),</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Example progress result dictionary at start:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_result</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;job_state&#39;</span><span class="p">:</span> <span class="s1">&#39;processing&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example progress result dictionary while processing:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_result</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;job_state&#39;</span><span class="p">:</span> <span class="s1">&#39;processing&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="s1">&#39;progress_data&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;base64-string&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test output&#39;</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example progress_result dictionaries when finished:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_result</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;job_result&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;auth&#39;</span><span class="p">:</span> <span class="s1">&#39;neo07_GPU0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;compute_duration&#39;</span><span class="p">:</span> <span class="mf">2.4</span><span class="p">,</span>
+        <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image...&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test outpu...&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;total_duration&#39;</span><span class="p">:</span> <span class="mf">2.5</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;job_state&#39;</span><span class="p">:</span> <span class="s1">&#39;done&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="s1">&#39;progress_data&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image...&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test outpu...&#39;</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aime_api_client_interface.do_api_request">
+<span class="sig-prename descclassname"><span class="pre">aime_api_client_interface.</span></span><span class="sig-name descname"><span class="pre">do_api_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.do_api_request" title="Link to this definition"></a></dt>
+<dd><p>A simplified interface for making a single synchronous API request with do_api_login included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>api_server</strong> (<em>str</em>) – Address of API server</p></li>
+<li><p><strong>endpoint_name</strong> (<em>str</em>) – Name of endpoint</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionary with api request parameters</p></li>
+<li><p><strong>progress_callback</strong> (<em>callback</em><em>, </em><em>optional</em>) – Callback function with arguments progress_info (dict)
+and progress_data (dict) for tracking progress. Defaults to None.</p></li>
+<li><p><strong>progress_error_callback</strong> (<em>callback</em><em>, </em><em>optional</em>) – Callback function with argument error_description (str)
+called if request was successfull but progress got errors. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with request result parameters</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ConnectionError</strong> – Raised if client couldn’t connect with API server. Also raised if client lost connection during transmitting
+    and no progress_error_callback is given.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Example usage with progress and progress_error_callback:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+
+<span class="k">def</span> <span class="nf">progress_callback</span><span class="p">(</span><span class="n">progress_info</span><span class="p">,</span> <span class="n">progress_data</span><span class="p">):</span>
+    <span class="n">process_progress_info</span><span class="p">(</span><span class="n">progress_info</span><span class="p">)</span>
+    <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">progress_error_callback</span><span class="p">(</span><span class="n">error_description</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">}),</span> <span class="n">progress_callback</span><span class="p">,</span> <span class="n">progress_error_callback</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example progress result dictionary at start:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_result</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;job_state&#39;</span><span class="p">:</span> <span class="s1">&#39;processing&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example progress result dictionary while processing:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_result</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;job_state&#39;</span><span class="p">:</span> <span class="s1">&#39;processing&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="s1">&#39;progress_data&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;base64-string&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test output&#39;</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Example progress_result dictionaries when finished:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_result</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;job_result&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;auth&#39;</span><span class="p">:</span> <span class="s1">&#39;neo07_GPU0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;compute_duration&#39;</span><span class="p">:</span> <span class="mf">2.4</span><span class="p">,</span>
+        <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image...&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test outpu...&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;total_duration&#39;</span><span class="p">:</span> <span class="mf">2.5</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;job_state&#39;</span><span class="p">:</span> <span class="s1">&#39;done&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID6&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="s1">&#39;progress_data&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image...&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test outpu...&#39;</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="setup.html" class="btn btn-neutral float-left" title="Setup Python API Client Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="Examples Python API Client Interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, AIME GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

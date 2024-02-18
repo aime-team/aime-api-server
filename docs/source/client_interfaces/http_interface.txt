@@ -1,0 +1,137 @@
+
+
+
+Example parameter for login request on route /get_client_session_auth_key
+
+.. highlight:: python
+.. code-block:: python
+
+    params = {
+        'endpoint_name': 'llama2_chat', 
+        'version': 'Client interface version'
+    }
+
+Example response json on route /get_client_session_auth_key
+
+.. highlight:: python
+.. code-block:: python
+
+    response_json = {
+        'client_session_auth_key': '7511a186-b0c6-4901-b228-68faea2b07f4'
+    }
+
+
+Example parameter for http request on route /endpoint
+
+.. highlight:: python
+.. code-block:: python
+
+    params = {
+        'prompt': 'prompt',
+        'client_session_auth_key': 'obtained auth key from /get_client_session_auth_key',
+        'wait_for_result': False
+    }
+
+
+
+Example response json for http request on route /endpoint if param 'wait_for_result': True
+
+.. highlight:: python
+.. code-block:: python
+    
+    final_result = {
+        'success': True,
+        'job_id': 'JID1',
+        'images': ['data:image/JPEG;base64,/9j/4AA...'],
+        'text': 'Test output...',
+        'seed': 26262303,
+        'prompt': 'cat',
+        'compute_duration': 8.2,
+        'total_duration': 47.8,
+        'auth': 'neo07_NVIDIA A100-SXM4-40GB_0',
+        'worker_interface_version': 'API-Worker-Interface 0.3.5'
+    }
+
+Example response json for http request on route /endpoint if param 'wait_for_result': False
+
+.. highlight:: python
+.. code-block:: python
+    
+    response_json = {
+        'success': True, 
+        'job_id': 'JID01'
+    }
+    
+
+Example parameter for http request on route /endpoint/progress
+
+.. highlight:: python
+.. code-block:: python
+
+    params = {
+        'client_session_auth_key': 'obtained auth key from /get_client_session_auth_key', 
+        'job_id': 'job id obtained from /endpoint'
+    }
+
+Example response json for http request on route /endpoint/progress dictionary at start:
+
+.. highlight:: python
+.. code-block:: python
+
+    progress_result = {
+        'job_id': 'JID1',
+        'job_state': 'processing',
+        'progress': {
+            'progress': 0, 
+            'queue_position': 0
+        },
+        'success': True
+    }
+
+Example response json for http request on route /endpoint/progress dictionary while processing:
+
+.. highlight:: python
+.. code-block:: python
+
+    progress_result = {
+        'job_id': 'JID1',
+        'job_state': 'processing',
+        'progress': {
+            'job_id': 'JID1', 
+            'progress': 50,
+            'progress_data': {
+                'images': ['base64-string', 'base64-string', ...]
+                'text': 'Test output'
+            },
+            'queue_position': 0
+        },
+        'success': True
+    }
+
+Example response json for http request on route /endpoint/progress dictionary when job finished:
+
+.. highlight:: python
+.. code-block:: python
+
+    progress_result = {
+        'job_id': 'JID1',
+        'job_result': {
+            'auth': 'worker_name',
+            'compute_duration': 2.4,
+            'images': ['base64-string', 'base64-string', ...]
+            'text': 'Test outpu...',
+            'total_duration': 2.5,
+            'worker_interface_version': 'API-Worker-Interface 0.3.5'
+        },
+        'job_state': 'done',
+        'progress': {
+            'job_id': 'JID1',
+            'progress': 100,
+            'progress_data': {
+                'images': ['base64-string', 'base64-string', ...]
+                'text': 'Test outpu...'
+            },
+            'queue_position': 0
+        },
+        'success': True
+    }

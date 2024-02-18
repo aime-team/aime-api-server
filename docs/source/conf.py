@@ -9,12 +9,15 @@
 import os 
 import sys 
 sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('../../api_client_interfaces/python'))
+sys.path.insert(0, os.path.abspath('../../api_worker_interface'))
+
 js_source_path = '../../frontend/static/js'
 
-project = 'AIME ML API Server'
+project = 'AIME API Server'
 copyright = '2023, AIME GmbH'
 author = 'AIME GmbH'
-release = '0.1.0'
+release = '0.8.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

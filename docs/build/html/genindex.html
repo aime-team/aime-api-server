@@ -1,20 +1,22 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; AIME ML API Server 0.1.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Index &mdash; AIME API Server 0.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=2389946f"></script>
+        <script src="_static/documentation_options.js?v=486e5634"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -29,7 +31,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            AIME ML API Server
+            AIME API Server
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -40,14 +42,18 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="aime_api_server.html">Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Start AIME API Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup &amp; Start API Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aime_api_server.html">Source Documentation</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">JavaScript Client Interface:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="js_api_client_interface/js_api_client_interface.html">Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="js_api_client_interface/examples.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Client Interfaces:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="client_interfaces/python_api_client_interface/index_python_api_client_interface.html">Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_interfaces/http_interface.html">HTTP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_interfaces/js_api_client_interface/index_js_api_client_interface.html">JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_interfaces/more.html">More coming soon</a></li>
 </ul>
 
         </div>
@@ -56,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">AIME ML API Server</a>
+          <a href="index.html">AIME API Server</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -78,12 +84,16 @@
 
 <div class="genindex-jumpbox">
  <a href="#A"><strong>A</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#J"><strong>J</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#S"><strong>S</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
@@ -95,11 +105,65 @@
 </li>
       <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.api_request">api_request() (api_server.api_endpoint.APIEndpoint method)</a>
 </li>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.api_server">api_server (aime_api_client_interface.ModelAPI attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint">APIEndpoint (class in api_server.api_endpoint)</a>
 </li>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer">APIServer (class in api_server.api_server)</a>
+</li>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface">APIWorkerInterface (class in aime_api_worker_interface)</a>
+</li>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.async_check_server_connection">async_check_server_connection() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.check_if_valid_base64_string">check_if_valid_base64_string() (aime_api_client_interface.ModelAPI static method)</a>
+</li>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.check_periodically_if_server_online">check_periodically_if_server_online() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.client_session_auth_key">client_session_auth_key (aime_api_client_interface.ModelAPI attribute)</a>
+</li>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.close_session">close_session() (aime_api_client_interface.ModelAPI method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.do_api_login">do_api_login() (aime_api_client_interface.ModelAPI method)</a>
+</li>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.do_api_login_async">do_api_login_async() (aime_api_client_interface.ModelAPI method)</a>
+</li>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.do_api_request">do_api_request() (aime_api_client_interface.ModelAPI method)</a>
+
+      <ul>
+        <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.do_api_request">(in module aime_api_client_interface)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.do_api_request_async">do_api_request_async() (aime_api_client_interface.ModelAPI method)</a>
+
+      <ul>
+        <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.do_api_request_async">(in module aime_api_client_interface)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.endpoint_name">endpoint_name (aime_api_client_interface.ModelAPI attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -117,16 +181,24 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="aime_api_server.html#api_server.job_queue.JobQueue.get">get() (api_server.job_queue.JobQueue method)</a>
 </li>
-      <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_client_session_auth_key">get_client_session_auth_key() (api_server.api_server.APIServer method)</a>
+      <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.get_client_session_auth_key">get_client_session_auth_key() (api_server.api_endpoint.APIEndpoint method)</a>
 </li>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_endpoint_descriptions">get_endpoint_descriptions() (api_server.api_server.APIServer method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_http_methods">get_http_methods() (api_server.api_server.APIServer method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_param_config">get_param_config() (api_server.api_server.APIServer method)</a>
 </li>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_pnginfo_metadata">get_pnginfo_metadata() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.get_version">get_version() (aime_api_client_interface.ModelAPI static method)</a>
+
+      <ul>
+        <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_version">(aime_api_worker_interface.APIWorkerInterface static method)</a>
+</li>
+      </ul></li>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_worker_params">get_worker_params() (api_server.api_server.APIServer method)</a>
 </li>
   </ul></td>
@@ -135,10 +207,12 @@
 <h2 id="J">J</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="aime_api_server.html#api_server.job_queue.JobQueue">JobQueue (class in api_server.job_queue)</a>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.job_request">job_request() (aime_api_worker_interface.APIWorkerInterface method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="aime_api_server.html#api_server.job_queue.JobQueue">JobQueue (class in api_server.job_queue)</a>
+</li>
       <li><a href="aime_api_server.html#api_server.job_queue.JobState">JobState (class in api_server.job_queue)</a>
 </li>
   </ul></td>
@@ -155,21 +229,23 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="js_api_client_interface/js_api_client_interface.html#ModelAPI">ModelAPI() (class)</a>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI">ModelAPI (class in aime_api_client_interface)</a>
 </li>
-      <li><a href="js_api_client_interface/js_api_client_interface.html#ModelAPI.doAPILogin">ModelAPI.doAPILogin() (ModelAPI method)</a>
+      <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI">ModelAPI() (class)</a>
 </li>
-      <li><a href="js_api_client_interface/js_api_client_interface.html#ModelAPI.doAPIRequest">ModelAPI.doAPIRequest() (ModelAPI method)</a>
+      <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.doAPILogin">ModelAPI.doAPILogin() (ModelAPI method)</a>
+</li>
+      <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.doAPIRequest">ModelAPI.doAPIRequest() (ModelAPI method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="js_api_client_interface/js_api_client_interface.html#ModelAPI.fetchAsync">ModelAPI.fetchAsync() (ModelAPI method)</a>
+      <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.fetchAsync">ModelAPI.fetchAsync() (ModelAPI method)</a>
 </li>
-      <li><a href="js_api_client_interface/js_api_client_interface.html#ModelAPI.fetchAuthKey">ModelAPI.fetchAuthKey() (ModelAPI method)</a>
+      <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.fetchAuthKey">ModelAPI.fetchAuthKey() (ModelAPI method)</a>
 </li>
-      <li><a href="js_api_client_interface/js_api_client_interface.html#ModelAPI.pollProgress">ModelAPI.pollProgress() (ModelAPI method)</a>
+      <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.pollProgress">ModelAPI.pollProgress() (ModelAPI method)</a>
 </li>
-      <li><a href="js_api_client_interface/js_api_client_interface.html#ModelAPI.setupProgressStream">ModelAPI.setupProgressStream() (ModelAPI method)</a>
+      <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.setupProgressStream">ModelAPI.setupProgressStream() (ModelAPI method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -177,7 +253,25 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.progress_data_received">progress_data_received (aime_api_worker_interface.APIWorkerInterface attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="aime_api_server.html#api_server.job_queue.JobQueue.put">put() (api_server.job_queue.JobQueue method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.send_job_results">send_job_results() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.send_progress">send_progress() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.setup_session">setup_session() (aime_api_client_interface.ModelAPI method)</a>
 </li>
   </ul></td>
 </tr></table>

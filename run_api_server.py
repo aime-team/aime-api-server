@@ -4,11 +4,11 @@ from api_server.api_server import APIServer
 from api_server.flags import Flags
 
 
-
 flags = Flags()
 args = flags.args
-API_NAME = "aime_model_api"
+API_NAME = "AIME_API_Server"
 app = APIServer(API_NAME, args)
+
 
 # create sessions
 session = Session(app, interface=InMemorySessionInterface())
