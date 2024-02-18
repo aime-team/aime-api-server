@@ -3,8 +3,7 @@ modelAPI = new ModelAPI('llama2_chat');
 var inputContext = 'A dialog, where User interacts with an helpful, kind, obedient, honest and very reasonable assistant called Dave.\n';
 let readyToSendRequest = true;
 let chatboxContentEl;
-let chatLogTextarea = document.getElementById('chat_log'); // TO BE REMOVED
-let info_box = document.getElementById('info_box');
+let info_box;
  
 function onSendAPIRequest() {
 	let chatInput = document.getElementById('chat_input');
@@ -21,10 +20,6 @@ function onSendAPIRequest() {
 	params.temperature = parseFloat(document.getElementById('temperature_range').value);
 	params.seed = parseInt(document.getElementById('seed').value);
 
-    // TODO: aus aktuellem return-Text die chatblasen basteln
-    // ...
-    // chatboxContentEl. ...
-    
     addChatboxBubble(chatInput.value, `Seed: ${params.seed} | TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`, true);
     addResponseBubble();
     chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
@@ -55,7 +50,6 @@ function onProgressCallback(progressInfo, progressData) {
 
 function onResultCallback(data) {
 	enableSendButton();
-    // removeSpinner();
     readyToSendRequest = true;
 
 	infoBox = document.getElementById('info_box');
@@ -86,40 +80,14 @@ function onResultCallback(data) {
 
     refreshResponseBubble(data.text, `Duration: ${data.total_duration} | Tokens: ${data.num_generated_tokens} | Tokens per second: ${tokensPerSec.toFixed(1)}`)
 
-    // TODO: aufhübschen durch HTML -> mini-markup, z.B. Auflistungen erkennen, Formatierungen (<strong>, italic) usw.?
+    // TODO: Content aufhübschen durch HTML -> mini-markup, z.B. Auflistungen erkennen, Formatierungen (<strong>, italic) usw.?
     // ...
 
     // TODO: Download des Dialogs als PDF anbieten
     // ...
 
-    // const dialogParts = extractDialogParts(data.text);
-    // console.log("Dave-Teile:", dialogParts.text_dave);
-    // console.log("User-Teile:", dialogParts.text_user);
-
-    console.log('text:' + data.text);
 	chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
 };
-
-function addSpinner() {
-    var spinner = document.createElement('div');
-        spinner.id = 'process-spinner';
-        spinner.className = 'animate-spin mr-2';
-        spinner.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-aime_orange">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-            </svg>
-        `;
-        const button = document.getElementById('chat_send');
-        if (button) {
-            button.parentNode.insertBefore(spinner, button);
-        }
-}
-function removeSpinner() {
-    const spinner  = document.getElementById('process-spinner');
-    if(spinner) {
-        spinner.remove();
-    }
-}
 
 function disableSendButton() {
     const button = document.getElementById('chat_send');
@@ -184,7 +152,6 @@ function onButtonClick() {
         info_box.textContent = 'Request sent.\nWaiting for response...';
 
         disableSendButton();
-        // addSpinner();
 
         // set Tabs to output section
         const output_btn =  document.getElementById('tab_button_output');
@@ -283,36 +250,6 @@ function onButtonClick() {
     return resultText;
  }
 
- function extractDialogParts(text) {
-    const dialogParts = {
-        text_dave: [],
-        text_user: []
-    };
-    const startOfDialogIndex = text.indexOf('Dave: ');
-    let inputText = text.substring(startOfDialogIndex);
-
-    while (inputText.includes('Dave: ') || inputText.includes('User: ')) {
-        // Extract Dave-part
-        const davePart = inputText.substring('Dave: '.length, inputText.indexOf('\nUser: ')).trim();
-        inputText = inputText.slice(davePart.length);
-        
-        console.log('davePart', davePart);
-        dialogParts.text_dave.push(davePart);
-
-        // Schneide den Dave-Teil ab und extrahiere den User-Teil
-        // const startOfUserIndex = inputText.indexOf('User');
-        // inputText = inputText.substring(startOfUserIndex);
-        // const endOfUserIndex = inputText.indexOf('\nDave: ') !== -1 ? inputText.indexOf('\nDave: ') : inputText.length;
-        // const userPart = inputText.substring(0, endOfUserIndex).trim();
-        // dialogParts.text_user.push(userPart);
-
-        // // Aktualisiere den Text für den nächsten Durchlauf
-        // inputText = inputText.substring(endOfUserIndex);
-    }
-    console.log('dialogParts', dialogParts);
-    return dialogParts;
-}
-
 function handleKeyPress(event) {
     if (event.keyCode === 13) {
       event.preventDefault();
@@ -368,6 +305,7 @@ window.addEventListener('load', function() {
     hljs.highlightAll();
 
     chatboxContentEl = document.getElementById('chatbox-content');
+    info_box = document.getElementById('info_box');
 	refreshRangeInputLayout();
 
     document.getElementById('input-context').textContent = inputContext;
