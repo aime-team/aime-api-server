@@ -16,7 +16,7 @@ function onSendAPIRequest() {
 	chatLogTextarea = document.getElementById('chat_log');
 	chatInput = document.getElementById('chat_input');
 	info_box = document.getElementById('info_box');
-    info_box.textContent = 'Request sent.\nWaiting for response...';
+  info_box.textContent = 'Request sent.\nWaiting for response...';
 
 	currentText = chatLogTextarea.value;
 	currentText += 'User: ' + chatInput.value + '\nDave:'
@@ -29,8 +29,8 @@ function onSendAPIRequest() {
 	params.seed = parseInt(document.getElementById('seed').value)
 
 	chatInput.value = ''
-  	chatLogTextarea.value = currentText;
-  	chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight
+	chatLogTextarea.value = currentText;
+	chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight
 
 	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
 }
@@ -62,11 +62,11 @@ function onResultCallback(data) {
 			tokensPerSec = data.num_generated_tokens / data.compute_duration
 			infoBox.textContent += 'Tokens per second: ' + tokensPerSec.toFixed(1) + '\n';
 		}
-	if (data.model_name) {
-		infoBox.textContent += '\nModel name: ' + data.model_name +'\n';
+		if (data.model_name) {
+			infoBox.textContent += '\nModel name: ' + data.model_name +'\n';
+		}		
 	}
 	
-	}
 	if (data.auth) {
 		infoBox.textContent += 'Worker: ' + data.auth + '\n';
 	}
@@ -83,7 +83,7 @@ function onResultCallback(data) {
 
 	infoBox.style.height = 'auto';
 	infoBox.style.height = infoBox.scrollHeight + 'px';
-	chatLogTextarea.value = data.text;
+	chatLogTextarea.value = currentText + ' ' + data.text;
 	chatLogTextarea.scrollTop = chatLogTextarea.scrollHeight;
 };
 
