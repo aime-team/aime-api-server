@@ -174,13 +174,13 @@ function onButtonClick() {
             <div class="flex items-start gap-2.5">
                 <div class="flex flex-col gap-1 w-full max-w-[320px]">
                     <div class="flex items-center justify-between rtl:justify-end space-x-2">
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">${isResponse ? 'User: ' : 'Dave: '}</span>
-                        <span class="overlook text-xs font-normal text-gray-500 dark:text-gray-400 ml-auto">${localISOTime.match(/\d\d:\d\d/)}</span>
+                        <span class="text-sm font-semibold text-white">${isResponse ? 'User: ' : 'Dave: '}</span>
+                        <span class="overlook text-xs font-normal text-gray-500 text-gray-400 ml-auto">${localISOTime.match(/\d\d:\d\d/)}</span>
                     </div>
-                    <div class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-xl ${isResponse ? 'rounded-br-none' : 'rounded-tl-none'} dark:bg-gray-600">
-                        <p class="eol-node latest-bubble-text text-sm font-normal text-gray-900 dark:text-white">${chatText}</p>
+                    <div class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-600 rounded-xl ${isResponse ? 'rounded-br-none' : 'rounded-tl-none'}">
+                        <p class="eol-node latest-bubble-text text-sm font-normal text-white">${chatText}</p>
                     </div>
-                    <span class="overlook latest-bubble-info text-xs font-normal text-gray-500 dark:text-gray-400">${infoDetails}</span>
+                    <span class="overlook latest-bubble-info text-xs font-normal text-gray-400">${infoDetails}</span>
                 </div>
             </div>
     `;
