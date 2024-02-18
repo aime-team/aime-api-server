@@ -212,11 +212,11 @@ job type and auth_key. Waiting for and receiving job data and sending job result
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.job_request">
-<span class="sig-name descname"><span class="pre">job_request</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.job_request" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">job_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_job_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.job_request" title="Link to this definition"></a></dt>
 <dd><p>Worker requests a job from API Server on route /worker_job_request. If there is
 no client job offer within the job_timeout = request_timeout * 0.9 the API server responds with ‘cmd’:’no_job’ and the
 worker requests a job again on route /worker_job_request.
-In MultGPU-Mode (world_size &gt; 1) only rank 0 will get job_data.</p>
+In MultGPU-Mode (world_size &gt; 1) only rank 0 will get the job_data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Job data with worker [INPUT] parameters received from API server.</p>
@@ -227,14 +227,17 @@ In MultGPU-Mode (world_size &gt; 1) only rank 0 will get job_data.</p>
 </dl>
 <p class="rubric">Examples</p>
 <p>Example job data:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">job_data</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;prompt&#39;</span><span class="p">:</span> <span class="s1">&#39;prompt&#39;</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response_data</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;wait_for_result&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID1&#39;</span><span class="p">,</span>
     <span class="s1">&#39;endpoint_name&#39;</span><span class="p">:</span> <span class="s1">&#39;stable_diffusion_xl_txt2img&#39;</span><span class="p">,</span>
     <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="mf">1700430052.505548</span><span class="p">,</span>
     <span class="s1">&#39;start_time_compute&#39;</span><span class="p">:</span> <span class="mf">1700430052.5124364</span><span class="p">},</span>
     <span class="s1">&#39;cmd&#39;</span><span class="p">:</span> <span class="s1">&#39;job&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;job_data&#39;</span><span class="p">:</span> <span class="p">[{</span>
+        <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;prompt&#39;</span><span class="p">:</span> <span class="s1">&#39;prompt&#39;</span><span class="p">,</span>
+        <span class="o">...</span>
+    <span class="p">}],</span>
     <span class="s1">&#39;progress_descriptions&#39;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s1">&#39;progress_images&#39;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;image_list&#39;</span><span class="p">,</span> <span class="s1">&#39;image_format&#39;</span><span class="p">:</span> <span class="s1">&#39;JPEG&#39;</span><span class="p">,</span> <span class="s1">&#39;color_space&#39;</span><span class="p">:</span> <span class="s1">&#39;RGB&#39;</span>
@@ -253,16 +256,12 @@ In MultGPU-Mode (world_size &gt; 1) only rank 0 will get job_data.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.send_job_results">
-<span class="sig-name descname"><span class="pre">send_job_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_job_results" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">send_job_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_job_results" title="Link to this definition"></a></dt>
 <dd><p>Process/convert job results and send it to API Server on route /worker_job_result.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>results</strong> (<em>dict</em>) – worker [OUTPUT] result parameters (f.i. ‘image’, ‘images’ or ‘text’).
-Example results: <code class="docutils literal notranslate"><span class="pre">{'images':</span> <span class="pre">[&lt;PIL.Image.Image&gt;,</span> <span class="pre">&lt;PIL.Image.Image&gt;,</span> <span class="pre">...]}</span></code></p></li>
-<li><p><strong>job_data</strong> (<em>dict</em><em>, </em><em>optional</em>) – job_data received from job_request(), if an explicit change of job parameters is desired.
-Defaults to None.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>results</strong> (<em>dict</em>) – worker [OUTPUT] result parameters (f.i. ‘image’, ‘images’ or ‘text’).
+Example results: <code class="docutils literal notranslate"><span class="pre">{'images':</span> <span class="pre">[&lt;PIL.Image.Image&gt;,</span> <span class="pre">&lt;PIL.Image.Image&gt;,</span> <span class="pre">...]}</span></code></p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Http response from API server to the worker.</p>
@@ -282,7 +281,7 @@ Defaults to None.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.send_progress">
-<span class="sig-name descname"><span class="pre">send_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_received_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_progress" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">send_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_received_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_progress" title="Link to this definition"></a></dt>
 <dd><p>Processes/converts job progress information and data and sends it to API Server on route /worker_job_progress asynchronously
 to main thread using Pool().apply_async() from multiprocessing.dummy. When Api server received progress data,
 self.progress_data_received is set to True. Use progress_received_callback and progress_error_callback for response.</p>

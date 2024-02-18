@@ -292,21 +292,23 @@ received from the job queue and send to API worker interface in the json respons
 <p class="rubric">Examples</p>
 <p>Example response json if client requested job:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;prompt&#39;</span><span class="p">:</span> <span class="s1">&#39;prompt&#39;</span><span class="p">,</span>
     <span class="s1">&#39;cmd&#39;</span><span class="p">:</span> <span class="s1">&#39;job&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID1&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;start_time_compute&#39;</span><span class="p">:</span> <span class="mf">1700424731.9582381</span>
-    <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="mf">1700424731.952994</span><span class="p">,</span>
-    <span class="s1">&#39;wait_for_result&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="s1">&#39;endpoint_name&#39;</span><span class="p">:</span> <span class="s1">&#39;stable_diffusion_xl_txt2img&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;progress_descriptions&#39;</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;wait_for_result&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="s1">&#39;job_data&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="mf">1700424731.952994</span><span class="p">,</span>
+        <span class="s1">&#39;start_time_compute&#39;</span><span class="p">:</span> <span class="mf">1700424731.9582381</span>
+        <span class="s1">&#39;prompt&#39;</span><span class="p">:</span> <span class="s1">&#39;prompt&#39;</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s1">&#39;progress_descriptions&#39;</span><span class="p">:</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;progress_images&#39;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;image_list&#39;</span><span class="p">,</span>
             <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="s1">&#39;JPEG&#39;</span><span class="p">,</span>
             <span class="s1">&#39;color_space&#39;</span><span class="p">:</span> <span class="s1">&#39;RGB&#39;</span>
         <span class="p">}</span>
     <span class="p">}</span>
-    <span class="s1">&#39;output_descriptions&#39;</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;output_descriptions&#39;</span><span class="p">:</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;image_list&#39;</span><span class="p">,</span>
             <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="s1">&#39;JPEG&#39;</span><span class="p">,</span>

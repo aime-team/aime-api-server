@@ -80,21 +80,23 @@ class APIServer(Sanic):
             .. code-block:: python 
 
                 response.json() = {   
-                    'prompt': 'prompt', 
                     'cmd': 'job',
-                    'job_id': 'JID1', 
-                    'start_time_compute': 1700424731.9582381
-                    'start_time': 1700424731.952994, 
-                    'wait_for_result': False, 
-                    'endpoint_name': 'stable_diffusion_xl_txt2img',     
-                    'progress_descriptions' = {
+                    'endpoint_name': 'stable_diffusion_xl_txt2img',
+                    'wait_for_result': False,
+                    'job_data': {
+                        'job_id': 'JID1', 
+                        'start_time': 1700424731.952994, 
+                        'start_time_compute': 1700424731.9582381
+                        'prompt': 'prompt',
+                    },
+                    'progress_descriptions': = {
                         'progress_images': {
                             'type': 'image_list',
                             'format': 'JPEG',
                             'color_space': 'RGB'
                         }
                     }
-                    'output_descriptions' = {
+                    'output_descriptions': = {
                         'images': {
                             'type': 'image_list',
                             'format': 'JPEG',
@@ -143,8 +145,8 @@ class APIServer(Sanic):
         if job_cmd['cmd'] not in ('ok', 'warning'):
             return sanic_json(job_cmd)
              
-        job_data = await self.wait_for_valid_job(queue, req_json)
-        return sanic_json(job_data)
+        job_cmd = await self.wait_for_valid_job(queue, req_json)
+        return sanic_json(job_cmd)
 
 
     async def worker_job_result_json(self, request):
@@ -464,13 +466,15 @@ class APIServer(Sanic):
 
         APIServer.job_states[job_id] = JobState.PROCESSING
         APIServer.logger.info(f"Worker '{auth}' got job {job_id}")
-        job_data['cmd'] = 'job'
-        job_data['api_server_version'] = __version__
-        endpoint = APIServer.endpoints.get(job_data['endpoint_name'])
-        job_data['progress_descriptions'] = endpoint.ep_progress_param_config
-        job_data['output_descriptions'] = endpoint.ep_output_param_config
+        job_cmd = { 'cmd': 'job', 'api_server_version': __version__ }
+        endpoint_name = job_data.pop('endpoint_name', '')
+        endpoint = APIServer.endpoints.get(endpoint_name)
+        job_cmd['endpoint_name'] = endpoint_name
+        job_cmd['progress_descriptions'] = endpoint.ep_progress_param_config
+        job_cmd['output_descriptions'] = endpoint.ep_output_param_config
         job_data['start_time_compute'] = time.time()
-        return job_data
+        job_cmd['job_data'] = job_data
+        return job_cmd
 
 
     @staticmethod #stream=True in add_route() only works if staticmethod?
