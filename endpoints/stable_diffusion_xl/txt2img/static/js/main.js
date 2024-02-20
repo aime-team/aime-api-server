@@ -58,7 +58,7 @@ function onResultCallback(data) {
     document.getElementById('estimate').innerText = '';
     document.getElementById('num_workers_online').innerText = '';
     document.getElementById('progress_bar').value = 100;
-    document.getElementById('progress_label').innerText = '100%';
+    document.getElementById('progress_label').innerText = '';
     
     readyToSendRequest = true;
     if (data.images) {
