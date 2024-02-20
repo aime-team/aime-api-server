@@ -155,7 +155,8 @@ class APIEndpoint():
                 job_state = self.app.job_states.get(job_id, job_state)       
 
         response['job_state'] = job_state.value
-        response['progress'] = progress_state
+        if job_state != JobState.DONE:
+            response['progress'] = progress_state
         APIEndpoint.logger.debug(str(shorten_strings(response)))
         return sanic_json(response)
 
