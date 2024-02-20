@@ -35,7 +35,7 @@ function onProgressCallback(progressInfo, progressData) {
 	const numWorkersOnline = progressInfo.num_workers_online;
 	const progress = progressInfo.progress;
 	
-    refreshResponseBubble(null, `queuePosition: ${queuePosition} | estimate: ${estimate}`)
+  refreshResponseBubble(null, `queuePosition: ${queuePosition} | estimate: ${estimate}`)
 
 	if(progressData != null) {
         refreshResponseBubble(progressData.text, `answering... | progress: ${progress}`);
@@ -43,7 +43,7 @@ function onProgressCallback(progressInfo, progressData) {
 	}
 
 	document.getElementById('progress_label').innerText = 'Generated tokens: ' + progress;
-    document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
+  document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
 	document.getElementById('estimate').innerText = ' | Estimate time: ' + estimate;
 	document.getElementById('num_workers_online').innerText = ' | Workers online: ' + numWorkersOnline;
 };
