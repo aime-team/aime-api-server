@@ -43,7 +43,7 @@ function onProgressCallback(progressInfo, progressData) {
 	}
 
 	document.getElementById('progress_label').innerText = 'Generated tokens: ' + progress;
-  document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
+    document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
 	document.getElementById('estimate').innerText = ' | Estimate time: ' + estimate;
 	document.getElementById('num_workers_online').innerText = ' | Workers online: ' + numWorkersOnline;
 };

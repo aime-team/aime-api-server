@@ -338,11 +338,11 @@ function refreshRangeInputLayout() {
     });
 }
 
-function roundToNearestMultipleOf8(number) {
-    if (number % 8 === 0) {
+function roundToNearestMultipleOf64(number) {
+    if (number % 64 === 0) {
       return number;
     } else {
-      return Math.round(number / 8) * 8;
+      return Math.round(number / 64) * 64;
     }
 }
 
