@@ -270,4 +270,5 @@ input[type="range"] {
 
 #chatbox-fadeout {
     background: linear-gradient(0deg, rgba(38,55,67,1) 38%, rgba(38,55,67,0.7512698218936011) 75%, rgba(38,55,67,0) 100%);
+    margin-right: 20px;
 }
