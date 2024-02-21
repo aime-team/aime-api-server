@@ -53,6 +53,13 @@ function onSendAPIRequest() {
 function onResultCallback(data) {
     enableSendButton();
     removeSpinner();
+
+    document.getElementById('tasks_to_wait_for').innerText = '';
+    document.getElementById('estimate').innerText = '';
+    document.getElementById('num_workers_online').innerText = '';
+    document.getElementById('progress_bar').value = 100;
+    document.getElementById('progress_label').innerText = '';
+    
     readyToSendRequest = true;
     if (data.images) {
         info_box = document.getElementById('info_box');
@@ -76,8 +83,8 @@ function onResultCallback(data) {
         info_box.style.height = info_box.scrollHeight + 'px';
         
         var imageContainer = document.getElementById('image_container');
+        imageContainer.innerHTML = '';
         var images = data.images;
-        // imageContainer.innerHTML = '';
         for (var i = 0; i < images.length; i++) {
             var image_data = images[i].trim();
             if (image_data) {
