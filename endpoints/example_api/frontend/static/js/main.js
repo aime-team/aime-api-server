@@ -1,35 +1,43 @@
 const modelAPI = new ModelAPI('example_api');
+
 let readyToSendRequest = true;
+let log_textarea, chat_input, info_box;
 
 function onSendAPIRequest() {
-
-    log_textarea = document.getElementById('chat_log');
-    prompt_input = document.getElementById('chat_input');
-
-    params = new Object();
-    params['prompt'] = prompt_input.value;
-    params['sleep_duration'] = parseFloat(document.getElementById('sleep_duration').value);
-    params['progress_steps'] = parseInt(document.getElementById('progress_steps').value);
-
-    prompt_input.value = '';
+    
+    let params = new Object({
+        prompt: chat_input.value,
+        sleep_duration:  parseFloat(document.getElementById('sleep_duration').value),
+        progress_steps:  parseInt(document.getElementById('progress_steps').value)
+    });
+    chat_input.value = '';
 
 //		doAPIRequest('example_api', params, function (data) {
 //			log_textarea.value += data['text'] + '\n';
 //			log_textarea.scrollTop = log_textarea.scrollHeight;
 //		});
 
-    
     modelAPI.doAPILogin(function (data) {
+        console.log('Sending ', params);
         modelAPI.doAPIRequest(params, 
+
+            // onResultCallback
             function (data) {
                 readyToSendRequest = true;
                 enableSendButton();
-                log_textarea.value += '\n' + data['text'] + '\n';
-                log_textarea.scrollTop = log_textarea.scrollHeight;
+                if (data["error"]) {
+                    info_box.textContent = data.error;
+                }
+                else {
+                    log_textarea.value += '\n' + data['text'] + '\n';
+                    log_textarea.scrollTop = log_textarea.scrollHeight;
+                }
             },
+
+            // onProgressCallback
             function (progress_info, progress_data) {
-                const progress = progress_info['progress'];
-                const queue_position = progress_info['queue_position'];
+                const progress = progress_info.progress;
+                const queue_position = progress_info.queue_position;
                 var progress_status = "Progress";
                 if((queue_position < 0) || (queue_position == null)) {
                     progress_status += " - Sending Request"
@@ -49,12 +57,13 @@ function onSendAPIRequest() {
                     log_textarea.value += " " + progress_data['status'];
                     log_textarea.scrollTop = log_textarea.scrollHeight;                
                 }
-            });
+            }
+        );
     });
 }
 
 function disableSendButton() {
-    const button = document.getElementById('prompt_send');
+    const button = document.getElementById('chat_send');
     if (button) {
       button.disabled = true;
       button.classList.add('disabled:opacity-50');
@@ -62,7 +71,7 @@ function disableSendButton() {
     }
 }
 function enableSendButton() {
-    const button = document.getElementById('prompt_send');
+    const button = document.getElementById('chat_send');
     if (button) {
         button.disabled = false;
         button.classList.remove('disabled:opacity-50');
@@ -151,10 +160,15 @@ window.addEventListener('load', function() {
         //   },
         }
     };
+    hljs.highlightAll();
    
+    log_textarea = document.getElementById('chat_log');
+    chat_input = document.getElementById('chat_input');
+    info_box = document.getElementById('info_box');
+
     document.addEventListener('keydown', function(event) {
         if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-            const button = document.getElementById('prompt_send');
+            const button = document.getElementById('chat_send');
             if (!button.disabled) {
                 event.preventDefault();
                 onButtonClick();
@@ -182,6 +196,4 @@ window.addEventListener('load', function() {
     });
 
     refreshRangeInputLayout();
-    modelAPI.doAPILogin();
-
 });
