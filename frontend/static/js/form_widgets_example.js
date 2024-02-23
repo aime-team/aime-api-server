@@ -59,3 +59,36 @@ wm.createWidget({
 
 
 console.log('WidgetManager', wm);
+
+
+// ### UI ELEMENTS ######################################
+
+// SLIDER WIDGET: put class .slider-widget to .input-group and initialize
+function updateSliderValue() {
+    // slider change
+    if ($(this).is('input[type="range"]')) {
+        $(this).closest('.form-group').find('input[type="number"]').val($(this).val());    
+    } 
+    // input field change
+    else if ($(this).is('input[type="number"]')) {
+        const $input = $(this).closest('.form-group').find('input[type="range"]');
+        let value = $(this).val();
+        // if ( $input.attr('max') && value > $input.prop('max') ) value = $input.prop('max');
+        // if ( $input.attr('min') && value < $input.prop('min') ) value = $input.prop('min');
+        $(this).closest('.form-group').find('input[type="range"]').val(value);
+    }
+}
+
+// ### FORM FIELD INTERACTION
+function getFormValues() {
+    const form = document.getElementById('form-example'); // Formular-Element auswählen
+    const formData = new FormData(form); // Alle Eingabefelder innerhalb des Formulars auswählen
+    const formDataObject = {}; // JSON-Objekt erstellen und Felder hinzufügen
+
+    formData.forEach((value, key) => {
+        formDataObject[key] = value;
+    });
+
+    console.log(formDataObject);
+    // via AJAX an Server senden ...
+}

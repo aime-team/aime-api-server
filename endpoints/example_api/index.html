@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+
+	<title>AIME API Example</title>
+
+	<link rel="stylesheet" href="/model_api/frontend/css/font.css">
+	<link rel="stylesheet" href="/example-api/static/css/highlight.css">
+	<link rel="stylesheet" href="/example-api/static/css/style.css">
+
+	<script src="/model_api/js/model_api.js"></script>
+	<script src="/example-api/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
+	<script src="/example-api/static/js/highlight.js"></script>
+	<script src="/example-api/static/js/main.js"></script>
+
+</head>
+<body>
+	<div class="pl-5 pr-5 max-w-7xl mx-auto">
+        <div id="top">
+            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Example: Simple API Example Server</h2>
+        </div>
+        <div id="input_section" class="columns flex flex-col md:flex-row">
+			<!-- LEFT COLUMN -->
+            <form class="column md:container input-col relative md:flex-1 pb-4 min-w-0" onsubmit="return false;">
+                <h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">INPUT</h3>
+				<div id="chat_box" class="row">
+					<!-- CHATBOX -->
+					<div class="col">
+						<textarea class="mlapi" id="chat_log" readonly></textarea>
+						<input class="mlapi" id="chat_input"
+							name="chat_input"
+							placeholder="Type your message..." 
+							onkeydown="handleKeyPress(event)" 
+						/>
+						<div>
+							<button id="chat_send" type="button" class="btn btn-primary" onclick="onButtonClick();">Send</button>
+						</div>
+					</div>
+					<!-- /END CHATBOX -->
+		
+					<!-- SLIDES -->
+					<div class="col">
+						<div class="form-group">
+							<label for="progress_steps">Progress Steps</label>
+							<div class="input-group slider-widget flex-centered">
+								<input type="range" class="form-control-range mt-sm-2 col-9" id="progress_steps" min="0" max="100" value="50">
+								<input type="number" class="form-control col-2" id="progress_steps_value" min="0" max="100">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="sleep_duration">Job Duration</label>
+							<div class="input-group slider-widget flex-centered">
+								<input type="range" class="form-control-range mt-sm-2 col-9" id="sleep_duration" min="0" max="60" value="3">
+								<input type="number" class="form-control col-2" id="sleep_duration_value" min="0" max="60">
+							</div>
+						</div>				
+					</div>
+					<!-- /END SLIDES -->			
+				</div>
+			</form> <!-- /END LEFT COLUMN -->
+
+			<!-- DEVIDER -->
+			<div class="column-divider" role="separator">
+				<div class="thin-line"></div>
+			</div><!-- /END DEVIDER -->
+
+			<!-- RIGHT COLUMN -->
+			<div id="output_section" class="column md:container output-col md:flex-1 pb-4 min-w-0">
+				<div>
+					<div class="flex">
+						<button id="tab_button_output" class="tab-button active" data-tab="tab_output"><h3 class="text-lg pr-4">OUTPUT</h3></button>
+						<button id="tab_button_json" class="tab-button" data-tab="tab_json"><h3 class="text-lg pl-4">JSON</h3></button>
+					</div>
+					</div>
+					
+					<div id="tab_output" class="tab-content">
+					<div id="progress_container" class="w100">
+						<p id="progress_status" class="label">Progress</p>
+						<progress id="progress_bar" class="rounded" value="0" max="100"></progress>
+						<span id="progress_label" class="text-sm"></span>
+						<label id="tasks_to_wait_for" class="text-sm"></label>
+						<label id="estimate" class="text-sm"></label>
+						<label id="num_workers_online" class="text-sm"></label>
+					</div>
+					
+					<p class="label mt-5">Console Output</p>
+					<textarea readonly id="info_box" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm text-aime_blue">>_</textarea>
+					
+					<div id="tab_json" class="hidden tab-content">
+					<div>
+						<p class="label">JSON Example</p>
+
+						<p class="select-label">API Call</p>
+						<pre><code class="info-field code language-json rounded">
+		{
+			"aesthetic_score":	5,
+			"base_discretization":	"EDMDiscretization",
+			"base_sampler":	"EulerEDMSampler",
+			"base_steps":	40,
+			"client_session_auth_key":	"f0aae4d5-abe5-49eb-a176-1129a14ec3a7",
+			"crop_coords_left":	0,
+			"crop_coords_top":	0,
+			"eta":	1,
+			"height":	1024,
+			"img2img_strength":	0.15,
+			"negative_aesthetic_score":	5,
+			"negative_prompt":	"out of frame, lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck, username, watermark, signature",
+			"num_samples":	1,
+			"order":	4,
+			"orig_height":	1024,
+			"orig_width":	1024,
+			"prompt":	'Astronaut on Mars During sunset sitting on a giant rubber duck, ultra realistic, 8k, Mirrorless, 28mm lens, f/2.5 aperture, ISO 400, natural daylight',
+			"provide_progress_images":	"latent",
+			"refine_discretization":	"EDMDiscretization",
+			"refine_sampler":	"HeunEDMSampler",
+			"refine_steps":	40,
+			"rho":	3,
+			"s_churn":	0,
+			"s_noise":	1,
+			"s_tmax":	999,
+			"s_tmin":	0,
+			"scale":	6,
+			"seed":	-1,
+			"sigma_max":	14.6146,
+			"sigma_min":	0.0292,
+			"wait_for_result":	false,
+			"width":	1024,
+		}
+						</code></pre>
+						<br/>
+						<p class="select-label">Progress</p>
+						<pre><code class="info-field code language-json rounded">
+		{
+			"success":	true,
+			"job_id":	"JID116",
+			"job_state":	"processing",
+			"progress":	Object { progress: 81, queue_position: 0, progress_data: {…} },
+			"progress":	81,
+			"progress_data":	Object { info: "processing", progress: 38, stage: "base", … },
+			"queue_position":	0,
+		}
+						</code></pre>
+
+					</div>
+					</div>
+					
+
+			</div> <!-- /END RIGHT COLUMN -->
+		</div>
+	</div>
+</body>
+</html>
