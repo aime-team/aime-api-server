@@ -373,28 +373,6 @@ window.addEventListener('load', function() {
     };
     hljs.highlightAll();
 
-    const sliderInputs = document.querySelectorAll('.slider-widget input[type="range"]');
-    sliderInputs.forEach(function(input) {
-        updateSliderValue({ target: input });
-        input.addEventListener('input', updateSliderValue);
-        input.addEventListener('change', updateSliderValue);
-    });
-
-    const numberInputs = document.querySelectorAll('.slider-widget input[type="number"]');
-    numberInputs.forEach(function(input) {
-        input.addEventListener('input', updateSliderValue);
-    });
-
-    document.addEventListener('keydown', function(event) {
-        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-            const button = document.getElementById('prompt_send');
-            if (!button.disabled) {
-                event.preventDefault();
-                onButtonClick();
-            }
-        }
-      });
-
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
 
