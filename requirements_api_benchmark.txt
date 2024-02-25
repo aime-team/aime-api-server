@@ -1,2 +1,3 @@
 toml
 tqdm
+aime_api_client_interface @ git+https://github.com//aime-team/aime-api-client-interfaces#subdirectory=python

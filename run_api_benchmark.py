@@ -21,7 +21,7 @@ class BenchmarkApi():
             '-as', '--api_server', type=str, default="http://0.0.0.0:7777", required=False, help='Address of api-server'
                             )
         parser.add_argument(
-            '-tr', '--total_requests', type=int, default=2, required=False
+            '-tr', '--total_requests', type=int, default=4, required=False
                             )
         parser.add_argument(
             '-cf', '--config_file', type=str, required=False
