@@ -61,6 +61,19 @@ class JobQueue():
         """        
         return await asyncio.wait_for(self.queue.get(), timeout=job_timeout)
 
+    def fetch_waiting_job(self):
+        """Get job data of the next waiting job in the queue. Returns None if no job is waiting
+
+        Returns:
+            dict: Job data of the next job in the queue, None if no job available
+        """        
+        try:
+            job_data = self.queue.get_nowait()
+            self.queue.task_done()
+        except asyncio.QueueEmpty:
+            job_data = None
+        return job_data
+
 
     def task_done(self):
         return self.queue.task_done()
