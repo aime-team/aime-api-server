@@ -447,9 +447,12 @@ class APIServer(Sanic):
             APIServer.logger.debug(logger_string)
             worker['retry'] = False
         
+        job_timeout = worker.get('job_timeout', 54)
+        max_job_batch = req_json.get('max_job_batch', 1)
+
         while not got_valid_job:
             try:
-                job_data = await queue.get(job_timeout=worker.get('job_timeout', 54))    # wait on queue for job
+                job_data = await queue.get(job_timeout=job_timeout)    # wait on queue for job
             except asyncio.TimeoutError:
                 worker['retry'] = True
                 return {'cmd': 'no_job', 'api_server_version': __version__}
@@ -464,15 +467,37 @@ class APIServer(Sanic):
                 job_id = job_data['job_id']
                 got_valid_job = (APIServer.job_states[job_id] == JobState.QUEUED)
 
+        endpoint_name = job_data.pop('endpoint_name', '')
         APIServer.job_states[job_id] = JobState.PROCESSING
         APIServer.logger.info(f"Worker '{auth}' got job {job_id}")
+        job_data['start_time_compute'] = time.time()
+
+        # fill batch with already waiting jobs
+        if(max_job_batch > 1):
+            job_data = [job_data]
+            fetch_waiting_jobs = True
+            while((len(job_data) < max_job_batch) and fetch_waiting_jobs):
+                job_data_next = queue.fetch_waiting_job()
+                if(job_data_next):
+                    client_session_auth_key = job_data_next.pop('client_session_auth_key', '')
+                    if not client_session_auth_key in self.registered_client_sessions:
+                        APIServer.logger.warn(f"discarding job, client session auth key not valid anymore")
+                    else:
+                        job_id = job_data_next['job_id']
+                        if(APIServer.job_states[job_id] == JobState.QUEUED):
+                            APIServer.job_states[job_id] = JobState.PROCESSING
+                            job_data_next.pop('endpoint_name', '')
+                            APIServer.logger.info(f"Worker '{auth}' got job {job_id}")
+                            job_data_next['start_time_compute'] = time.time()
+                            job_data.append(job_data_next)
+                else:
+                    fetch_waiting_jobs = False
+
         job_cmd = { 'cmd': 'job', 'api_server_version': __version__ }
-        endpoint_name = job_data.pop('endpoint_name', '')
         endpoint = APIServer.endpoints.get(endpoint_name)
         job_cmd['endpoint_name'] = endpoint_name
         job_cmd['progress_descriptions'] = endpoint.ep_progress_param_config
         job_cmd['output_descriptions'] = endpoint.ep_output_param_config
-        job_data['start_time_compute'] = time.time()
         job_cmd['job_data'] = job_data
         return job_cmd
 
