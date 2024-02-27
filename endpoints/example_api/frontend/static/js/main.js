@@ -11,52 +11,60 @@ function onSendAPIRequest() {
         progress_steps:  parseInt(document.getElementById('progress_steps').value)
     });
     chat_input.value = '';
-
-//		doAPIRequest('example_api', params, function (data) {
-//			log_textarea.value += data['text'] + '\n';
-//			log_textarea.scrollTop = log_textarea.scrollHeight;
-//		});
+    log_textarea.value = 'step 0';
 
     modelAPI.doAPILogin(function (data) {
-        console.log('Sending ', params);
         modelAPI.doAPIRequest(params, 
 
             // onResultCallback
             function (data) {
                 readyToSendRequest = true;
                 enableSendButton();
-                if (data["error"]) {
+                removeSpinner();
+
+                if (data.error) {
                     info_box.textContent = data.error;
                 }
                 else {
-                    log_textarea.value += '\n' + data['text'] + '\n';
+                    log_textarea.value += '\n' + data.text + '\n';
                     log_textarea.scrollTop = log_textarea.scrollHeight;
+                    info_box.textContent = 'Response received. Request finished succesfully!';
+
+                    document.getElementById('progress_bar').value = 100;
+                    document.getElementById('progress_label').innerText = '100%';
                 }
+                adjustTextareasHeight();
             },
 
             // onProgressCallback
             function (progress_info, progress_data) {
                 const progress = progress_info.progress;
                 const queue_position = progress_info.queue_position;
-                var progress_status = "Progress";
+                let progressTxt = 'Receiving response: ';
+                
+
                 if((queue_position < 0) || (queue_position == null)) {
-                    progress_status += " - Sending Request"
+                    progressTxt += 'Sending Request'
                 } 
                 else if(queue_position == 0) {
                     if(progress < 100) {
-                        progress_status += " - Processing"
+                        progressTxt += 'Processing...';
                     }
                 }
                 else {
-                    progress_status += ' - Waiting in queue at position ' + queue_position
+                    progressTxt += 'Waiting in queue at position ' + queue_position
                 }
-                document.getElementById("progress_status").innerText = progress_status;            
-                document.getElementById("progress_bar").value = progress;
-                document.getElementById('progress_label').innerText = progress.toFixed(1) + '%';
+                info_box.textContent = progressTxt;
+
+                document.getElementById('progress_bar').value = progress;
+                document.getElementById('progress_label').innerText = progress.toFixed(1) + '% | ' + progressTxt;
+                
                 if(progress_data != null) {
-                    log_textarea.value += " " + progress_data['status'];
+                    log_textarea.value += '\n' + progress_data['status'];
                     log_textarea.scrollTop = log_textarea.scrollHeight;                
                 }
+
+                adjustTextareasHeight();
             }
         );
     });
@@ -76,6 +84,26 @@ function enableSendButton() {
         button.disabled = false;
         button.classList.remove('disabled:opacity-50');
         button.classList.remove('disabled:cursor-not-allowed');
+    }
+}
+function addSpinner() {
+    var spinner = document.createElement('div');
+        spinner.id = 'process-spinner';
+        spinner.className = 'animate-spin mr-2';
+        spinner.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-aime_orange">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+        `;
+        const button = document.getElementById('chat_send');
+        if (button) {
+            button.parentNode.insertBefore(spinner, button);
+        }
+}
+function removeSpinner() {
+    const spinner  = document.getElementById('process-spinner');
+    if(spinner) {
+        spinner.remove();
     }
 }
 
@@ -117,6 +145,14 @@ function refreshRangeInputLayout() {
     });
 }
 
+function adjustTextareasHeight() {
+    log_textarea.style.height = 'auto';
+    log_textarea.style.height = log_textarea.scrollHeight + 'px';
+
+    info_box.style.height = 'auto';
+    info_box.style.height = info_box.scrollHeight + 'px';
+}
+
 function handleKeyPress(event) {
     if (event.keyCode === 13) { // Enter key
         event.preventDefault();
@@ -131,7 +167,14 @@ function onButtonClick() {
         info_box = document.getElementById('info_box');
         info_box.textContent = 'Request sent.\nWaiting for response...';
         disableSendButton();
+        addSpinner();
         onSendAPIRequest();
+
+        // set Tabs to output section
+        const output_btn =  document.getElementById('tab_button_output');
+        if(!output_btn.active) {
+            output_btn.click();
+        }
     }
  }
 
@@ -165,6 +208,8 @@ window.addEventListener('load', function() {
     log_textarea = document.getElementById('chat_log');
     chat_input = document.getElementById('chat_input');
     info_box = document.getElementById('info_box');
+
+    log_textarea.innerText = 'Welcome user! Please type in a message, set your number of steps and a job duration, then press the send button.';
 
     document.addEventListener('keydown', function(event) {
         if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {

@@ -18,8 +18,8 @@
 	<script src="/example-api/static/js/main.js"></script>
 
 </head>
-<body>
-	<div class="pl-5 pr-5 max-w-7xl mx-auto">
+<body class="flex flex-col min-h-screen">
+	<div class="pl-5 pr-5 max-w-7xl mx-auto flex-grow">
         <div id="top">
             <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Example: Simple API Example Server</h2>
         </div>
@@ -32,14 +32,14 @@
 					<div id="prompt_container">
 						<textarea id="chat_log" 
                                 name="chat_log" 
-                                class="rounded form-input border p-2 border-black w-full disabled:cursor-not-allowed disabled:opacity-50" 
-								style="height: 66px !important;"  
+                                class="leading-tight rounded bg-aime_darkblue text-sm text-white form-input border p-2 border-black w-full disabled:cursor-not-allowed disabled:opacity-50" 
+								style="min-height: 80px !important; max-height: 350px !important;"  
                                 onkeydown="handleKeyPress(event)" 
 								readonly
 						></textarea>
 						<input id="chat_input" 
 							name="chat_input"
-							class="rounded form-input border p-2 border-black w-full disabled:cursor-not-allowed disabled:opacity-50" 
+							class="rounded form-input bg-aime_darkblue text-white border p-2 border-black w-full disabled:cursor-not-allowed disabled:opacity-50" 
 							placeholder="Type your message..."
 							onkeydown="handleKeyPress(event)" 
 						/>
@@ -73,58 +73,59 @@
 						<button id="tab_button_output" class="tab-button active" data-tab="tab_output"><h3 class="text-lg pr-4">OUTPUT</h3></button>
 						<button id="tab_button_json" class="tab-button" data-tab="tab_json"><h3 class="text-lg pl-4">JSON</h3></button>
 					</div>
-					</div>
+				</div>
 					
-					<div id="tab_output" class="tab-content">
-						<div id="progress_container" class="w100">
-							<p id="progress_status" class="label">Progress</p>
-							<progress id="progress_bar" class="rounded" value="0" max="100"></progress>
-							<span id="progress_label" class="text-sm"></span>
-							<label id="tasks_to_wait_for" class="text-sm"></label>
-							<label id="estimate" class="text-sm"></label>
-							<label id="num_workers_online" class="text-sm"></label>
-						</div>
-						
-						<p class="label mt-5">Console Output</p>
-						<textarea readonly id="info_box" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm text-aime_blue">>_</textarea>
-						
-						<div id="tab_json" class="hidden tab-content">
-							<div>
-								<p class="label">JSON Example</p>
+				<div id="tab_output" class="tab-content">
+					<div id="progress_container" class="w100">
+						<p class="label">Progress</p>
+						<progress id="progress_bar" class="rounded" value="0" max="100"></progress>
+						<label id="progress_label" class="text-sm"></label>
+					</div>
+					<p class="label mt-5">Console Output</p>
+					<textarea readonly id="info_box" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm text-aime_blue">>_</textarea>
+				</div>
 
-								<p class="select-label">API Call</p>
-								<pre><code class="info-field code language-json rounded">
-				{
-					"prompt":"Hello World!",
-					"sleep_duration":3,
-					"progress_steps":50,
-					"client_session_auth_key":"1b2...ba3",
-					"wait_for_result":false
-				}
-								</code></pre>
-								<br/>
-								<p class="select-label">Progress</p>
-								<pre><code class="info-field code language-json rounded">
-				{
-					"success":true,
-					"job_id":"JID15",
-					"ep_version":0,
-					"job_state":"processing",
-					"progress":{
-						"progress":81,
-						"estimate":7.5,
-						"queue_position":0,
-						"num_workers_online":1
-					}
-				}
-								</code></pre>
-
-							</div>
-						</div>
+				<div id="tab_json" class="hidden tab-content">
+					<div>
+						<p class="label">JSON Example</p>
+	
+						<p class="select-label">API Call (Text)</p>
+						<pre><code class="info-field code language-json rounded">
+{
+	"prompt":"Hello World!",
+	"sleep_duration":3,
+	"progress_steps":50,
+	"client_session_auth_key":"1b2...ba3",
+	"wait_for_result":false
+}
+						</code></pre>
+						<br/>
+						<p class="select-label">Progress</p>
+						<pre><code class="info-field code language-json rounded">
+{
+	"success":true,
+	"job_id":"JID15",
+	"ep_version":0,
+	"job_state":"processing",
+	"progress":{
+		"progress":81,
+		"estimate":7.5,
+		"queue_position":0,
+		"num_workers_online":1
+	}
+}
+						</code></pre>
 					</div>
 				</div>
 			</div> <!-- /END RIGHT COLUMN -->
 		</div>
 	</div>
+
+	<footer class="text-xs p-4 text-center">
+		<div class="flex items-center justify-center space-x-2">
+			<span>&copy; 2024 AIME GmbH | Powered by AIME API</span>
+		</div>
+	</footer>
+	
 </body>
 </html>
