@@ -68,6 +68,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#api_server.job_queue.JobQueue"><code class="docutils literal notranslate"><span class="pre">JobQueue</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.job_queue.JobQueue.fetch_waiting_job"><code class="docutils literal notranslate"><span class="pre">JobQueue.fetch_waiting_job()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.job_queue.JobQueue.get"><code class="docutils literal notranslate"><span class="pre">JobQueue.get()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.job_queue.JobQueue.put"><code class="docutils literal notranslate"><span class="pre">JobQueue.put()</span></code></a></li>
 </ul>
@@ -489,6 +490,20 @@ authentication key.</p>
 <dd><p>Job queue to manage jobs for the given job type. Assignes jobs offered from client on APIEndpoint.api_request
 via route /endpoint_name with a job_id and collects the job_data. The workers asking for jobs on worker_job_request_json get
 the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.job_queue.JobQueue.fetch_waiting_job">
+<span class="sig-name descname"><span class="pre">fetch_waiting_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.fetch_waiting_job" title="Link to this definition"></a></dt>
+<dd><p>Get job data of the next waiting job in the queue. Returns None if no job is waiting</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Job data of the next job in the queue, None if no job available</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue.get">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.get" title="Link to this definition"></a></dt>

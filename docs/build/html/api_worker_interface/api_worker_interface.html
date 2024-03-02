@@ -55,7 +55,12 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Documentation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.progress_data_received"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.progress_data_received</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.current_job_data"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.current_job_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.current_job_batch_data"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.current_job_batch_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.has_job_finished"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.has_job_finished()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.have_all_jobs_finished"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.have_all_jobs_finished()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.job_request"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.job_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.job_batch_request"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.job_batch_request()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.send_job_results"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.send_job_results()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.send_progress"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.send_progress()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.async_check_server_connection"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.async_check_server_connection()</span></code></a></li>
@@ -211,18 +216,101 @@ job type and auth_key. Waiting for and receiving job data and sending job result
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.job_request">
-<span class="sig-name descname"><span class="pre">job_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_job_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.job_request" title="Link to this definition"></a></dt>
-<dd><p>Worker requests a job from API Server on route /worker_job_request. If there is
-no client job offer within the job_timeout = request_timeout * 0.9 the API server responds with ‘cmd’:’no_job’ and the
-worker requests a job again on route /worker_job_request.
-In MultGPU-Mode (world_size &gt; 1) only rank 0 will get the job_data.</p>
+<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.current_job_data">
+<span class="sig-name descname"><span class="pre">current_job_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.current_job_data" title="Link to this definition"></a></dt>
+<dd><p>get the job_data of current job to be processed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>job_id</strong> (<em>string</em>) – For single job processing (max_job_batch=1) the job_id is not required.
+For batch job processing (max_job_batch&gt;1) the job_id is required to specify
+the job the data should be returned.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the job_data of the current only job or the job with the given job_id</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>job_data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.current_job_batch_data">
+<span class="sig-name descname"><span class="pre">current_job_batch_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.current_job_batch_data" title="Link to this definition"></a></dt>
+<dd><p>get the job_datas of the current batch as list</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Job data with worker [INPUT] parameters received from API server.</p>
+<dd class="field-odd"><p>the list of job_datas of the current jobs to be processed</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p>[job_data]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.has_job_finished">
+<span class="sig-name descname"><span class="pre">has_job_finished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.has_job_finished" title="Link to this definition"></a></dt>
+<dd><p>check if specific job has been addressed with a send_job_results and is thereby finished</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>job_data</strong> – job_data of the job to check</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if job has send job_results, False otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.have_all_jobs_finished">
+<span class="sig-name descname"><span class="pre">have_all_jobs_finished</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.have_all_jobs_finished" title="Link to this definition"></a></dt>
+<dd><p>check if all jobs have been addressed with a send_job_results and are therefore finished</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>true if all jobs have send job_results, false otherwise</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.job_request">
+<span class="sig-name descname"><span class="pre">job_request</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.job_request" title="Link to this definition"></a></dt>
+<dd><p>Worker requests a single job from the API Server on endpoint route /worker_job_request.</p>
+<p>Does call job_batch_request() with max_job_batch size 1 and returns the first job.</p>
+<p>See job_batch_request() for more information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>job data with worker [INPUT] parameters received from API server.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.job_batch_request">
+<span class="sig-name descname"><span class="pre">job_batch_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_job_batch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.job_batch_request" title="Link to this definition"></a></dt>
+<dd><p>Worker requests a job batch from API Server on endpoint route /worker_job_request.</p>
+<p>If there is no client job offer within the job_timeout = request_timeout * 0.9 the API server
+responds with ‘cmd’:’no_job’ and the worker requests a job again on endpoint route/worker_job_request.</p>
+<p>In MultGPU-Mode (world_size &gt; 1) only rank 0 will get the job_data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>max_job_batch</strong> – max job batch size of jobs to process. One to max job batch size jobs will be returned</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of job data with worker [INPUT] parameters received from API server.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Array</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -256,7 +344,7 @@ In MultGPU-Mode (world_size &gt; 1) only rank 0 will get the job_data.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.send_job_results">
-<span class="sig-name descname"><span class="pre">send_job_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_job_results" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">send_job_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_job_results" title="Link to this definition"></a></dt>
 <dd><p>Process/convert job results and send it to API Server on route /worker_job_result.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -281,7 +369,7 @@ Example results: <code class="docutils literal notranslate"><span class="pre">{'
 
 <dl class="py method">
 <dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.send_progress">
-<span class="sig-name descname"><span class="pre">send_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_received_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_progress" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">send_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_received_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_progress" title="Link to this definition"></a></dt>
 <dd><p>Processes/converts job progress information and data and sends it to API Server on route /worker_job_progress asynchronously
 to main thread using Pool().apply_async() from multiprocessing.dummy. When Api server received progress data,
 self.progress_data_received is set to True. Use progress_received_callback and progress_error_callback for response.</p>
@@ -336,7 +424,7 @@ Called when server replied with error. Defaults to None.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.get_pnginfo_metadata">
-<span class="sig-name descname"><span class="pre">get_pnginfo_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.get_pnginfo_metadata" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_pnginfo_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.get_pnginfo_metadata" title="Link to this definition"></a></dt>
 <dd><p>Parses and returns image metadata from job_data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
