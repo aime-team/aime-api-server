@@ -230,7 +230,8 @@ async function startStopRecording() {
                 timerInterval = setInterval(updateTimer, 1000);
 
                 audioChunks = [];
-                mediaRecorder = new MediaRecorder(stream);
+                const mimeType = getMimeType();
+                mediaRecorder = new MediaRecorder(stream, { 'mimeType': mimeType });
 
                 mediaRecorder.ondataavailable = event => {
                     if (event.data.size > 0) {
@@ -240,7 +241,7 @@ async function startStopRecording() {
 
                 mediaRecorder.onstop = () => {
                     clearInterval(timerInterval);
-                    audioInputBlob = new Blob(audioChunks);
+                    audioInputBlob = new Blob(audioChunks, { 'type': mimeType });
                     createAudioPlayer(audioInputBlob);
                     recordButton.classList.remove('bg-red-500', 'recording');
 
@@ -287,6 +288,23 @@ async function startStopRecording() {
 
 //     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 // }
+
+function getMimeType() {
+    const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+    const isFirefox = typeof InstallTrigger !== 'undefined';
+    const isEdge = /Edg/.test(navigator.userAgent) && /Microsoft Corporation/.test(navigator.vendor);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    if (isChrome || isEdge) {
+        return 'audio/webm';
+    } else if (isFirefox) {
+        return 'audio/ogg';
+    } else if (isSafari) {
+        return 'audio/mp4';
+    } else {
+        return 'audio/wav';
+    }
+}
 
 function adjustTextareasHeight() {
     var textarea = document.getElementById('textOutput');
@@ -420,7 +438,7 @@ function removeAudioPlayerIfAny() {
 }
 
 function createAudioPlayer(file) {
-
+    console.log('file', file);
     removeAudioPlayerIfAny();
 
     var audioPlayer = document.createElement('audio');
@@ -433,6 +451,7 @@ function createAudioPlayer(file) {
     audioContainer.appendChild(audioPlayer);
 
     audioPlayer.src = URL.createObjectURL(file);
+    console.log('src', audioPlayer.src);
 
     var audioFileInfo = document.getElementById('audio-fileinfo');
     audioFileInfo = document.createElement('p');

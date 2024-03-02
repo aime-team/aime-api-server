@@ -209,7 +209,7 @@ window.addEventListener('load', function() {
     chat_input = document.getElementById('chat_input');
     info_box = document.getElementById('info_box');
 
-    log_textarea.innerText = 'Welcome user! Please type in a message, set your number of steps and a job duration, then press the send button.';
+    log_textarea.innerText = 'Welcome, User! Please type in a message, set your number of steps and a job duration, then press the send button.';
 
     document.addEventListener('keydown', function(event) {
         if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
