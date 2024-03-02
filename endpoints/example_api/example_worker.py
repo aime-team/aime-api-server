@@ -1,7 +1,5 @@
 # minimal example worker to request a job and send results
 
-import sys
-sys.path.append('../..')
 from aime_api_worker_interface import APIWorkerInterface
 import time
 
@@ -27,7 +25,7 @@ def main():
             for step in range(progress_steps):
                 time.sleep(step_duration)
                 step_str = 'step ' + str(step) 
-                print(step_str)
+                print(job_data['job_id'] + ": " + step_str  + "/" +  str(progress_steps))
                 progress_data['status'] = step_str
                 api_worker.send_progress((100.0 * (step + 1)) / progress_steps, progress_data)
         else:

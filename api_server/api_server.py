@@ -472,24 +472,25 @@ class APIServer(Sanic):
         APIServer.logger.info(f"Worker '{auth}' got job {job_id}")
         job_data['start_time_compute'] = time.time()
 
+        job_batch_data = [job_data]
+
         # fill batch with already waiting jobs
         if(max_job_batch > 1):
-            job_data = [job_data]
             fetch_waiting_jobs = True
-            while((len(job_data) < max_job_batch) and fetch_waiting_jobs):
-                job_data_next = queue.fetch_waiting_job()
-                if(job_data_next):
-                    client_session_auth_key = job_data_next.pop('client_session_auth_key', '')
+            while((len(job_batch_data) < max_job_batch) and fetch_waiting_jobs):
+                job_data = queue.fetch_waiting_job()
+                if(job_data):
+                    client_session_auth_key = job_data.pop('client_session_auth_key', '')
                     if not client_session_auth_key in self.registered_client_sessions:
                         APIServer.logger.warn(f"discarding job, client session auth key not valid anymore")
                     else:
-                        job_id = job_data_next['job_id']
+                        job_id = job_data['job_id']
                         if(APIServer.job_states[job_id] == JobState.QUEUED):
                             APIServer.job_states[job_id] = JobState.PROCESSING
-                            job_data_next.pop('endpoint_name', '')
+                            job_data.pop('endpoint_name', '')
                             APIServer.logger.info(f"Worker '{auth}' got job {job_id}")
-                            job_data_next['start_time_compute'] = time.time()
-                            job_data.append(job_data_next)
+                            job_data['start_time_compute'] = time.time()
+                            job_batch_data.append(job_data)
                 else:
                     fetch_waiting_jobs = False
 
@@ -498,7 +499,7 @@ class APIServer(Sanic):
         job_cmd['endpoint_name'] = endpoint_name
         job_cmd['progress_descriptions'] = endpoint.ep_progress_param_config
         job_cmd['output_descriptions'] = endpoint.ep_output_param_config
-        job_cmd['job_data'] = job_data
+        job_cmd['job_data'] = job_batch_data
         return job_cmd
 
 

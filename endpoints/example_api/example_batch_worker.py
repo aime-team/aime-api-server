@@ -1,6 +1,5 @@
 # minimal example worker to request a job batch and sends results
 
-import sys
 from aime_api_worker_interface import APIWorkerInterface
 import time
 
