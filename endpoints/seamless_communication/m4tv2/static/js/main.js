@@ -401,7 +401,7 @@ function initializeDropZone() {
             <p class="text-grey text-sm font-semibold">(wav, mp3 or ogg)</p>
             <p class="text-grey text-xs mt-2 italic">Or press the record button.</p>
         </div>
-        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="audio/wav, audio/x-wav, audio/mp3, audio/mp4, audio/mpeg, audio/ogg, audio/ogg; codecs=vorbis">
+        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="audio/wav, audio/x-wav, audio/mp3, audio/mp4, video/mp4, audio/mpeg, audio/vnd.wave, audio/ogg, video/ogg, audio/ogg; codecs=vorbis">
     `; // Audio MIME Types to handle: audio/mp3, audio/mpeg, audio/wav, audio/x-wav, audio/aac, audio/ogg, audio/flac, audio/amr, audio/x-ms-wma
     document.getElementById('dropzone').insertAdjacentElement('afterbegin', dropzone);
 
@@ -465,6 +465,7 @@ function createAudioPlayer(file) {
 function handleFileSelection(file) {
     const audioInput = document.getElementById('dropzone-input');
     var allowedFormats = audioInput.accept.split(',').map(function (item) { return item.trim(); });
+    console.log(file.type)
 
     if (allowedFormats.includes(file.type)) {
         audioInputBlob = file;

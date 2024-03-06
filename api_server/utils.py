@@ -301,48 +301,56 @@ class InputValidationHandler():
         result, _ = await process.communicate(input=audio_binary)
         if result:
             result = json.loads(result.decode())
-            media_format = result.get('format').get('format_name').replace('matroska,', '')
-        try:
-            await process.stdin.wait_closed()
-        except BrokenPipeError:
-            pass    # Non-critical issue in asyncio.create_subprocess_exec, see https://github.com/python/cpython/issues/104340
-                    # Didn't find solution for process being closed before input is fully received.
-                    # BrokenPipeError only handable in process.stdin.wait_closed() but is ignored anyway. Result is still present.
-
-        """
-        if True:#not result or b'N/A' in result:
-            async with aiofiles.tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                await temp_file.write(audio_binary)
-            process_2 = await asyncio.create_subprocess_exec(*make_ffprobe_command(temp_file.name), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-            result, _ = await process_2.communicate() 
-            await run_in_executor(os.unlink, temp_file.name)
-        """
-        temp_file_name = f'{str(uuid.uuid4())[:8]}.{media_format}'
-        process = await asyncio.create_subprocess_exec(*['ffmpeg', '-i', 'pipe:0', '-vcodec', 'copy', '-acodec', 'copy', temp_file_name], stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        await process.communicate(input=audio_binary)
-        process = await asyncio.create_subprocess_exec(*make_ffprobe_command(temp_file_name), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        result, _ = await process.communicate()
-        await aiofiles.os.remove(temp_file_name)
-
-        if result:
-            result = json.loads(result.decode())
-            streams_dict = result.get('streams')[0]
-            #if result.get('format').get('duration') == 'N/A':
-            #    bit_size = sys.getsizeof(audio_binary)
-            #    duration = bit_size/ (float(bit_rate)/8)
-
             media_params = {
-                MediaParams.FORMAT: media_format, 
-                MediaParams.DURATION: round(float(result.get('format').get('duration'))), 
-                MediaParams.CHANNELS: int(streams_dict.get('channels')),
-                MediaParams.SAMPLE_RATE: int(streams_dict.get('sample_rate')), 
-                MediaParams.SAMPLE_BIT_DEPTH: streams_dict.get('sample_fmt'),
-                MediaParams.AUDIO_BIT_RATE: result.get('format').get('bit_rate')
-                }
+                MediaParams.FORMAT: self.get_media_format(result), 
+                MediaParams.DURATION: round(float(result.get('format', {}).get('duration'))) if result.get('format', {}).get('duration') is not None else None,
+                MediaParams.AUDIO_BIT_RATE: result.get('format', {}).get('bit_rate'),
+                MediaParams.CHANNELS: int(self.get_stream_param(result, 'channels')) if self.get_stream_param(result, 'channels') is not None else None,
+                MediaParams.SAMPLE_RATE: int(self.get_stream_param(result, 'sample_rate')) if self.get_stream_param(result, 'sample_rate') is not None else None,
+                MediaParams.SAMPLE_BIT_DEPTH: self.get_stream_param(result, 'sample_fmt')
+            }
+            try:
+                await process.stdin.wait_closed()
+            except BrokenPipeError:
+                pass    # Non-critical issue in asyncio.create_subprocess_exec, see https://github.com/python/cpython/issues/104340
+                        # Didn't find solution for process being closed before input is fully received.
+                        # BrokenPipeError only handable in process.stdin.wait_closed() but is ignored anyway. Result is still present.
+
+            """
+            if True:#not result or b'N/A' in result:
+                async with aiofiles.tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                    await temp_file.write(audio_binary)
+                process_2 = await asyncio.create_subprocess_exec(*make_ffprobe_command(temp_file.name), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                result, _ = await process_2.communicate() 
+                await run_in_executor(os.unlink, temp_file.name)
+            """
+            if any(param is None for param in media_params.values()):
+                temp_file_name = f'{str(uuid.uuid4())[:8]}.{media_params[MediaParams.FORMAT]}'
+                process = await asyncio.create_subprocess_exec(*['ffmpeg', '-i', 'pipe:0', '-vcodec', 'copy', '-acodec', 'copy', temp_file_name], stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                await process.communicate(input=audio_binary)
+                process = await asyncio.create_subprocess_exec(*make_ffprobe_command(temp_file_name), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                result, _ = await process.communicate()
+                await aiofiles.os.remove(temp_file_name)
+                if result:
+                    result = json.loads(result.decode())
+                    media_params_copied = {
+                        MediaParams.FORMAT: self.get_media_format(result), 
+                        MediaParams.DURATION: round(float(result.get('format', {}).get('duration'))) if result.get('format', {}).get('duration') is not None else None,
+                        MediaParams.AUDIO_BIT_RATE: result.get('format', {}).get('bit_rate'),
+                        MediaParams.CHANNELS: int(self.get_stream_param(result, 'channels')) if self.get_stream_param(result, 'channels') is not None else None,
+                        MediaParams.SAMPLE_RATE: int(self.get_stream_param(result, 'sample_rate')) if self.get_stream_param(result, 'sample_rate') is not None else None,
+                        MediaParams.SAMPLE_BIT_DEPTH: self.get_stream_param(result, 'sample_fmt')
+                    }
+                    media_params = {
+                        key: param if param else media_params_copied[key] for key, param in media_params.items()
+                    }
+                else:
+                    logger.info(f'Parameter {self.ep_input_param_name} denied. Format not recognized by ffprobe.')
+
             logger.info(f'ffprobe analysis audio parameters: {str(media_params)}')
             return media_params
+
         else:
-            logger.info(f'Parameter {self.ep_input_param_name} denied. Format not recognized by ffprobe.')
             return {
                 MediaParams.FORMAT: None, 
                 MediaParams.DURATION: None, 
@@ -351,6 +359,19 @@ class InputValidationHandler():
                 MediaParams.SAMPLE_BIT_DEPTH: None,
                 MediaParams.AUDIO_BIT_RATE: None
             }
+
+
+    def get_media_format(self, result):
+            media_format_list = result.get('format', {}).get('format_name', '').split(',')
+            allowed_formats = self.server_settings.get(f'{self.arg_type}_input', {}).get('format', {}).get('allowed', [])
+            media_format_list = [media_format for media_format in media_format_list if media_format in allowed_formats]
+            if media_format_list:
+                return media_format_list[0]
+
+
+    def get_stream_param(self, result, param_name):
+        return result.get('streams')[0].get(param_name, 0) if result.get('streams') and result.get('streams')[0] else 0
+
 
 
     async def convert_audio_data(

@@ -4,3 +4,4 @@ numpy
 psutil
 hypothesis
 aime_api_worker_interface @ git+https://github.com//aime-team/aime-api-worker-interface
+aime_api_client_interface @ git+https://github.com/aime-team/aime-api-client-interfaces.git#subdirectory=python

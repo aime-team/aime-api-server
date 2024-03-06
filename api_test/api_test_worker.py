@@ -45,7 +45,7 @@ class ApiTestWorker():
         self.api_worker_interface.send_job_results(test_results)
         
     def error_handling(self):
-        if self.job_data['cmd'] == 'error':
+        if self.job_data.get('cmd') == 'error':
             raise ConnectionRefusedError(job_data['msg'])
 
 def load_flags():
