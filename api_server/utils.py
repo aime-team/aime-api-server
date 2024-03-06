@@ -249,7 +249,7 @@ class InputValidationHandler():
                         allowed_values_list = arg_param_definition_server.get(f'allowed')
                         if allowed_values_list and param not in allowed_values_list:
                             self.validation_errors.append(
-                                f'{"Invalid" if param else "Unknown"} {param_name}{param if param else ""}. '+\
+                                f'{"Invalid" if param else "Unknown"} {param_name} {param if param else ""}. '+\
                                 f'Only {", ".join(allowed_values_list)} are allowed by the AIME API Server!'
                             )
 
@@ -325,25 +325,28 @@ class InputValidationHandler():
                 await run_in_executor(os.unlink, temp_file.name)
             """
             if any(param is None for param in media_params.values()):
-                temp_file_name = f'{str(uuid.uuid4())[:8]}.{media_params[MediaParams.FORMAT]}'
-                process = await asyncio.create_subprocess_exec(*['ffmpeg', '-i', 'pipe:0', '-vcodec', 'copy', '-acodec', 'copy', temp_file_name], stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-                await process.communicate(input=audio_binary)
-                process = await asyncio.create_subprocess_exec(*make_ffprobe_command(temp_file_name), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-                result, _ = await process.communicate()
-                await aiofiles.os.remove(temp_file_name)
-                if result:
-                    result = json.loads(result.decode())
-                    media_params_copied = {
-                        MediaParams.FORMAT: self.get_media_format(result), 
-                        MediaParams.DURATION: round(float(result.get('format', {}).get('duration'))) if result.get('format', {}).get('duration') is not None else None,
-                        MediaParams.AUDIO_BIT_RATE: result.get('format', {}).get('bit_rate'),
-                        MediaParams.CHANNELS: int(self.get_stream_param(result, 'channels')) if self.get_stream_param(result, 'channels') is not None else None,
-                        MediaParams.SAMPLE_RATE: int(self.get_stream_param(result, 'sample_rate')) if self.get_stream_param(result, 'sample_rate') is not None else None,
-                        MediaParams.SAMPLE_BIT_DEPTH: self.get_stream_param(result, 'sample_fmt')
-                    }
-                    media_params = {
-                        key: param if param else media_params_copied[key] for key, param in media_params.items()
-                    }
+                if media_params[MediaParams.FORMAT]:
+                    temp_file_name = f'{str(uuid.uuid4())[:8]}.{media_params[MediaParams.FORMAT]}'
+                    process = await asyncio.create_subprocess_exec(*['ffmpeg', '-i', 'pipe:0', '-vcodec', 'copy', '-acodec', 'copy', temp_file_name], stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                    await process.communicate(input=audio_binary)
+                    process = await asyncio.create_subprocess_exec(*make_ffprobe_command(temp_file_name), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                    result, _ = await process.communicate()
+                    await aiofiles.os.remove(temp_file_name)
+                    if result:
+                        result = json.loads(result.decode())
+                        media_params_copied = {
+                            MediaParams.FORMAT: self.get_media_format(result), 
+                            MediaParams.DURATION: round(float(result.get('format', {}).get('duration'))) if result.get('format', {}).get('duration') is not None else None,
+                            MediaParams.AUDIO_BIT_RATE: result.get('format', {}).get('bit_rate'),
+                            MediaParams.CHANNELS: int(self.get_stream_param(result, 'channels')) if self.get_stream_param(result, 'channels') is not None else None,
+                            MediaParams.SAMPLE_RATE: int(self.get_stream_param(result, 'sample_rate')) if self.get_stream_param(result, 'sample_rate') is not None else None,
+                            MediaParams.SAMPLE_BIT_DEPTH: self.get_stream_param(result, 'sample_fmt')
+                        }
+                        media_params = {
+                            key: param if param else media_params_copied[key] for key, param in media_params.items()
+                        }
+                    else:
+                        return media_params
                 else:
                     logger.info(f'Parameter {self.ep_input_param_name} denied. Format not recognized by ffprobe.')
 
@@ -362,16 +365,16 @@ class InputValidationHandler():
 
 
     def get_media_format(self, result):
-            media_format_list = result.get('format', {}).get('format_name', '').split(',')
-            allowed_formats = self.server_settings.get(f'{self.arg_type}_input', {}).get('format', {}).get('allowed', [])
-            media_format_list = [media_format for media_format in media_format_list if media_format in allowed_formats]
-            if media_format_list:
-                return media_format_list[0]
+        media_format_list = result.get('format', {}).get('format_name', '').split(',')
+        if media_format_list:
+            if len(media_format_list) > 1:
+                allowed_formats = self.server_settings.get(f'{self.arg_type}_input', {}).get('format', {}).get('allowed', [])
+                media_format_list = [media_format for media_format in media_format_list if media_format in allowed_formats]
+            return media_format_list[0]
 
 
     def get_stream_param(self, result, param_name):
         return result.get('streams')[0].get(param_name, 0) if result.get('streams') and result.get('streams')[0] else 0
-
 
 
     async def convert_audio_data(

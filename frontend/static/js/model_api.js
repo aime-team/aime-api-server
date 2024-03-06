@@ -57,9 +57,9 @@ class ModelAPI {
 
         const response = await fetch(url, { method, headers, body });
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data from ${url}. Response ${response}`);
-        }
+        //if (!response.ok) {
+        //    throw new Error(`Failed to fetch data from ${url}. Response ${response}`);
+        //z}
 
         return response.json();
     }
@@ -99,7 +99,7 @@ class ModelAPI {
 
         params.client_session_auth_key = this.clientSessionAuthKey;
         params.wait_for_result = !progressCallback;
-
+        
         const response = await this.fetchAsync(url, params, true);
         // console.log('doAPIRequest response', response); // DEBUG output
 

@@ -272,7 +272,7 @@ async function startStopRecording() {
             .catch(error => console.error('Error accessing microphone:', error));
         }
         else {
-            console.error("getUserMedia not supported on your browser!");
+            console.error("getUserMedia not supported on your browser! In firefox and chrome getUserMedia only works via https!");
         }
     }
 }
