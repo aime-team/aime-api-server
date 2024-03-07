@@ -57,13 +57,9 @@ class ModelAPI {
 
         const response = await fetch(url, { method, headers, body });
 
-        if (!response.ok) {
-            const status_code = response.status;
-            var error_response = response.json();
-            error_response.status_code = status_code;
-            return error_response;
-            // throw new Error(`Failed to fetch data from ${url}. Response ${response}`);
-        }
+        //if (!response.ok) {
+        //    throw new Error(`Failed to fetch data from ${url}. Response ${response}`);
+        //}
 
         return response.json();
     }
