@@ -98,8 +98,16 @@ function onResultCallback(data) {
     
     let infoBox = document.getElementById('infoBox');
 
-    if (data["error"]) {
-        infoBox.textContent = 'Error: ' + data.error;
+    if (data.error) {
+        
+        if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
+            modelAPI.doAPILogin();
+            onButtonClick();
+        }
+        else {
+            infoBox.textContent = 'Error: ' + data.error;
+        }
+        
     } else {
         infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's';
     }

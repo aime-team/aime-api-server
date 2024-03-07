@@ -4,29 +4,39 @@ var inputContext = 'A dialog, where User interacts with an helpful, kind, obedie
 let readyToSendRequest = true;
 let chatboxContentEl;
 let info_box;
+let requestNotAuthorized;
+let currentText;
  
 function onSendAPIRequest() {
 	let chatInput = document.getElementById('chat_input');
     info_box.textContent = 'Request sent.\nWaiting for response...';
-
-	let currentText = getChatboxContext();
-	currentText += 'User: ' + chatInput.value + '\nDave:'; // vorher war ohne \n bei user
-    console.log('currentText:'+ currentText);
-
+    if (!requestNotAuthorized) {
+        currentText = getChatboxContext();
+        console.log
+        currentText += 'User: ' + chatInput.value + '\nDave:'; // vorher war ohne \n bei user
+        console.log('currentText:'+ currentText);
+    }
 	params = new Object();
 	params.text = currentText;
 	params.top_k = parseInt(document.getElementById('top_k_range').value);
 	params.top_p = parseFloat(document.getElementById('top_p_range').value);
 	params.temperature = parseFloat(document.getElementById('temperature_range').value);
 	params.seed = parseInt(document.getElementById('seed').value);
+    
 
-    addChatboxBubble(chatInput.value, `Seed: ${params.seed} | TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`, true);
-    addResponseBubble();
-    chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
 
-    chatInput.value = '';
 	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
+    if (!requestNotAuthorized) {
+        addChatboxBubble(chatInput.value, `Seed: ${params.seed} | TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`, true);
+        addResponseBubble();
+        chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
+        
+    }
+
+    
     console.log('sent:', params);
+    
+
 }
 
 function onProgressCallback(progressInfo, progressData) {
@@ -35,7 +45,7 @@ function onProgressCallback(progressInfo, progressData) {
 	const numWorkersOnline = progressInfo.num_workers_online;
 	const progress = progressInfo.progress;
 	
-  refreshResponseBubble(null, `queuePosition: ${queuePosition} | estimate: ${estimate}`)
+    refreshResponseBubble(null, `queuePosition: ${queuePosition} | estimate: ${estimate}`)
 
 	if(progressData != null) {
         refreshResponseBubble(progressData.text, `answering... | progress: ${progress}`);
@@ -51,12 +61,22 @@ function onProgressCallback(progressInfo, progressData) {
 function onResultCallback(data) {
 	enableSendButton();
     readyToSendRequest = true;
-
+    
 	infoBox = document.getElementById('info_box');
-	if (data['error']) {
-		infoBox.textContent = data.error;
-	}
+    console.log('RESSSS')
+    if (data.error) {
+        if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
+            modelAPI.doAPILogin();
+            requestNotAuthorized = true;
+            onSendAPIRequest();
+            return
+        }
+        else {
+            infoBox.textContent = 'Error: ' + data.error;
+        }
+    }
 	else {
+
 		console.log('result: ', data);
 		if (data.seed) { 					infoBox.textContent = 'Seed: ' + data.seed + '\n'; }
 		if (data.total_duration) { 			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n'; }
@@ -67,6 +87,7 @@ function onResultCallback(data) {
 											infoBox.textContent += 'Tokens per second: ' + tokensPerSec.toFixed(1) + '\n';
 		}
 		if (data.model_name) { 				infoBox.textContent += '\nModel name: ' + data.model_name +'\n'; }
+        document.getElementById('chat_input').value = '';
 	}
 	if (data.auth) { 						infoBox.textContent += 'Worker: ' + data.auth + '\n'; }
 	if (data.worker_interface_version) {
@@ -77,8 +98,8 @@ function onResultCallback(data) {
 
 	infoBox.style.height = 'auto';
 	infoBox.style.height = infoBox.scrollHeight + 'px';
-
     refreshResponseBubble(data.text, `Duration: ${data.total_duration} | Tokens: ${data.num_generated_tokens} | Tokens per second: ${tokensPerSec.toFixed(1)}`)
+    
 
     // TODO: Content aufhübschen durch HTML -> mini-markup, z.B. Auflistungen erkennen, Formatierungen (<strong>, italic) usw.?
     // ...
@@ -145,6 +166,7 @@ function refreshRangeInputLayout() {
 }
 
 function onButtonClick() {
+    requestNotAuthorized = false;
     if(readyToSendRequest) {
         readyToSendRequest = false;
 

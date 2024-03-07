@@ -61,26 +61,32 @@ function onResultCallback(data) {
     document.getElementById('progress_label').innerText = '';
     
     readyToSendRequest = true;
-    if (data.images) {
-        info_box = document.getElementById('info_box');
-        
-        if (data["error"]) {
-            info_box.textContent = data.error;
+    infoBox = document.getElementById('info_box');
+    if (data.error) {
+        if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
+            modelAPI.doAPILogin();
+            onButtonClick();
         }
         else {
-            num_images = parseInt(document.getElementById('num_samples_range').value);
-            imagesPerSec = num_images / data.total_duration
-            info_box.textContent = 'Prompt: ' +  data.prompt + '\nSeed: ' + data.seed + '\nTotal job duration: ' + 
-                data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's' + '\nImages per second: ' + imagesPerSec.toFixed(1);
+            infoBox.textContent = 'Error: ' + data.error;
         }
-        if (data.auth) {
-            info_box.textContent += '\nWorker: ' + data.auth;
-        }
-        if (data.worker_interface_version) {
-            info_box.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
-        }
-        info_box.style.height = 'auto';
-        info_box.style.height = info_box.scrollHeight + 'px';
+    }
+    else {
+        num_images = parseInt(document.getElementById('num_samples_range').value);
+        imagesPerSec = num_images / data.total_duration
+        infoBox.textContent = 'Prompt: ' +  data.prompt + '\nSeed: ' + data.seed + '\nTotal job duration: ' + 
+            data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's' + '\nImages per second: ' + imagesPerSec.toFixed(1);
+    }
+    if (data.auth) {
+        infoBox.textContent += '\nWorker: ' + data.auth;
+    }
+    if (data.worker_interface_version) {
+        infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
+    }
+    if (data.images) {
+
+        infoBox.style.height = 'auto';
+        infoBox.style.height = infoBox.scrollHeight + 'px';
         
         var imageContainer = document.getElementById('image_container');
         imageContainer.innerHTML = '';
@@ -264,8 +270,8 @@ function handleKeyPress(event) {
     if(readyToSendRequest) {
         readyToSendRequest = false;
 
-        info_box = document.getElementById('info_box');
-        info_box.textContent = 'Request sent.\nWaiting for response...';
+        infoBox = document.getElementById('info_box');
+        infoBox.textContent = 'Request sent.\nWaiting for response...';
 
         disableSendButton();
         addSpinner();

@@ -102,11 +102,11 @@ class APIEndpoint():
         """
         start_time = time.time()   
         input_args = request.json if request.method == "POST" else request.args
-        validation_errors = self.validate_client(input_args)
+        validation_errors, error_code = self.validate_client(input_args)
 
         # fast exit if not authorized for request
         if validation_errors:
-            return self.handle_validation_errors(validation_errors)
+            return self.handle_validation_errors(validation_errors, error_code)
 
         job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
         if validation_errors:
@@ -196,10 +196,10 @@ class APIEndpoint():
         return job_future
 
 
-    def handle_validation_errors(self, validation_errors):
+    def handle_validation_errors(self, validation_errors, error_code=400):
         response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
         APIEndpoint.logger.debug(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
-        return sanic_json(response, status=400)
+        return sanic_json(response, status=error_code)
 
 
     def validate_progress_request(self, input_args):
@@ -294,15 +294,17 @@ class APIEndpoint():
 
     def validate_client(self, input_args):
         client_session_auth_key = input_args.get('client_session_auth_key')
-
+        error_code = None
         validation_errors = []
         if not client_session_auth_key in self.app.registered_client_sessions:
             validation_errors.append(f'Client session authentication key not registered in API Server')
+            error_code = 401
         else:
             self.app.registered_client_sessions[client_session_auth_key][self.endpoint_name] += 1
             if self.client_request_limit and self.app.registered_client_sessions[client_session_auth_key] > self.client_request_limit:
                 validation_errors.append(f'Client has too much requests. Only {self.client_request_limit} requests per client allowed.')
-        return validation_errors
+                error_code = 402
+        return validation_errors, error_code
 
 
     def get_and_validate_progress_data(self, job_id):
