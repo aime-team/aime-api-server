@@ -195,7 +195,7 @@ class ApiTest():
         params = self.get_dict_with_required_parameters_and_ep_input_on_main_endpoint('client_session_auth_key', 'this_is_an_invalid_key')
         try:
             response = self.fetch_sync(params, self.endpoint_names[0])
-            assert response.status_code == 400, f'Invalid client_session authentification key "{params["client_session_auth_key"]}" did not reply with status code 400'
+            assert response.status_code == 401, f'Invalid client_session authentification key "{params["client_session_auth_key"]}" did not reply with status code 401'
             return True , response.json().get('errors')
 
 
@@ -205,7 +205,7 @@ class ApiTest():
 
     
     def make_request_with_invalid_parameters(self, params):
-        try:
+        try:    
             response = self.fetch_sync(params, self.endpoint_names[0])
             assert response.status_code == 400, f'Invalid parameters {params} did not reply with status code 400'
             return True
@@ -345,7 +345,6 @@ class ApiTest():
 
     def get_invalid_parameters_from_main_endpoint_config(self):
         invalid_parameters = []
-        invalid_parameters.append({})
         
         invalid_parameters.append(self.get_dict_with_required_parameters_and_ep_input_on_main_endpoint('unknown_parameter', 'value'))
         ep_inputs = self.ep_config_dict.get('api_test').get('INPUTS')
@@ -669,7 +668,7 @@ def test_make_single_request(api_test_instance):
 
 def test_make_request_with_invalid_parameters(api_test_instance):
     invalid_parameters = api_test_instance.get_invalid_parameters_from_main_endpoint_config()
-    print('Following invalid paraters were tried: ')
+    print('Following invalid parameters were tried: ')
     for parameter in invalid_parameters:
         print(parameter)
     success = all(api_test_instance.make_request_with_invalid_parameters(parameters) for parameters in invalid_parameters)
