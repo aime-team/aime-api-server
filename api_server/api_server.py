@@ -213,7 +213,7 @@ class APIServer(Sanic):
                 }]
         """
         req_json = request.json
-        if isinstance(req_json, list):
+        if not isinstance(req_json, list): # compatibility fix: api_worker_interface < version 0.70
             req_json = [req_json]
 
         for job_data in req_json:
