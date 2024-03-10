@@ -67,6 +67,7 @@ class BenchmarkApi():
             summary_string += f'; {round(self.args.total_requests/duration, 1)} images/s'
             
         print(summary_string)
+        
     def get_loop(self):
         try:
             loop = asyncio.get_running_loop()
