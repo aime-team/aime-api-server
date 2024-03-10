@@ -204,17 +204,22 @@ class APIServer(Sanic):
             .. highlight:: python
             .. code-block:: python 
 
-                request.json = {    
+                request.json = [{    
                     'job_id': 'JID1',
                     'progress': 50,
                     'progress_data': {'progress_images': ['base64-string', 'base64-string', ...]},
                     'start_time_compute': 1700424731.9582381,
                     'start_time': 1700424731.952994
-                }
+                }]
         """
         req_json = request.json
-        job_id = req_json.get('job_id')
-        APIServer.progress_states[job_id] = req_json
+        if isinstance(req_json, list):
+            req_json = [req_json]
+
+        for job_data in req_json:
+            job_id = job_data.get('job_id')
+            # TODO: error checking!
+            APIServer.progress_states[job_id] = job_data
         result = {'cmd': 'ok'}
         return sanic_json(result)
 
