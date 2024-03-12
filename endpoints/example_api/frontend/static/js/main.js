@@ -1,7 +1,7 @@
 const modelAPI = new ModelAPI('example_api');
 
 let readyToSendRequest = true;
-let log_textarea, chat_input, info_box;
+let log_textarea, chat_input, infoBox;
 
 function onSendAPIRequest() {
     
@@ -23,15 +23,33 @@ function onSendAPIRequest() {
                 removeSpinner();
 
                 if (data.error) {
-                    info_box.textContent = data.error;
-                }
+                    if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
+                        modelAPI.doAPILogin();
+                        onButtonClick();
+                    }
+                    else {
+                        infoBox.textContent = 'Error: ' + data.error;
+                    }
+                } 
                 else {
                     log_textarea.value += '\n' + data.text + '\n';
                     log_textarea.scrollTop = log_textarea.scrollHeight;
-                    info_box.textContent = 'Response received. Request finished succesfully!';
-
+                    infoBox.textContent = 'Response received. Request finished succesfully!';
+                    infoBox.textContent += '\nTotal job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's';
                     document.getElementById('progress_bar').value = 100;
                     document.getElementById('progress_label').innerText = '100%';
+                }
+                if (data.model_name) {
+                    infoBox.textContent += '\nModel name: ' + data.model_name;
+                }
+                if (data.task) {
+                    infoBox.textContent += '\nTask: ' + data.task;
+                }
+                if (data.auth) {
+                    infoBox.textContent += '\nWorker: ' + data.auth;
+                }
+                if (data.worker_interface_version) {
+                    infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
                 }
                 adjustTextareasHeight();
             },
@@ -54,7 +72,7 @@ function onSendAPIRequest() {
                 else {
                     progressTxt += 'Waiting in queue at position ' + queue_position
                 }
-                info_box.textContent = progressTxt;
+                infoBox.textContent = progressTxt;
 
                 document.getElementById('progress_bar').value = progress;
                 document.getElementById('progress_label').innerText = progress.toFixed(1) + '% | ' + progressTxt;
@@ -149,8 +167,8 @@ function adjustTextareasHeight() {
     log_textarea.style.height = 'auto';
     log_textarea.style.height = log_textarea.scrollHeight + 'px';
 
-    info_box.style.height = 'auto';
-    info_box.style.height = info_box.scrollHeight + 'px';
+    infoBox.style.height = 'auto';
+    infoBox.style.height = infoBox.scrollHeight + 'px';
 }
 
 function handleKeyPress(event) {
@@ -164,8 +182,8 @@ function onButtonClick() {
     
     if(readyToSendRequest) {
         readyToSendRequest = false;
-        info_box = document.getElementById('info_box');
-        info_box.textContent = 'Request sent.\nWaiting for response...';
+        infoBox = document.getElementById('info_box');
+        infoBox.textContent = 'Request sent.\nWaiting for response...';
         disableSendButton();
         addSpinner();
         onSendAPIRequest();
@@ -207,7 +225,7 @@ window.addEventListener('load', function() {
    
     log_textarea = document.getElementById('chat_log');
     chat_input = document.getElementById('chat_input');
-    info_box = document.getElementById('info_box');
+    infoBox = document.getElementById('info_box');
 
     log_textarea.innerText = 'Welcome, User! Please type in a message, set your number of steps and a job duration, then press the send button.';
 
