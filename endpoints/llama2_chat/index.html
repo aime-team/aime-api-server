@@ -47,9 +47,6 @@
 				</div>
 
 				<div id="settings_container" class="w100 mt-5">
-					<p class="select-label">Seed</p>
-                    <input id="seed" type="number" min="0" max="99999999" value="1234" class="form-input w-full mb-3"/>
-
 					<p class="select-label">Top K</p>
 					<input id="top_k_range" class="slider w100" type="range" min="1" max="100" value="40" oninput="document.getElementById('top_k_label').innerHTML = this.value">
 					<label for="top_k_range" id="top_k_label">40</label>
@@ -102,7 +99,6 @@
 				"top_k":40,
 				"top_p":0.9,
 				"temperature":0.8,
-				"seed":1234,
 				"client_session_auth_key":"e1b12673-3beb-42eb-bd2c-1747a11dd084",
 				"wait_for_result":false
 			}
@@ -144,7 +140,6 @@
 					"text":"Oh, that's a tough one! I have so many favourite movies, but if I had to choose just one, I would say \"Toy Story\". It's such a classic and it always makes me laugh.\n",
 					"num_generated_tokens":52,
 					"model_name":"llama-2-13b-chat",
-					"seed":1234,
 					"compute_duration":1.8,
 					"total_duration":1.8,
 					"auth":"neo06_NVIDIA A100-PCIE-40GB_0",
