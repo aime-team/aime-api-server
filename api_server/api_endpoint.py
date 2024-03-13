@@ -17,7 +17,7 @@ from .utils import StaticRouteHandler, shorten_strings, generate_auth_key, calcu
 TYPES_DICT = {'string': str, 'integer':int, 'float':float, 'bool':bool, 'image':str, 'audio':str}
 
 
-class APIEndpoint():
+class APIEndpointOld():
     """AIME ML API endpoint
 
     Args:
@@ -83,6 +83,431 @@ class APIEndpoint():
     def add_server_static_routes(self, static_files):
         static_route_handler = StaticRouteHandler(Path(self.ep_config_file_path).parent, self.app, self.endpoint_name)
         static_route_handler.setup_static_routes(static_files)
+
+
+    async def api_request(self, request):
+        """Client request on route /self.endpoint_name with input parameters for the workers related to the job type 
+        given in the input parameters. The client input parameters are validated and prepared for the worker job data. 
+        Next an asyncio.Future() for the job is initialized where the result will be put by APIServer.worker_job_result_json() when the job is finished. 
+        The job data is put to the job type related asyncio.Queue() to be accessed by the workers in APIServer().worker_job_request().
+        If 'wait_for_result' is True the end result of the job is awaited via finalize_request and returned to the client. If False, 
+        the client gets a quick confirmation response and the result can be requested on route 
+        /self.endpoint_name/progress in the parameter 'job_result'.
+
+        Args:
+            request (sanic.request.types.Request): Request from client
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client
+        """
+        start_time = time.time()   
+        input_args = request.json if request.method == "POST" else request.args
+        validation_errors, error_code = self.validate_client(input_args)
+
+        # fast exit if not authorized for request
+        if validation_errors:
+            return self.handle_validation_errors(validation_errors, error_code)
+
+        job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
+        if validation_errors:
+            return self.handle_validation_errors(validation_errors)
+
+        job_data = self.add_session_variables_to_job_data(request, job_data)
+        job_data = self.prepare_job_data(job_data, start_time)
+        job_future = await self.init_future_and_put_job_in_worker_queue(job_data)
+
+        if input_args.get('wait_for_result', True):
+            response = await self.finalize_request(request, job_data.get('job_id'), job_future) 
+        else:
+            response = {'success': True, 'job_id': job_data.get('job_id'), 'ep_version': self.version}
+        return sanic_json(response)
+
+
+    async def api_progress(self, request):
+        """Client request on route /self.endpoint_name/progress called periodically by the client interface 
+        to receive progress and end results if the input parameter 'wait_for_result' of the related api_request 
+        was False. Takes the progress results from APIServer.progress_states put there by 
+        APIServer.worker_job_progress() and sends it as response json to the client. When the job is finished the 
+        final job result is awaited and taken from the job queue in finalize_request() and sent as response json 
+        to the client. 
+
+        Args:
+            request (sanic.request.types.Request): Request with client_session_auth_key from client to 
+                receive progress and end result 
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client with progress result and end result
+        """        
+
+        input_args = request.json if request.method == "POST" else request.args
+        job_id, validation_errors = self.validate_progress_request(input_args)
+
+        if validation_errors:
+            return self.handle_validation_errors(validation_errors)
+
+        response = {"success": True, 'job_id': job_id, 'ep_version': self.version}
+        progress_state = self.get_and_validate_progress_data(job_id)
+        job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
+        if job_state == JobState.PROCESSING:
+            job_future =  self.app.job_result_futures.get(job_id, None)
+            if job_future and job_future.done():
+                response['job_result'] = await self.finalize_request(request, job_id, job_future)
+                job_state = self.app.job_states.get(job_id, job_state)       
+
+        response['job_state'] = job_state.value
+        if job_state != JobState.DONE:
+            response['progress'] = progress_state
+        APIEndpoint.logger.debug(str(shorten_strings(response)))
+        return sanic_json(response)
+
+
+    async def get_client_session_auth_key(self, request):
+        """Route for client interface to login to the API Server while receiving a client session 
+        authentication key.
+
+        Args:
+            request (sanic.request.types.Request): Request from client.
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client containing the client session authentication key.
+        """
+        client_session_auth_key = generate_auth_key()
+        client_version = request.args.get('version','No version given from client')
+        
+        self.app.registered_client_sessions[client_session_auth_key] = {self.endpoint_name: 0}
+
+        APIEndpoint.logger.debug(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
+        response = {
+            'success': True, 
+            'ep_version': self.version, 
+            'client_session_auth_key': client_session_auth_key
+        }
+        return sanic_json(response)
+
+
+    async def init_future_and_put_job_in_worker_queue(self, job_data):
+        job_id = job_data.get('job_id')
+        APIEndpoint.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {job_id} into the '{self.worker_job_type}' queue ... ")       
+        self.app.job_states[job_id] = JobState.QUEUED
+        job_future = asyncio.Future(loop=self.app.loop)
+        self.app.job_result_futures[job_id] = job_future
+
+        await self.app.job_queues.get(self.worker_job_type).put(job_data)
+        return job_future
+
+
+    def handle_validation_errors(self, validation_errors, error_code=400):
+        response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
+        APIEndpoint.logger.debug(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
+        return sanic_json(response, status=error_code)
+
+
+    def validate_progress_request(self, input_args):
+        validation_errors = []
+
+        client_session_auth_key = input_args.get('client_session_auth_key', None)
+
+        if not client_session_auth_key in self.app.registered_client_sessions:
+            validation_errors.append(f'Client session authentication key not registered in API Server')
+
+        job_id = input_args.get('job_id', None)
+        if not job_id:
+            validation_errors.append(f'No job_id given')
+
+        job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
+        if job_state == JobState.UNKNOWN:
+            validation_errors.append(f'Client has no active request with this job id')
+
+        return job_id, validation_errors
+
+
+    async def finalize_request(self, request, job_id, job_future):
+        """Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future 
+        initialized in api_request() to get the results.
+
+        Args:
+            request (sanic.request.types.Request): _description_
+            job_id (_type_): _description_
+            job_future (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """        
+
+        response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
+        result = await job_future
+
+        #--- extract and store session variables from job
+        for ep_session_param_name in self.ep_session_param_config:
+            if ep_session_param_name in result:
+                request.ctx.session[ep_session_param_name] = result[ep_session_param_name]
+
+        #--- read job outputs
+        for ep_output_param_name in self.ep_output_param_config:
+            if ep_output_param_name in result:
+                APIEndpoint.logger.debug('job outputs: ')
+                APIEndpoint.logger.debug(f'{ep_output_param_name}: {shorten_strings(result[ep_output_param_name])}')
+                response[ep_output_param_name] = result[ep_output_param_name]
+            else:
+                if ep_output_param_name != 'error':
+                    APIEndpoint.logger.warn(f"missing output '{ep_output_param_name}' in job results")
+        meta_outputs = ['compute_duration', 'total_duration', 'auth', 'worker_interface_version']
+        queue = self.app.job_queues.get(self.worker_job_type)
+        queue.update_mean_job_duration(result)
+        if self.provide_worker_meta_data:
+            for meta_output in meta_outputs:
+                if meta_output in result:
+                    response[meta_output] = result[meta_output]
+
+        self.app.job_states[job_id] = JobState.DONE
+        self.app.progress_states[job_id] = {}
+        return response
+
+    
+
+    async def validate_input_parameters_for_job_data(self, input_args):
+        """Check if worker input parameters received from client are as specified in the endpoint config file
+        """
+        input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.settings)
+        return await input_validator.validate_input_parameter()
+           
+
+
+    def add_session_variables_to_job_data(self, request, job_data):
+        for ep_session_param_name in self.ep_session_param_config:
+            arg_definition = self.ep_session_param_config[ep_session_param_name]
+            value_default = arg_definition.get('default', None)
+            value = request.ctx.session.get(ep_session_param_name, value_default)
+            if value is not None:
+                job_data[ep_session_param_name] = value
+        return job_data
+
+
+    def prepare_job_data(self, job_data, start_time):
+        job_data['job_id'] = self.app.job_queues[self.worker_job_type].get_next_job_id()
+        job_data['endpoint_name'] = self.endpoint_name
+        job_data['start_time'] = start_time
+        APIEndpoint.logger.debug('Job data: ')
+        APIEndpoint.logger.debug(str(shorten_strings(job_data)))
+        return job_data
+
+
+    def validate_client(self, input_args):
+        client_session_auth_key = input_args.get('client_session_auth_key')
+        error_code = None
+        validation_errors = []
+        if not client_session_auth_key in self.app.registered_client_sessions:
+            validation_errors.append(f'Client session authentication key not registered in API Server')
+            error_code = 401
+        else:
+            self.app.registered_client_sessions[client_session_auth_key][self.endpoint_name] += 1
+            if self.client_request_limit and self.app.registered_client_sessions[client_session_auth_key] > self.client_request_limit:
+                validation_errors.append(f'Client has too much requests. Only {self.client_request_limit} requests per client allowed.')
+                error_code = 402
+        return validation_errors, error_code
+
+
+    def get_and_validate_progress_data(self, job_id):
+        progress_state = self.app.progress_states.get(job_id, {})
+        queue = self.app.job_queues.get(self.worker_job_type)
+        if progress_state:
+            
+            progress_data_validated = dict()
+            progress_data = progress_state.get('progress_data', None)
+            if progress_data:
+                for ep_progress_param_name in self.ep_progress_param_config:
+                    if ep_progress_param_name in progress_data:
+                        APIEndpoint.logger.debug('progress outputs: ')
+                        APIEndpoint.logger.debug(shorten_strings(progress_data[ep_progress_param_name]))
+                        progress_data_validated[ep_progress_param_name] = progress_data[ep_progress_param_name]
+            progress_state['progress_data'] = progress_data_validated
+        else:
+            progress_state['progress'] = 0
+
+        queue_position, estimate, num_workers_online = self.get_queue_parameters(job_id, queue, progress_state)
+        progress_state['estimate'] = estimate
+        progress_state['queue_position'] = queue_position
+        progress_state['num_workers_online'] = num_workers_online
+        return progress_state
+
+
+    def get_queue_parameters(self, job_id, queue, progress_state):
+                
+        job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
+        queue_position = 0
+        queue.update_worker_status()
+        num_workers_online = sum(1 for worker in queue.registered_workers.values() if worker.get('status') in ('waiting', 'processing', f'finished job {job_id}'))
+        if progress_state['progress'] == 100:
+            estimate = 0
+        elif job_state == JobState.QUEUED:
+            queue_position = queue.get_rank_for_job_id(job_id)
+            if num_workers_online and queue_position:                
+                estimate = max(
+                    calculate_estimate_time(
+                        queue.mean_job_duration['compute_duration'] * (queue_position + 1) / num_workers_online,
+                        queue.get_start_time_for_job_id(job_id)
+                    ),
+                    calculate_estimate_time(
+                        queue.mean_job_duration['total_duration'], 
+                        queue.get_start_time_for_job_id(job_id))
+                )
+            else:
+                estimate = -1
+        elif job_state == JobState.PROCESSING and progress_state and progress_state.get('start_time_compute'):
+            estimate = max(
+                0,
+                calculate_estimate_time(
+                    queue.mean_job_duration['compute_duration'], 
+                    progress_state.get('start_time_compute'))
+            )
+        else:
+            estimate = queue.mean_job_duration['compute_duration']
+
+        return queue_position, estimate, num_workers_online
+
+
+class APIEndpoint():
+    """AIME ML API endpoint
+
+    Args:
+        app (APIServer): Instance of APIServer()
+        title (str): Endpoint title
+        name (str): Endpoint name
+        description (str): Endpoint description
+        client_request_limit (int): Request limit per client
+        provide_worker_meta_data (bool): Whether to send data like worker name to the client
+        http_methods (str): Allowed http methods on this endpoint
+        ep_input_param_config (dict): Input parameter configuration from endpoint config file
+        ep_output_param_config (dict): Output parameter configuration from endpoint config file
+        ep_progress_param_config (dict): Progress parameter configuration from endpoint config file
+        ep_session_param_config (dict): Session parameter configuration from endpoint config file
+        job_type (str): Job type
+        worker_auth_key (str): Allowed worker authentication key
+        static_files (dict): Static routes
+              
+    """    
+    logger = logging.getLogger('API')
+    def __init__(
+        self,
+        app,
+        ep_config_file_path
+        ):
+        self.get_endpoint_description(ep_config_file_path)
+        self.title = title
+        self.endpoint_name = name
+        self.description = description
+        self.client_request_limit = client_request_limit
+        self.provide_worker_meta_data = provide_worker_meta_data
+        self.version = version
+        self.ep_input_param_config = ep_input_param_config
+        self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
+        self.ep_input_param_config['wait_for_result'] = { 'type': 'bool'}     # add implicit input 
+        self.ep_output_param_config = ep_output_param_config
+        self.ep_progress_param_config = ep_progress_param_config
+        self.ep_session_param_config = ep_session_param_config
+        self.ep_config_file_path = ep_config_file_path
+        self.worker_job_type = job_type
+        self.worker_auth_key = worker_auth_key
+        self.registered_client_session_auth_keys = dict()
+
+        app.add_route(self.api_request, "/" + self.endpoint_name, methods=http_methods, name=self.endpoint_name)
+        app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=http_methods, name=self.endpoint_name + "$progress")
+        app.add_route(self.get_client_session_auth_key, "/" + self.endpoint_name + "/get_client_session_auth_key", methods=http_methods, name=self.endpoint_name + "$get_client_session_auth_key")
+        self.app = app
+        self.add_server_static_routes(static_files)
+
+        
+
+
+    def add_server_static_routes(self, static_files):
+        static_route_handler = StaticRouteHandler(Path(self.ep_config_file_path).parent, self.app, self.endpoint_name)
+        static_route_handler.setup_static_routes(static_files)
+
+
+    def get_endpoint_description(self, ep_config_file_path):
+        """Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.
+
+        Args:
+            config (dict): Config dictionary
+
+        Returns:
+            tuple (str, str, str, int, list): Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.
+        """
+        ep_config = ep_config_file_path['ENDPOINT']
+        name = ep_config['name']             
+        title = ep_config.get('title', name)  
+        description = ep_config.get('description', title)
+
+        http_methods = self.get_http_methods(ep_config)
+        version = ep_config.get('version')
+        APIServer.logger.info(f'----------- {title} - {name} {http_methods}')
+        return title, name, description, http_methods, version
+
+
+    def get_endpoint_clients_config(self, ep_config):
+        endpoint_clients_config = ep_config.get('CLIENTS', {})
+        return endpoint_clients_config.get('client_request_limit', 0), endpoint_clients_config.get('provide_worker_meta_data', False)
+
+    def get_http_methods(self, ep_config):
+        """Loads http methods defined in given endpoint config file
+
+        Args:
+            config (dict): Config dictionary
+
+        Returns:
+            list: List of http methods like ['GET', 'POST']
+        """
+        http_methods_str = ep_config.get('methods', "GET, POST")
+        http_methods = []
+        for http_method in http_methods_str.replace(" ", "").split(","):
+            if http_method == "GET":
+                http_methods.append("GET")
+            elif http_method == "POST":
+                http_methods.append("POST")
+            else:
+                APIServer.logger.error("unknown HTTP method: " + http_method)
+        return http_methods
+
+
+    def get_param_config(self, config):
+        """Parses endpoint input-, output-, progress-, and session-parameter configuration from
+        given endpoint config file.
+
+        Args:
+            config (dict): Config dictionary
+
+        Returns:
+            tuple (dict, dict, dict, dict): Tuple of dictionaries with input-, output-, progress-, 
+                and session-parameter configuration
+        """
+        ep_input_param_config = config.get('INPUTS', {})
+        ep_output_param_config = config.get('OUTPUTS', {})
+        ep_progress_output_param_config = config.get('PROGRESS', {}).get('PROGRESS.OUTPUTS')
+        ep_session_param_config = config.get('SESSION', {}).get(("VARS"), {})
+
+        for ep_input_param_name in ep_input_param_config:
+            APIServer.logger.debug(str(ep_input_param_name))
+
+        return ep_input_param_config, ep_output_param_config, ep_progress_output_param_config, ep_session_param_config
+
+
+    def get_worker_params(self, config):
+        """Parses worker parameters like job type and worker authorization key from endpoint config file.
+
+        Args:
+            config (dict): Config dictionary
+
+        Returns:
+            tuple (str, str): Tuple of job_type and worker_auth_key
+        """
+        worker_config = config.get('WORKER', {})
+        job_type = worker_config.get('job_type')    
+        if job_type == None:
+            APIServer.logger.error("No job_type for worker configured!")
+        else:
+            APIServer.logger.info("Worker job type: " + job_type)
+        worker_auth_key = worker_config.get('auth_key')
+        return job_type, worker_auth_key   
 
 
     async def api_request(self, request):

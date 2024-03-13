@@ -280,17 +280,13 @@ class APIServer(Sanic):
         config_file = APIServer.args.server_config
         APIServer.logger.info("Reading server config: " + str(config_file))
 
-        config = {}
         with open(config_file, "r") as f:
-            config = toml.load(f)
+            server_config = toml.load(f)
 
-        clients_config = config.get('CLIENTS', {})
-        APIServer.default_authentification = clients_config.get("default_authentification", "None")
-        APIServer.default_authorization = clients_config.get("default_authorization", "None")
-        APIServer.default_authorization_keys = clients_config.get("default_authorization_keys", {})
 
-        APIServer.static_routes = config.get('STATIC', {})
-        APIServer.settings = config.get('SETTINGS')
+        self.get_server_clients_config()
+        APIServer.inputs = server_config.get('INPUTS')
+        APIServer.static_routes = server_config.get('STATIC', {})
 
 
     def get_endpoint_descriptions(self, config):
@@ -306,13 +302,24 @@ class APIServer(Sanic):
         name = ep_config['name']             
         title = ep_config.get('title', name)  
         description = ep_config.get('description', title)
-        client_request_limit = ep_config.get('client_request_limit', 0)
-        provide_worker_meta_data = ep_config.get('provide_worker_meta_data', False)
+
         http_methods = self.get_http_methods(ep_config)
         version = ep_config.get('version')
         APIServer.logger.info(f'----------- {title} - {name} {http_methods}')
-        return title, name, description, client_request_limit, provide_worker_meta_data, http_methods, version
+        return title, name, description, http_methods, version
 
+
+    def get_endpoint_clients_config(self, ep_config):
+        endpoint_clients_config = ep_config.get('CLIENTS', {})
+        return endpoint_clients_config.get('client_request_limit', 0), endpoint_clients_config.get('provide_worker_meta_data', False)
+
+    def get_server_clients_config(self, server_config):
+        server_clients_config = server_config.get('CLIENTS', {})
+        APIServer.default_authentification = server_clients_config.get("default_authentification", "None")
+        APIServer.default_authorization = server_clients_config.get("default_authorization", "None")
+        APIServer.default_authorization_keys = server_clients_config.get("default_authorization_keys", {})
+        APIServer.default_client_request_limit = server_clients_config.get("default_client_request_limit", 0)
+        APIServer.default_provide_worker_meta_data = server_clients_config.get("default_provide_worker_meta_data", False)
 
     def get_http_methods(self, ep_config):
         """Loads http methods defined in given endpoint config file
@@ -348,13 +355,13 @@ class APIServer(Sanic):
         """
         ep_input_param_config = config.get('INPUTS', {})
         ep_output_param_config = config.get('OUTPUTS', {})
-        ep_progress_param_config = config.get('PROGRESS', {})
+        ep_progress_output_param_config = config.get('PROGRESS', {}).get('PROGRESS.OUTPUTS')
         ep_session_param_config = config.get('SESSION', {}).get(("VARS"), {})
 
         for ep_input_param_name in ep_input_param_config:
             APIServer.logger.debug(str(ep_input_param_name))
 
-        return ep_input_param_config, ep_output_param_config, ep_progress_param_config, ep_session_param_config
+        return ep_input_param_config, ep_output_param_config, ep_progress_output_param_config, ep_session_param_config
 
 
     def get_worker_params(self, config):
@@ -382,17 +389,43 @@ class APIServer(Sanic):
         config = None
         with open(config_file, 'r') as f:
             config = toml.load(f)
-
-        endpoint_description = self.get_endpoint_descriptions(config)
-
         APIServer.logger.debug(str(config))
-
+        endpoint_description = self.get_endpoint_descriptions(config)
+        clients_config = self.get_endpoint_clients_config(config)
+        worker_config = self.get_worker_params(config)
         param_config = self.get_param_config(config)
-        job_type, worker_auth_key = self.get_worker_params(config)
 
         APIServer.endpoints[endpoint_description[1]] = APIEndpoint(
-            self, *endpoint_description, *param_config, job_type, worker_auth_key, config.get('HTML', {}), config_file
+            self,
+            *endpoint_description,
+            *clients_config,
+            *param_config,
+            *worker_config,
+            config.get('STATIC', {}),
+            config_file
         )
+
+    def init_endpoint(self, config_file):
+        with open(config_file, 'r') as f:
+            config = toml.load(f)
+            name = config.get('ENDPOINT', {}).get('name')
+        APIServer.endpoints[name] = APIEndpoint(config_file)
+
+    def init_all_endpoints(self, app):
+        config_dir = APIServer.args.ep_config
+        APIServer.logger.info('--- Searching endpoints configurations in {config_dir}')
+        if Path(config_dir).is_dir():
+            for config_file in Path(config_dir).glob('**/ml_api_endpoint.cfg'):
+                self.init_endpoint(config_file)
+        elif Path(config_dir).is_file():
+            self.init_endpoint(config_dir)
+        elif ',' in config_dir:
+            for config_file in config_dir.split(','):
+                self.init_endpoint(config_file)
+        else:
+            APIServer.logger.error("!!! No Endpoint Configuration found, please specify where to load ml_api_endpoing.cfg with the --ep_config argument")
+
+
         
 
     def load_endpoint_configurations(self, app):
