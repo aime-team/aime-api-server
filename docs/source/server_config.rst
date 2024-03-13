@@ -1,0 +1,74 @@
+Server configuration
+~~~~~~~~~~~~~~~~~~~~
+
+
+The server configuration file model_api_server.cfg is used to set server related parameters and can be found in the root directory of this repository.
+Is it divided to certain sections explained in detail below.
+
+The basic server parameters like its address are set in the section [SERVER]:
+
+.. code-block:: toml
+
+    [SERVER]
+    port = 7777
+    host = "0.0.0.0"
+
+The section [ADMIN] deals with administrator related settings:
+
+.. code-block:: toml
+
+    [ADMIN]
+    # login credentials to admin backend
+    user = "admin"
+    password = ""
+
+Settings concerning the endpoints can be changed in the section [ENDPOINTS]. To change the settings for a specific endpoint use the endpoint config file <link>.
+
+.. code-block:: toml
+
+    [ENDPOINTS]
+    # search path or list of endpoint configuration files to load on startup
+    endpoint_configs = "./endpoints"
+
+Client related configurations can be done in the section [CLIENTS]:
+
+.. code-block:: toml
+
+    [CLIENTS]
+    # client default authorization method (can be overwritten in Endpoint configuration)
+    # Available authentification: None, User, IP, Pubkey
+    default_authentification = "User"
+    # Available authorization: None, Key
+    default_authorization = "Key"
+    default_authorization_keys = { "aime" = "6a17e2a5b70603cb1a3294b4a1df67da" }
+
+General settings like the allowed formats for input data are to be configured in the section [SETTINGS]. Note that input data recognized in a format not being allowed here will be rejected no matter of the supported formats in the endpoint configuration file!
+
+.. code-block:: toml
+
+    [SETTINGS]
+
+    image_input.format = { allowed = [ "png", "jpeg" ] }
+    audio_input.format = { allowed = [ "wav", "mp3", "ogg", "webm", "mp4" ] }
+    job_timeout = 60
+
+In the section [STATIC] the static routes can be redirected to a desired destination.
+
+.. code-block:: toml
+
+    [STATIC]
+    # mount static served files, path relativ to location of the configuratin file
+    # supported types: "file" (default), "scss" (SCSS compiled CSS) and "md" (markdown, will be compiled to HTML)
+
+    # demo endpoints shared resources
+    "/model_api/js/model_api.js" = { file = "./frontend/static/js/model_api.js" }
+    "/model_api/frontend" = { path = "./frontend/static" }
+    "/model_api/css" = { path = "./frontend/scss", compiled_path = "./frontend/static/_compiled_/css", type = "scss" }
+
+    # README and Documentation
+    "/" = { file = "./README.md", type = "md", compiled_path = "./frontend/static/_compiled_/html", css_file = "./docs/css/markdown.css" }
+
+    "/docs" = { path = "./docs/build/html/" }
+    "/docs/css" = { path = "./docs/css/" }
+    "/docs/images" = { path = "./docs/images" }
+
