@@ -55,20 +55,22 @@ Chat with 'Dave', our LLaMa2 based chat-bot.
 
 ### Stable Diffusion XL
 
-[![AIME Stable Diffusion XL Demo](/docs/images/aime_stable_diffusion_xl.jpg "AIME Stable Diffusion XL Demo")](https://api.aime.info/sdxl-txt2img/)
+[![AIME Stable Diffusion XL Demo](/docs/images/aime_stable_diffusion_xl.jpg "AIME Stable Diffusion XL Demo")](/#sdxl-txt2img){:target="_parent"}
 
 Create photo realistic images from text prompts.
 
-* AIME Demo Server: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/)
+* AIME Demo Server: [Stable Diffusion XL](/#sdxl-txt2img){:target="_parent"}
+* Your Local Server: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/)
 * Source: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl)
 
 ### Seamless Communication
 
-[![AIME Seamless Communication Demo](/docs/images/aime_seamless_communication.jpg "AIME Seamless Communication Demo")](https://api.aime.info/sc-m4tv2/)
+[![AIME Seamless Communication Demo](/docs/images/aime_seamless_communication.jpg "AIME Seamless Communication Demo")](/#sc-m4tv2){:target="_parent"}
 
 Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, Text-to-Speech and Speech-to-Speech! 
 
-* Demo: [Seamless Communication](https://api.aime.info/sc-m4tv2/)
+* AIME Demo Server: [Seamless Communication](/#sc-m4tv2){:target="_parent"}
+* Your local Server: [Seamless Communication](/sc-m4tv2/)
 * Source: [https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication)
 
 
