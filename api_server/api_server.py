@@ -218,7 +218,7 @@ class APIServer(Sanic):
 
         for job_data in req_json:
             job_id = job_data.get('job_id')
-            # TODO: error checking!
+            # TODO: validation and error checking!
             APIServer.progress_states[job_id] = job_data
         result = {'cmd': 'ok'}
         return sanic_json(result)
