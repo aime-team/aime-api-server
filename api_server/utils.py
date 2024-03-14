@@ -82,6 +82,7 @@ class StaticRouteHandler:
             self.app.static(slug, route_path, name=f'{self.endpoint_name}_static{str(self.num)}')
             self.num += 1
 
+
     def setup_markdown_route(self, slug, route):
         route_path = route.get('path', route.get('file', None))
         compiled_path = (self.config_file_path / route.get('compiled_path')).resolve()
@@ -119,10 +120,10 @@ class StaticRouteHandler:
 
 class InputValidationHandler():
 
-    def __init__(self, input_args, ep_input_param_config, server_settings):
+    def __init__(self, input_args, ep_input_param_config, server_input_type_config):
         self.input_args = input_args
         self.ep_input_param_config = ep_input_param_config
-        self.server_settings = server_settings
+        self.server_input_type_config = server_input_type_config
         self.validation_errors = list()
         self.arg_definition = dict()
         self.arg_type = str()
@@ -133,7 +134,6 @@ class InputValidationHandler():
 
 
     async def validate_input_parameter(self):
-
         job_data = dict()
         self.check_for_unknown_parameters()
         for ep_input_param_name, arg_definition in self.ep_input_param_config.items():
@@ -242,7 +242,7 @@ class InputValidationHandler():
     def validate_media_parameters_on_server(self, params):
         if params:
             for param_name, param in params.items():
-                arg_definition_server = self.server_settings.get(f'{self.arg_type}_input')
+                arg_definition_server = self.server_input_type_config.get(self.arg_type)
                 if arg_definition_server:
                     arg_param_definition_server = arg_definition_server.get(param_name)
                     if arg_param_definition_server:
@@ -368,7 +368,7 @@ class InputValidationHandler():
         media_format_list = result.get('format', {}).get('format_name', '').split(',')
         if media_format_list:
             if len(media_format_list) > 1:
-                allowed_formats = self.server_settings.get(f'{self.arg_type}_input', {}).get('format', {}).get('allowed', [])
+                allowed_formats = self.server_input_type_config.get(self.arg_type, {}).get('format', {}).get('allowed', [])
                 media_format_list = [media_format for media_format in media_format_list if media_format in allowed_formats]
             return media_format_list[0]
 

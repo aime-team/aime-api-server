@@ -44,10 +44,10 @@ class APIEndpoint():
         title,
         name,
         description,
-        client_request_limit,
-        provide_worker_meta_data,
         http_methods,
         version,
+        client_request_limit,
+        provide_worker_meta_data,
         ep_input_param_config,
         ep_output_param_config,
         ep_progress_param_config,
@@ -268,7 +268,7 @@ class APIEndpoint():
     async def validate_input_parameters_for_job_data(self, input_args):
         """Check if worker input parameters received from client are as specified in the endpoint config file
         """
-        input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.settings)
+        input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.input_type_config)
         return await input_validator.validate_input_parameter()
            
 
@@ -310,12 +310,13 @@ class APIEndpoint():
     def get_and_validate_progress_data(self, job_id):
         progress_state = self.app.progress_states.get(job_id, {})
         queue = self.app.job_queues.get(self.worker_job_type)
+        ep_progress_output_param_config = self.ep_progress_param_config.get('OUTPUTS')
         if progress_state:
             
             progress_data_validated = dict()
             progress_data = progress_state.get('progress_data', None)
             if progress_data:
-                for ep_progress_param_name in self.ep_progress_param_config:
+                for ep_progress_param_name in ep_progress_output_param_config:
                     if ep_progress_param_name in progress_data:
                         APIEndpoint.logger.debug('progress outputs: ')
                         APIEndpoint.logger.debug(shorten_strings(progress_data[ep_progress_param_name]))
