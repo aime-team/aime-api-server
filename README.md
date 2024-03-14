@@ -45,11 +45,12 @@ To illustrate the usage and capabilities of AIME API we currently run following 
 
 ### LLaMa2 Chat
 
-[![AIME LLaMa2 Chat Demo](/docs/images/aime_llama2_chat.jpg "AIME LLaMa2 Chat Demo")](https://api.aime.info/llama2_chat.html)
+[![AIME LLaMa2 Chat Demo](/docs/images/aime_llama2_chat.jpg "AIME LLaMa2 Chat Demo")](/#llama2_chat){:target="_parent"}
 
 Chat with 'Dave', our LLaMa2 based chat-bot.
 
-* Demo: [LLama2 Chat](https://api.aime.info/llama2_chat.html)
+* AIME Demo Server: [LLama2 Chat](/#llama2_chat){:target="_parent"}
+* Your Local Server: [LLama2 Chat](/llama2_chat.html)
 * Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
 
 ### Stable Diffusion XL
@@ -58,7 +59,7 @@ Chat with 'Dave', our LLaMa2 based chat-bot.
 
 Create photo realistic images from text prompts.
 
-* Demo: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/)
+* AIME Demo Server: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/)
 * Source: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl)
 
 ### Seamless Communication
