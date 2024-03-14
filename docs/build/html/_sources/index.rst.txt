@@ -8,6 +8,7 @@ AIME API Server
 
    Setup & Start API Server <setup>
    Source Documentation <aime_api_server>
+   Configuration <configuration>
 
 .. toctree::
    :maxdepth: 4

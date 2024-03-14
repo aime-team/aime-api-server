@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -15,13 +15,13 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=486e5634"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=6a14807c"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API Worker Interface" href="api_worker_interface/index_api_worker_interface.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
     <link rel="prev" title="Setup AIME API Server" href="setup.html" /> 
 </head>
 
@@ -76,6 +76,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#api_server.job_queue.JobState"><code class="docutils literal notranslate"><span class="pre">JobState</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
@@ -113,10 +114,10 @@
            <div itemprop="articleBody">
              
   <section id="aime-api-server-documentation">
-<h1>AIME API Server Documentation<a class="headerlink" href="#aime-api-server-documentation" title="Link to this heading"></a></h1>
+<h1>AIME API Server Documentation<a class="headerlink" href="#aime-api-server-documentation" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_server.</span></span><span class="sig-name descname"><span class="pre">APIServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_server.</span></span><span class="sig-name descname"><span class="pre">APIServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer" title="Permalink to this definition"></a></dt>
 <dd><p>AIME ML API Server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -128,7 +129,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.get_endpoint_descriptions">
-<span class="sig-name descname"><span class="pre">get_endpoint_descriptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_endpoint_descriptions" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_endpoint_descriptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_endpoint_descriptions" title="Permalink to this definition"></a></dt>
 <dd><p>Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -145,7 +146,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.get_http_methods">
-<span class="sig-name descname"><span class="pre">get_http_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_http_methods" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_http_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_http_methods" title="Permalink to this definition"></a></dt>
 <dd><p>Loads http methods defined in given endpoint config file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -162,7 +163,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.get_param_config">
-<span class="sig-name descname"><span class="pre">get_param_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_param_config" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_param_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_param_config" title="Permalink to this definition"></a></dt>
 <dd><p>Parses endpoint input-, output-, progress-, and session-parameter configuration from
 given endpoint config file.</p>
 <dl class="field-list simple">
@@ -184,7 +185,7 @@ given endpoint config file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.get_worker_params">
-<span class="sig-name descname"><span class="pre">get_worker_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_worker_params" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_worker_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_worker_params" title="Permalink to this definition"></a></dt>
 <dd><p>Parses worker parameters like job type and worker authorization key from endpoint config file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -201,13 +202,13 @@ given endpoint config file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.load_server_configuration">
-<span class="sig-name descname"><span class="pre">load_server_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.load_server_configuration" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">load_server_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.load_server_configuration" title="Permalink to this definition"></a></dt>
 <dd><p>Parses server configuration file.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_check_server_status">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_check_server_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_check_server_status" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_check_server_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_check_server_status" title="Permalink to this definition"></a></dt>
 <dd><p>Route /worker_check_server_status for API worker interface to check
 server connection and queue validation for given job type and worker authentication.</p>
 <dl class="field-list simple">
@@ -244,7 +245,7 @@ server connection and queue validation for given job type and worker authenticat
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_job_progress">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_progress" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_progress" title="Permalink to this definition"></a></dt>
 <dd><p>Receive progress results from api worker interface via route /worker_job_progress
 and put it to APIServer.progress_states[job_id] to make it available for APIEndpoint.api_progress().</p>
 <dl class="field-list simple">
@@ -260,20 +261,20 @@ and put it to APIServer.progress_states[job_id] to make it available for APIEndp
 </dl>
 <p class="rubric">Examples</p>
 <p>Examples request payload from API worker interface:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">request</span><span class="o">.</span><span class="n">json</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">request</span><span class="o">.</span><span class="n">json</span> <span class="o">=</span> <span class="p">[{</span>
     <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID1&#39;</span><span class="p">,</span>
     <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
     <span class="s1">&#39;progress_data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;progress_images&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;base64-string&#39;</span><span class="p">,</span> <span class="s1">&#39;base64-string&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]},</span>
     <span class="s1">&#39;start_time_compute&#39;</span><span class="p">:</span> <span class="mf">1700424731.9582381</span><span class="p">,</span>
     <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="mf">1700424731.952994</span>
-<span class="p">}</span>
+<span class="p">}]</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_job_request_json">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_request_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_request_json" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_request_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_request_json" title="Permalink to this definition"></a></dt>
 <dd><p>Request from API worker interface for a job on route /worker_job_request. If the worker is validated and a job is put in the job_queue
 within job_timeout the job data including ‘cmd’: ‘job’ is received from the job queue and send to API worker interface in the json response.
 If there is no job put in the within job_timeout ‘cmd’: ‘no_job’ is
@@ -347,7 +348,7 @@ received from the job queue and send to API worker interface in the json respons
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_job_result_json">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_result_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_result_json" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_result_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_result_json" title="Permalink to this definition"></a></dt>
 <dd><p>Receive final job result from API worker interface via route /worker_job_result.
 Processes the result and puts it to the future related to the job initialized in APIEndpoint.api_request
 to make it available by APIEndpoint.api_request and APIEndpoint.api_progress to send it to the client.</p>
@@ -368,7 +369,7 @@ to make it available by APIEndpoint.api_request and APIEndpoint.api_progress to 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_endpoint.</span></span><span class="sig-name descname"><span class="pre">APIEndpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_request_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provide_worker_meta_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_input_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_output_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_progress_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_session_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_config_file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_endpoint.</span></span><span class="sig-name descname"><span class="pre">APIEndpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_request_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provide_worker_meta_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_input_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_output_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_progress_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_session_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_config_file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint" title="Permalink to this definition"></a></dt>
 <dd><p>AIME ML API endpoint</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -392,7 +393,7 @@ to make it available by APIEndpoint.api_request and APIEndpoint.api_progress to 
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.api_progress">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">api_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.api_progress" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">api_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.api_progress" title="Permalink to this definition"></a></dt>
 <dd><p>Client request on route /self.endpoint_name/progress called periodically by the client interface
 to receive progress and end results if the input parameter ‘wait_for_result’ of the related api_request
 was False. Takes the progress results from APIServer.progress_states put there by
@@ -415,7 +416,7 @@ receive progress and end result</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.api_request">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">api_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.api_request" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">api_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.api_request" title="Permalink to this definition"></a></dt>
 <dd><p>Client request on route /self.endpoint_name with input parameters for the workers related to the job type
 given in the input parameters. The client input parameters are validated and prepared for the worker job data.
 Next an asyncio.Future() for the job is initialized where the result will be put by APIServer.worker_job_result_json() when the job is finished.
@@ -438,7 +439,7 @@ the client gets a quick confirmation response and the result can be requested on
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.finalize_request">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_future</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.finalize_request" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_future</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.finalize_request" title="Permalink to this definition"></a></dt>
 <dd><p>Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future
 initialized in api_request() to get the results.</p>
 <dl class="field-list simple">
@@ -460,7 +461,7 @@ initialized in api_request() to get the results.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.get_client_session_auth_key">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_client_session_auth_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.get_client_session_auth_key" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_client_session_auth_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.get_client_session_auth_key" title="Permalink to this definition"></a></dt>
 <dd><p>Route for client interface to login to the API Server while receiving a client session
 authentication key.</p>
 <dl class="field-list simple">
@@ -478,7 +479,7 @@ authentication key.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.validate_input_parameters_for_job_data">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_input_parameters_for_job_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.validate_input_parameters_for_job_data" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_input_parameters_for_job_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.validate_input_parameters_for_job_data" title="Permalink to this definition"></a></dt>
 <dd><p>Check if worker input parameters received from client are as specified in the endpoint config file</p>
 </dd></dl>
 
@@ -486,13 +487,13 @@ authentication key.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobQueue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobQueue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue" title="Permalink to this definition"></a></dt>
 <dd><p>Job queue to manage jobs for the given job type. Assignes jobs offered from client on APIEndpoint.api_request
 via route /endpoint_name with a job_id and collects the job_data. The workers asking for jobs on worker_job_request_json get
 the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue.fetch_waiting_job">
-<span class="sig-name descname"><span class="pre">fetch_waiting_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.fetch_waiting_job" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fetch_waiting_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.fetch_waiting_job" title="Permalink to this definition"></a></dt>
 <dd><p>Get job data of the next waiting job in the queue. Returns None if no job is waiting</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -506,7 +507,7 @@ the job_data for the next job in the queue to process. Also monitors states of w
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue.get">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.get" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.get" title="Permalink to this definition"></a></dt>
 <dd><p>Get job data of the next job in the queue. Timeout after self.job_timeout</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -520,7 +521,7 @@ the job_data for the next job in the queue to process. Also monitors states of w
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue.put">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.put" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.put" title="Permalink to this definition"></a></dt>
 <dd><p>Put job_data from the client job offer to the job_queue.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -539,7 +540,7 @@ the job_data for the next job in the queue to process. Also monitors states of w
 
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.job_queue.JobState">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobState" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobState" title="Permalink to this definition"></a></dt>
 <dd><p>An enumeration.</p>
 </dd></dl>
 
@@ -550,7 +551,7 @@ the job_data for the next job in the queue to process. Also monitors states of w
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="setup.html" class="btn btn-neutral float-left" title="Setup AIME API Server" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="api_worker_interface/index_api_worker_interface.html" class="btn btn-neutral float-right" title="API Worker Interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

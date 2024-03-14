@@ -21,22 +21,15 @@ function onSendAPIRequest() {
 	params.top_k = parseInt(document.getElementById('top_k_range').value);
 	params.top_p = parseFloat(document.getElementById('top_p_range').value);
 	params.temperature = parseFloat(document.getElementById('temperature_range').value);
-	params.seed = parseInt(document.getElementById('seed').value);
-    
-
 
 	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
     if (!requestNotAuthorized) {
-        addChatboxBubble(chatInput.value, `Seed: ${params.seed} | TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`, true);
+        addChatboxBubble(chatInput.value, `TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`, true);
         addResponseBubble();
         chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
         
     }
-
-    
     console.log('sent:', params);
-    
-
 }
 
 function onProgressCallback(progressInfo, progressData) {
@@ -63,7 +56,6 @@ function onResultCallback(data) {
     readyToSendRequest = true;
     
 	infoBox = document.getElementById('info_box');
-    console.log('RESSSS')
     if (data.error) {
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
             modelAPI.doAPILogin();
@@ -78,7 +70,6 @@ function onResultCallback(data) {
 	else {
 
 		console.log('result: ', data);
-		if (data.seed) { 					infoBox.textContent = 'Seed: ' + data.seed + '\n'; }
 		if (data.total_duration) { 			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n'; }
 		if (data.compute_duration) { 		infoBox.textContent += 'Compute duration: ' + data.compute_duration + 's' + '\n'; }
 		if (data.num_generated_tokens) { 	infoBox.textContent += 'Generated tokens: ' + data.num_generated_tokens + '\n'; }
