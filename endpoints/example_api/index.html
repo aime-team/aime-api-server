@@ -19,7 +19,7 @@
 
 </head>
 <body class="flex flex-col min-h-screen">
-	<div class="pl-5 pr-5 max-w-7xl mx-auto flex-grow">
+	<div class="pl-5 pr-5 max-w-7xl flex-grow">
         <div id="top">
             <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: Simple Example</h2>
         </div>
@@ -43,7 +43,7 @@
 							placeholder="Type your message..."
 							onkeydown="handleKeyPress(event)" 
 						/>
-						<div class="w100 flex justify-end mb-5 mt-1 items-center h-full w-full">
+						<div class="min-w-full flex justify-end mb-5 mt-1 items-center h-full w-full">
 							<button id="chat_send" type="button" class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" onclick="onButtonClick();">Send</button>
 						</div>
 					</div>
@@ -51,11 +51,11 @@
 		
 					<!-- VALUE SLIDERS -->
 					<p class="select-label">Progress Steps</p>
-					<input type="range" class="slider w100" id="progress_steps" min="0" max="100" value="50" oninput="document.getElementById('progress_steps_label').innerHTML = this.value">
+					<input type="range" class="slider min-w-full" id="progress_steps" min="0" max="100" value="50" oninput="document.getElementById('progress_steps_label').innerHTML = this.value">
 					<label for="progress_steps" id="progress_steps_label">50</label>
 
 					<p class="select-label">Job Duration</p>
-					<input type="range" class="slider w100" id="sleep_duration" min="0" max="60" value="3" oninput="document.getElementById('sleep_duration_label').innerHTML = this.value">
+					<input type="range" class="slider min-w-full" id="sleep_duration" min="0" max="60" value="3" oninput="document.getElementById('sleep_duration_label').innerHTML = this.value">
 					<label for="sleep_duration" id="sleep_duration_label">3</label>
 					<!-- /END VALUE SLIDERS -->			
 				</div>
@@ -76,13 +76,13 @@
 				</div>
 					
 				<div id="tab_output" class="tab-content">
-					<div id="progress_container" class="w100">
+					<div id="progress_container" class="min-w-full">
 						<p class="label">Progress</p>
 						<progress id="progress_bar" class="rounded" value="0" max="100"></progress>
-						<label id="progress_label" class="text-sm"></label>
+						<label id="progress_label" class="text-sm min-w-full"><span class="text-gray-300">[Progress Information]</span></label>
 					</div>
 					<p class="label mt-5">Console Output</p>
-					<textarea readonly id="info_box" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm text-aime_blue">>_</textarea>
+					<textarea readonly id="info_box" class="rounded bg-gray-400 mb-4 min-w-full p-4 border-none text-sm text-aime_blue">>_</textarea>
 				</div>
 
 				<div id="tab_json" class="hidden tab-content">

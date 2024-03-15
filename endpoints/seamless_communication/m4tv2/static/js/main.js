@@ -44,6 +44,7 @@ var audioInputBlob;
 let mediaRecorder;
 let audioChunks = [];
 let timerInterval;
+let info_box;
 
 const modelAPI = new ModelAPI('sc_m4tv2');
 
@@ -91,57 +92,38 @@ function onSendAPIRequest() {
 }
 
 function onResultCallback(data) {
-	enableSendButton();
-    removeSpinner();
-    readyToSendRequest = true;
-	document.getElementById('textOutput').textContent = data.text_output;
-    
-    let infoBox = document.getElementById('infoBox');
-
     if (data.error) {
-        
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-            modelAPI.doAPILogin();
-            onButtonClick();
+            modelAPI.doAPILogin( () => onSendAPIRequest() );
+            return;
         }
-        else {
-            infoBox.textContent = 'Error: ' + data.error;
-        }
-        
     } else {
-        infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's';
-    }
+        enableSendButton();
+        removeSpinner();
+        readyToSendRequest = true;
+        document.getElementById('textOutput').textContent = data.text_output;
+        infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + ' s';
 
-    if (data.model_name) {
-        infoBox.textContent += '\nModel name: ' + data.model_name;
-    }
+        if (data.model_name) {              infoBox.textContent += '\nModel name: ' + data.model_name; }
+        if (data.task) {                    infoBox.textContent += '\nTask: ' + data.task; }
+        if (data.auth) {                    infoBox.textContent += '\nWorker: ' + data.auth; }
+        if (data.worker_interface_version) { infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version; }
+        
+        adjustTextareasHeight();
     
-    if (data.task) {
-        infoBox.textContent += '\nTask: ' + data.task;
-    }
-    
-    if (data.auth) {
-        infoBox.textContent += '\nWorker: ' + data.auth;
-    }
-    
-    if (data.worker_interface_version) {
-        infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
-    }
-    
-    adjustTextareasHeight();
-
-    let audioOutputContainer = document.getElementById('audioOutputContainer');
-    let audioOutput = document.getElementById('audioPlayerOutput');
-    audioOutputContainer.classList.remove('hidden');
-	
-    if (data.audio_output) {
-		audioOutputElement.src = data.audio_output;
-    	audioOutput.src = data.audio_output;
-        audioOutput.play();
-	} else {
-        audioOutputElement.src = '';
-    	audioOutput.src = '';
-        audioOutputContainer.classList.add('hidden');
+        let audioOutputContainer = document.getElementById('audioOutputContainer');
+        let audioOutput = document.getElementById('audioPlayerOutput');
+        audioOutputContainer.classList.remove('hidden');
+        
+        if (data.audio_output) {
+            audioOutputElement.src = data.audio_output;
+            audioOutput.src = data.audio_output;
+            audioOutput.play();
+        } else {
+            audioOutputElement.src = '';
+            audioOutput.src = '';
+            audioOutputContainer.classList.add('hidden');
+        }
     }
 }
 
@@ -571,6 +553,8 @@ window.addEventListener('load', function() {
     initializeLanguageSwapButton();
     initializeDropZone();
     updateWordCount();
+
+    infoBox = document.getElementById('infoBox');
     
     document.addEventListener('keydown', function(event) {
         if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {

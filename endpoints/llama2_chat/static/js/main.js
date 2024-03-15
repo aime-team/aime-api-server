@@ -4,32 +4,17 @@ var inputContext = 'A dialog, where User interacts with an helpful, kind, obedie
 let readyToSendRequest = true;
 let chatboxContentEl;
 let info_box;
-let requestNotAuthorized;
-let currentText;
- 
+let currentContext;
+
 function onSendAPIRequest() {
-	let chatInput = document.getElementById('chat_input');
-    info_box.textContent = 'Request sent.\nWaiting for response...';
-    if (!requestNotAuthorized) {
-        currentText = getChatboxContext();
-        console.log
-        currentText += 'User: ' + chatInput.value + '\nDave:'; // vorher war ohne \n bei user
-        console.log('currentText:'+ currentText);
-    }
 	params = new Object();
-	params.text = currentText;
+	params.text = currentContext;
 	params.top_k = parseInt(document.getElementById('top_k_range').value);
 	params.top_p = parseFloat(document.getElementById('top_p_range').value);
 	params.temperature = parseFloat(document.getElementById('temperature_range').value);
 
 	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
-    if (!requestNotAuthorized) {
-        addChatboxBubble(chatInput.value, `TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`, true);
-        addResponseBubble();
-        chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
-        
-    }
-    console.log('sent:', params);
+    // console.log('sent:', params);
 }
 
 function onProgressCallback(progressInfo, progressData) {
@@ -52,24 +37,17 @@ function onProgressCallback(progressInfo, progressData) {
 };
 
 function onResultCallback(data) {
-	enableSendButton();
-    readyToSendRequest = true;
-    
-	infoBox = document.getElementById('info_box');
     if (data.error) {
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-            modelAPI.doAPILogin();
-            requestNotAuthorized = true;
-            onSendAPIRequest();
-            return
-        }
-        else {
-            infoBox.textContent = 'Error: ' + data.error;
+            modelAPI.doAPILogin( () => onSendAPIRequest() );
+            return;
         }
     }
 	else {
-
-		console.log('result: ', data);
+        enableSendButton();
+        readyToSendRequest = true;
+        infoBox = document.getElementById('info_box');
+        
 		if (data.total_duration) { 			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n'; }
 		if (data.compute_duration) { 		infoBox.textContent += 'Compute duration: ' + data.compute_duration + 's' + '\n'; }
 		if (data.num_generated_tokens) { 	infoBox.textContent += 'Generated tokens: ' + data.num_generated_tokens + '\n'; }
@@ -79,26 +57,26 @@ function onResultCallback(data) {
 		}
 		if (data.model_name) { 				infoBox.textContent += '\nModel name: ' + data.model_name +'\n'; }
         document.getElementById('chat_input').value = '';
+        
+        if (data.auth) { 					infoBox.textContent += 'Worker: ' + data.auth + '\n'; }
+        if (data.worker_interface_version) {
+            var versionNo = data.worker_interface_version.match(/\d+\.\d+\.\d+/);
+            if (versionNo) {				infoBox.textContent += 'Worker Interface version: ' + versionNo[0] + '\n'; }
+        }
+        if (data.ep_version != null) { 		infoBox.textContent += 'Endpoint version: ' + data.ep_version; }
+
+        infoBox.style.height = 'auto';
+        infoBox.style.height = infoBox.scrollHeight + 'px';
+        refreshResponseBubble(data.text, `Duration: ${data.total_duration} | Tokens: ${data.num_generated_tokens} | Tokens per second: ${tokensPerSec.toFixed(1)}`)
+        
+        // TODO: Make content prettier with HTML -> mini-markup, e.g. recognize listings, formatting (<strong>, italic) etc.?
+        // ...
+
+        // TODO: Offer download of the dialog as PDF
+        // ...
+
+        chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
 	}
-	if (data.auth) { 						infoBox.textContent += 'Worker: ' + data.auth + '\n'; }
-	if (data.worker_interface_version) {
-		var versionNo = data.worker_interface_version.match(/\d+\.\d+\.\d+/);
-		if (versionNo) {					infoBox.textContent += 'Worker Interface version: ' + versionNo[0] + '\n'; }
-	}
-	if (data.ep_version != null) { 			infoBox.textContent += 'Endpoint version: ' + data.ep_version; }
-
-	infoBox.style.height = 'auto';
-	infoBox.style.height = infoBox.scrollHeight + 'px';
-    refreshResponseBubble(data.text, `Duration: ${data.total_duration} | Tokens: ${data.num_generated_tokens} | Tokens per second: ${tokensPerSec.toFixed(1)}`)
-    
-
-    // TODO: Content aufhübschen durch HTML -> mini-markup, z.B. Auflistungen erkennen, Formatierungen (<strong>, italic) usw.?
-    // ...
-
-    // TODO: Download des Dialogs als PDF anbieten
-    // ...
-
-	chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
 };
 
 function disableSendButton() {
@@ -157,7 +135,6 @@ function refreshRangeInputLayout() {
 }
 
 function onButtonClick() {
-    requestNotAuthorized = false;
     if(readyToSendRequest) {
         readyToSendRequest = false;
 
@@ -171,8 +148,21 @@ function onButtonClick() {
         if(!output_btn.active) {
             output_btn.click();
         }
-        
+
+        let chatInput = document.getElementById('chat_input');
+        info_box.textContent = 'Request sent.\nWaiting for response...';
+
+        currentContext = getChatboxContext();
+        currentContext += 'User: ' + chatInput.value + '\nDave:';
+        console.log('currentContext:'+ currentContext);
+
         onSendAPIRequest();
+
+        addChatboxBubble(chatInput.value, `TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`, true);
+        addResponseBubble();
+        chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
+        
+        chatInput.value = '';
     }
  }
 
