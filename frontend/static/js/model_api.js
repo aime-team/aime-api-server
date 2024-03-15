@@ -57,9 +57,19 @@ class ModelAPI {
 
         const response = await fetch(url, { method, headers, body });
 
-        //if (!response.ok) {
-        //    throw new Error(`Failed to fetch data from ${url}. Response ${response}`);
-        //}
+        // if (response.ok) {
+        //    ...
+        // }
+        // else {
+        //     switch (response.status) {
+        //         case 401: // Unauthorized
+        //             // ...
+        //             break;
+            
+        //         default:
+        //             break;
+        //     }
+        // }
 
         return response.json();
     }
@@ -93,9 +103,7 @@ class ModelAPI {
      */
     async doAPIRequest(params, resultCallback, progressCallback = null, progressStream = false) {
         const url = `/${this.endpointName}`;
-        console.log(`URL: ${url}`);
-        console.log(`API Key: ${this.clientSessionAuthKey}`);
-        console.log('progressStream: ', progressStream);
+        console.log(`sending API request to URL: ${url} with API Key: ${this.clientSessionAuthKey} and progressStream: ${progressStream}`);
 
         params.client_session_auth_key = this.clientSessionAuthKey;
         params.wait_for_result = !progressCallback;

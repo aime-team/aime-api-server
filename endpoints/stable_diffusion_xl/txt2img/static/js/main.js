@@ -1,4 +1,5 @@
 const modelAPI = new ModelAPI('stable_diffusion_xl_txt2img');
+let info_box;
 
 function onSendAPIRequest() {
     params = new Object({
@@ -46,64 +47,64 @@ function onSendAPIRequest() {
             var provide_progress_images = provide_progress_images_radio[i].value;
     }
     params.provide_progress_images = provide_progress_images;
-    // prompt_input.value = '';
     modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
 }
         
 function onResultCallback(data) {
-    enableSendButton();
-    removeSpinner();
-
-    document.getElementById('tasks_to_wait_for').innerText = '';
-    document.getElementById('estimate').innerText = '';
-    document.getElementById('num_workers_online').innerText = '';
-    document.getElementById('progress_bar').value = 100;
-    document.getElementById('progress_label').innerText = '';
-    
-    readyToSendRequest = true;
-    infoBox = document.getElementById('info_box');
     if (data.error) {
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-            modelAPI.doAPILogin();
-            onButtonClick();
-        }
-        else {
-            infoBox.textContent = 'Error: ' + data.error;
+            modelAPI.doAPILogin( () => onSendAPIRequest() );
+            return;
         }
     }
     else {
+        enableSendButton();
+        removeSpinner();
+    
+        document.getElementById('tasks_to_wait_for').innerText = '';
+        document.getElementById('estimate').innerText = '';
+        document.getElementById('num_workers_online').innerText = '';
+        document.getElementById('progress_bar').value = 100;
+        document.getElementById('progress_label').innerText = '';
+        
+        readyToSendRequest = true;
+        infoBox = document.getElementById('info_box');
+
         num_images = parseInt(document.getElementById('num_samples_range').value);
         imagesPerSec = num_images / data.total_duration
         infoBox.textContent = 'Prompt: ' +  data.prompt + '\nSeed: ' + data.seed + '\nTotal job duration: ' + 
             data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's' + '\nImages per second: ' + imagesPerSec.toFixed(1);
-    }
-    if (data.auth) {
-        infoBox.textContent += '\nWorker: ' + data.auth;
-    }
-    if (data.worker_interface_version) {
-        infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
-    }
-    if (data.images) {
-
-        infoBox.style.height = 'auto';
-        infoBox.style.height = infoBox.scrollHeight + 'px';
+    
+        if (data.auth) {
+            infoBox.textContent += '\nWorker: ' + data.auth;
+        }
         
-        var imageContainer = document.getElementById('image_container');
-        imageContainer.innerHTML = '';
-        var images = data.images;
-        for (var i = 0; i < images.length; i++) {
-            var image_data = images[i].trim();
-            if (image_data) {
-                var img = document.createElement('img');
-                img.src = image_data;
-                img.classList.add('generated_image');
-                // img.style.width = '1024px';
-                img.style.marginBottom = '10px';
-
-                var imageDiv = document.createElement('div');
-                imageDiv.appendChild(img);
-                appendDownloadIcon(imageDiv, image_data, data.prompt, data.seed, i);
-                imageContainer.appendChild(imageDiv);
+        if (data.worker_interface_version) {
+            infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
+        }
+        
+        if (data.images) {
+    
+            infoBox.style.height = 'auto';
+            infoBox.style.height = infoBox.scrollHeight + 'px';
+            
+            var imageContainer = document.getElementById('image_container');
+            imageContainer.innerHTML = '';
+            var images = data.images;
+            for (var i = 0; i < images.length; i++) {
+                var image_data = images[i].trim();
+                if (image_data) {
+                    var img = document.createElement('img');
+                    img.src = image_data;
+                    img.classList.add('generated_image');
+                    // img.style.width = '1024px';
+                    img.style.marginBottom = '10px';
+    
+                    var imageDiv = document.createElement('div');
+                    imageDiv.appendChild(img);
+                    appendDownloadIcon(imageDiv, image_data, data.prompt, data.seed, i);
+                    imageContainer.appendChild(imageDiv);
+                }
             }
         }
     }
