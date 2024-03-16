@@ -129,14 +129,14 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.get_endpoint_descriptions">
-<span class="sig-name descname"><span class="pre">get_endpoint_descriptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_endpoint_descriptions" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_endpoint_descriptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_endpoint_descriptions" title="Permalink to this definition"></a></dt>
 <dd><p>Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+<dd class="field-odd"><p><strong>ep_config</strong> (<em>dict</em>) – Config dictionary</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.</p>
+<dd class="field-even"><p>Tuple with endpoint descriptions title, name, description, http_methods, version.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tuple (str, str, str, int, list)</p>
@@ -146,7 +146,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.get_http_methods">
-<span class="sig-name descname"><span class="pre">get_http_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_http_methods" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_http_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_description</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_http_methods" title="Permalink to this definition"></a></dt>
 <dd><p>Loads http methods defined in given endpoint config file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -163,12 +163,12 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.get_param_config">
-<span class="sig-name descname"><span class="pre">get_param_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_param_config" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_param_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_param_config" title="Permalink to this definition"></a></dt>
 <dd><p>Parses endpoint input-, output-, progress-, and session-parameter configuration from
 given endpoint config file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+<dd class="field-odd"><p><strong>ep_config</strong> (<em>dict</em>) – Config dictionary</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
@@ -185,11 +185,11 @@ given endpoint config file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.get_worker_params">
-<span class="sig-name descname"><span class="pre">get_worker_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_worker_params" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_worker_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_worker_params" title="Permalink to this definition"></a></dt>
 <dd><p>Parses worker parameters like job type and worker authorization key from endpoint config file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+<dd class="field-odd"><p><strong>ep_config</strong> (<em>dict</em>) – Config dictionary</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Tuple of job_type and worker_auth_key</p>
@@ -369,7 +369,7 @@ to make it available by APIEndpoint.api_request and APIEndpoint.api_progress to 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_endpoint.</span></span><span class="sig-name descname"><span class="pre">APIEndpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_request_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provide_worker_meta_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_input_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_output_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_progress_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_session_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_config_file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_endpoint.</span></span><span class="sig-name descname"><span class="pre">APIEndpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_request_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provide_worker_meta_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_input_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_output_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_progress_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_session_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_config_file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint" title="Permalink to this definition"></a></dt>
 <dd><p>AIME ML API endpoint</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

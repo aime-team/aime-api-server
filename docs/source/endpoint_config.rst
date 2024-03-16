@@ -1,2 +1,163 @@
-Endpoint configuration
+Endpoint Configuration
 ~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+Basic Endpoint Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The basic endpoint parameters like its title, name and the http methods are set in the section ``[ENDPOINT]``:
+
+.. code-block:: toml
+
+    [ENDPOINT]
+    title = "Seamless communication m4tv2"
+    name = "sc_m4tv2"
+    description = "Seamless communication m4tv2 example API"
+    methods = "GET, POST"
+    version = 0
+
+
+Worker Parameters
+^^^^^^^^^^^^^^^^^
+
+The section ``[WORKER]`` deals with worker related parameters like the authentication key:
+
+.. code-block:: toml
+
+    [WORKER]
+    job_type = "stable_diffusion_xl_txt2img"
+    auth_key = "5b07e305b50505ca2b3284b4ae5f65d7"
+
+
+Clients Parameters
+^^^^^^^^^^^^^^^^^^
+
+Client related configurations can be done in the section ``[CLIENTS]`` to overwrite the values :
+
+.. code-block:: toml
+
+    [CLIENTS]
+    client_request_limit = 0 # default is server config value, 0 = not limited
+    provide_worker_meta_data = true	# default is server config value
+    # client default authorization and authentication method (to overwrite the value of server configuration)
+    # Available authentification: None, User, IP, Pubkey
+    # default_authentification = "User"
+    # Available authorization: None, Key
+    # default_authorization = "Key"
+    # default_authorization_keys = { "aime" = "6a17e2a5b70603cb1a3294b4a1df67da" }
+
+Session Parameters
+^^^^^^^^^^^^^^^^^^
+
+Settings concerning the workers like job_timeout and default auth keys are to be configured in the section ``[WORKERS]``:
+
+.. code-block:: toml
+
+
+    [SESSION]
+    # variables that should be kept in the session between calls and provided to the worker as additional inputs
+
+
+Input Parameters
+^^^^^^^^^^^^^^^^
+
+All job input parameters need to be validated by the AIME API Server for security reasons before forwarding it to the workers.
+The ``[INPUTS]`` section offers configuration of the following attributes for that validation:
+
+* ``type`` *(str): The most important attribute. Each input parameter needs at least the specification of its type or the related client request will be rejected by the AIME API Server. 
+  Also if the specified type doesn't match the recognized type of the parameter and the attribute* ``auto_convert`` *is not set to* ``true`` *(It's* ``false`` *by default).
+  Available types:* ``"string"`` */* ``"str"`` *,* ``"integer"`` */* ``"int"`` *,* ``"float"`` *,* ``"image"`` *,* ``"image_list"`` *,* ``"audio"``
+
+Attributes for all parameter types:
+"""""""""""""""""""""""""""""""""""
+
+* ``required`` *(bool): Whether the parameter needs to be present in the client request or not. Client requests with missing required parameters will be rejected if* ``auto_convert`` *is false.* 
+  *If* ``auto_convert`` *is true, required parameters need a default value the parameter will be converted to.*
+* ``default`` *(same type as parameter): The default value missing required parameters will be converted to.*
+* ``auto_convert`` *(bool): Whether invalid parameters will be automatically converted to valid parameters if possible. Default is false.*
+
+Attributes for the types ``"float"`` and ``"integer"``:
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+* ``minimum`` or ``min`` *(int/float): The smallest allowed value. If* ``auto_convert = true`` *, smaller values will be converted to the* ``min`` *value.*
+* ``maximum`` or ``max`` *(int/float):The highest allowed value. If* ``auto_convert = true`` *, higher values will be converted to the* ``max`` *value.*
+
+Attributes for the type ``"string"``:
+"""""""""""""""""""""""""""""""""""""
+
+* ``max_length`` *(int): The maximum allowed length of the string. If* ``auto_convert = true`` *, longer strings will be cut to the* ``max_length`` *value.*
+
+Attributes for the type ``"image"``,  ``"image_list"`` and ``"audio"``:
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+* ``format`` *(str): The format supported by the workers.* 
+
+  * *Available values for the type* ``"audio"`` *:* ``"wav"`` *,* ``"mp3"`` *,* ``"ogg"`` *,* ``"webm"`` *,* ``"mp4"``
+  * *Available values for the type* ``"image"`` *or* ``"image_list"`` *:* ``"JPEG"`` *,* ``"jpeg"`` *,* ``"JPG"`` *,* ``"jpg"`` *,* ``"PNG"`` *,* ``"png"``
+* ``color_space`` *(str): The color space of images supported by the workers. Available values:* ``"rgb"`` *,* ``RGB``
+* ``sample_rate`` *(int): The sample rate of audio data supported by the workers. Available values:*
+* ``sample_bit_depth`` *(int): The sample bit depth of audio data supported by the workers.*
+* ``audio_bit_rate`` *(int): The audio bit rate in bits/second supported by the workers.*
+* ``channels`` *(int): The number of channels (Mono=1, Stereo=2, etc.) of audio data supported by the workers.*
+* ``duration`` *(int): The duration in seconds of audio data supported by the workers.*
+
+Since the attributes of media data needs specifications for each attribute seperately, we use nested attributes to do so:
+
+* ``supported`` *(array): Values supported by the workers. Values not listed here will be rejected by the AIME API Server, if* ``auto_convert`` *is false.*
+* ``auto_convert`` *(bool): Whether invalid parameters will be automatically converted to valid parameters if possible. Default is false*
+* ``default`` *(same type as parent attribute): The audio format supported by the workers. Available values:* ``"wav"`` *,* ``"mp3"`` *,* ``"ogg"`` *,* ``"webm"`` *,* ``"mp4"``
+* ``minimum`` or ``min`` *(int/float): The smallest allowed value. If* ``auto_convert = true`` *, smaller values will be converted to the* ``min`` *value.*
+* ``maximum`` or ``max`` *(int/float):The highest allowed value. If* ``auto_convert = true`` *, higher values will be converted to the* ``max`` *value.*
+
+.. code-block:: toml
+
+    [INPUTS]
+    integer_param = { type = "integer", min = 0, max = 10, default = 1, auto_convert = true }
+    float_param = { type = "float", minimum = 0.0, maximum = 10.0, default = 1.0, auto_convert = true }
+    string_param = { type = "string", max_length = 200, auto_convert = true }
+
+    audio_param.type = "audio"
+    audio_param.format = { supported = [ "mp3", "wav" ], default = "wav", auto_convert = true }
+    audio_param.sample_rate = { supported = [ 16000 ], default = 16000, auto_convert = true }
+    audio_param.sample_bit_depth = { supported = [ 16, 32], default = 16, auto_convert = true }
+    audio_param.audio_bit_rate = { max = 192000, auto_convert = true } # in bits/s
+    audio_param.channels = { supported = [1], default = 1, auto_convert = true }
+    audio_param.duration = { max = 30, auto_convert = true } # in seconds
+
+    image_param.type = "image"
+    image_param.format = { supported = [ "JPG", "PNG" ], default = "JPG", auto_convert = true }
+    image_param.color_space = { supported = [ "RGB" ], default = "RGB", auto_convert = true }
+
+    image_list_param.type = "image_list"
+    image_list_param.format = { supported = [ "JPG", "PNG" ], default = "JPG", auto_convert = true }
+    image_list_param.color_space = { supported = [ "RGB" ], default = "RGB", auto_convert = true }
+    
+
+.. code-block:: toml
+
+    [OUTPUTS]
+    text = { type = "string" }
+    num_generated_tokens = { type = "integer" }
+    model_name = { type = "string" }
+
+.. code-block:: toml
+
+    [PROGRESS]
+
+        [PROGRESS.OUTPUTS]
+        text = { type = "string" }
+        num_generated_tokens = { type = "integer" }
+
+In the section [STATIC] the static routes can be redirected to a desired destination.
+
+.. code-block:: toml
+
+    [STATIC]
+    "/sc-m4tv2/" = { file = "index.html" }
+    "/sc-m4tv2/static/js/tailwind.js" = { file = "../../../frontend/static/vendor/tailwind/tailwind_335_plugin_forms.min.js" }
+    "/sc-m4tv2/static/js/highlight.js" = { file = "../../../frontend/static/vendor/highlight/highlight.min.js" }
+    "/sc-m4tv2/static/js/" = { path = "static/js/" }
+    "/sc-m4tv2/static/css/highlight.css" = { file = "../../../frontend/static/vendor/highlight/styles/github.min.css" }
+    "/sc-m4tv2/static/css/style.css" = { file = "static/css/style.css" }
+

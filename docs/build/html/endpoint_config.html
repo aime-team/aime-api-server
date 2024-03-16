@@ -49,7 +49,20 @@
 <li class="toctree-l1"><a class="reference internal" href="aime_api_server.html">Source Documentation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="configuration.html">Configuration</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="server_config.html">Server</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Endpoint</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Endpoint</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#endpoint">Endpoint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#worker">Worker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clients">Clients</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#session-parameters">Session Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#input-parameters">Input Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#attributes-for-all-parameter-types">Attributes for all parameter types:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#attributes-for-the-types-float-and-integer">Attributes for the types <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code>:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#attributes-for-the-type-string">Attributes for the type <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code>:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#attributes-for-the-type-image-image-list-and-audio">Attributes for the type <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>,  <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -91,6 +104,152 @@
              
   <section id="endpoint-configuration">
 <h1>Endpoint configuration<a class="headerlink" href="#endpoint-configuration" title="Permalink to this heading"></a></h1>
+<p>The basic endpoint parameters like its title, name and the http methods are set in the section <code class="docutils literal notranslate"><span class="pre">[ENDPOINT]</span></code>:</p>
+<section id="endpoint">
+<h2>Endpoint<a class="headerlink" href="#endpoint" title="Permalink to this heading"></a></h2>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[ENDPOINT]</span>
+<span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Seamless communication m4tv2&quot;</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;sc_m4tv2&quot;</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Seamless communication m4tv2 example API&quot;</span>
+<span class="n">methods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;GET, POST&quot;</span>
+<span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+</pre></div>
+</div>
+</section>
+<section id="worker">
+<h2>Worker<a class="headerlink" href="#worker" title="Permalink to this heading"></a></h2>
+<p>The section <code class="docutils literal notranslate"><span class="pre">[WORKER]</span></code> deals with worker related parameters like the authentication key:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[WORKER]</span>
+<span class="n">job_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;stable_diffusion_xl_txt2img&quot;</span>
+<span class="n">auth_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;5b07e305b50505ca2b3284b4ae5f65d7&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="clients">
+<h2>Clients<a class="headerlink" href="#clients" title="Permalink to this heading"></a></h2>
+<p>Client related configurations can be done in the section <code class="docutils literal notranslate"><span class="pre">[CLIENTS]</span></code> to overwrite the values :</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[CLIENTS]</span>
+<span class="n">client_request_limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="c1"># default is server config value, 0 = not limited</span>
+<span class="n">provide_worker_meta_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">     </span><span class="c1"># default is server config value</span>
+<span class="c1"># client default authorization and authentication method (to overwrite the value of server configuration)</span>
+<span class="c1"># Available authentification: None, User, IP, Pubkey</span>
+<span class="c1"># default_authentification = &quot;User&quot;</span>
+<span class="c1"># Available authorization: None, Key</span>
+<span class="c1"># default_authorization = &quot;Key&quot;</span>
+<span class="c1"># default_authorization_keys = { &quot;aime&quot; = &quot;6a17e2a5b70603cb1a3294b4a1df67da&quot; }</span>
+</pre></div>
+</div>
+</section>
+<section id="session-parameters">
+<h2>Session Parameters<a class="headerlink" href="#session-parameters" title="Permalink to this heading"></a></h2>
+<p>Settings concerning the workers like job_timeout and default auth keys are to be configured in the section <code class="docutils literal notranslate"><span class="pre">[WORKERS]</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[SESSION]</span>
+<span class="c1"># variables that should be kept in the session between calls and provided to the worker as additional inputs</span>
+</pre></div>
+</div>
+</section>
+<section id="input-parameters">
+<h2>Input Parameters<a class="headerlink" href="#input-parameters" title="Permalink to this heading"></a></h2>
+<p>All job input parameters need to be validated by the AIME API Server for security reasons before forwarding it to the workers.
+The <code class="docutils literal notranslate"><span class="pre">[INPUTS]</span></code> section offers configuration of the following attributes for that validation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> <em>(str): The most important attribute. Each input parameter needs at least the specification of its type or the related client request will be rejected by the AIME API Server.
+Also if the specified type doesn’t match the recognized type of the parameter and the attribute</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is not set to</em> <code class="docutils literal notranslate"><span class="pre">true</span></code> <em>(It’s</em> <code class="docutils literal notranslate"><span class="pre">false</span></code> <em>by default).
+Available types:</em> <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code> <em>/</em> <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code> <em>/</em> <code class="docutils literal notranslate"><span class="pre">&quot;int&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code></p></li>
+</ul>
+<section id="attributes-for-all-parameter-types">
+<h3>Attributes for all parameter types:<a class="headerlink" href="#attributes-for-all-parameter-types" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">required</span></code> <em>(bool): Whether the parameter needs to be present in the client request or not. Client requests with missing required parameters will be rejected if</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is false.</em>
+<em>If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is true, required parameters need a default value the parameter will be converted to.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> <em>(same type as parameter): The default value missing required parameters will be converted to.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>(bool): Whether invalid parameters will be automatically converted to valid parameters if possible. Default is false.</em></p></li>
+</ul>
+</section>
+<section id="attributes-for-the-types-float-and-integer">
+<h3>Attributes for the types <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code>:<a class="headerlink" href="#attributes-for-the-types-float-and-integer" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">minimum</span></code> or <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>(int/float): The smallest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, smaller values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>value.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maximum</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>(int/float):The highest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, higher values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>value.</em></p></li>
+</ul>
+</section>
+<section id="attributes-for-the-type-string">
+<h3>Attributes for the type <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code>:<a class="headerlink" href="#attributes-for-the-type-string" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_length</span></code> <em>(int): The maximum allowed length of the string. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, longer strings will be cut to the</em> <code class="docutils literal notranslate"><span class="pre">max_length</span></code> <em>value.</em></p></li>
+</ul>
+</section>
+<section id="attributes-for-the-type-image-image-list-and-audio">
+<h3>Attributes for the type <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>,  <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:<a class="headerlink" href="#attributes-for-the-type-image-image-list-and-audio" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">format</span></code> <em>(str): The format supported by the workers.</em></p>
+<ul>
+<li><p><em>Available values for the type</em> <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code> <em>:</em> <code class="docutils literal notranslate"><span class="pre">&quot;wav&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;mp3&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;ogg&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;webm&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;mp4&quot;</span></code></p></li>
+<li><p><em>Available values for the type</em> <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code> <em>or</em> <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> <em>:</em> <code class="docutils literal notranslate"><span class="pre">&quot;JPEG&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;jpeg&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;JPG&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;jpg&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;PNG&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;png&quot;</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">color_space</span></code> <em>(str): The color space of images supported by the workers. Available values:</em> <code class="docutils literal notranslate"><span class="pre">&quot;rgb&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">RGB</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_rate</span></code> <em>(int): The sample rate of audio data supported by the workers. Available values:</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_bit_depth</span></code> <em>(int): The sample bit depth of audio data supported by the workers.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">audio_bit_rate</span></code> <em>(int): The audio bit rate in bits/second supported by the workers.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">channels</span></code> <em>(int): The number of channels (Mono=1, Stereo=2, etc.) of audio data supported by the workers.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code> <em>(int): The duration in seconds of audio data supported by the workers.</em></p></li>
+</ul>
+<p>Since the attributes of media data needs specifications for each attribute seperately, we use nested attributes to do so:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">supported</span></code> <em>(array): Values supported by the workers. Values not listed here will be rejected by the AIME API Server, if</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is false.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>(bool): Whether invalid parameters will be automatically converted to valid parameters if possible. Default is false</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> <em>(same type as parent attribute): The audio format supported by the workers. Available values:</em> <code class="docutils literal notranslate"><span class="pre">&quot;wav&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;mp3&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;ogg&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;webm&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;mp4&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minimum</span></code> or <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>(int/float): The smallest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, smaller values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>value.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maximum</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>(int/float):The highest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, higher values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>value.</em></p></li>
+</ul>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[INPUTS]</span>
+<span class="n">integer_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">min</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">float_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">minimum</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">maximum</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">string_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">max_length</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+
+<span class="n">audio_param</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;audio&quot;</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;mp3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;wav&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;wav&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">sample_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">16000</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">16000</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">sample_bit_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">audio_bit_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">192000</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1"># in bits/s</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">channels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">duration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1"># in seconds</span>
+
+<span class="n">image_param</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;image&quot;</span>
+<span class="n">image_param</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;JPG&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PNG&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;JPG&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">image_param</span><span class="p">.</span><span class="n">color_space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;RGB&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;RGB&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+
+<span class="n">image_list_param</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;image_list&quot;</span>
+<span class="n">image_list_param</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;JPG&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PNG&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;JPG&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">image_list_param</span><span class="p">.</span><span class="n">color_space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;RGB&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;RGB&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[OUTPUTS]</span>
+<span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">num_generated_tokens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">model_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[PROGRESS]</span>
+
+<span class="w">    </span><span class="k">[PROGRESS.OUTPUTS]</span>
+<span class="w">    </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="n">num_generated_tokens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>In the section [STATIC] the static routes can be redirected to a desired destination.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[STATIC]</span>
+<span class="s2">&quot;/sc-m4tv2/&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;index.html&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/sc-m4tv2/static/js/tailwind.js&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;../../../frontend/static/vendor/tailwind/tailwind_335_plugin_forms.min.js&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/sc-m4tv2/static/js/highlight.js&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;../../../frontend/static/vendor/highlight/highlight.min.js&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/sc-m4tv2/static/js/&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;static/js/&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/sc-m4tv2/static/css/highlight.css&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;../../../frontend/static/vendor/highlight/styles/github.min.css&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/sc-m4tv2/static/css/style.css&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;static/css/style.css&quot;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 
