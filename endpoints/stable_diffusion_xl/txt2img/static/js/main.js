@@ -56,6 +56,9 @@ function onResultCallback(data) {
             modelAPI.doAPILogin( () => onSendAPIRequest() );
             return;
         }
+        else {
+            infoBox.textContent = 'Error: ' + data.error + '\n';
+        }
     }
     else {
         enableSendButton();
