@@ -1,124 +1,130 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
+        
+        <title>AIME API</title>
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  width: 100%; height: 100%; margin: 0; padding: 0;
-}
+        <link rel="stylesheet" href="/model_api/frontend/css/font.css">
+        <!-- <script src="/model_api/frontend/vendor/tailwind/tailwind_335.min.js"></script>  from https://cdn.tailwindcss.com -->
+        
 
-html {
-  width: 100%; height: 100%; margin: 0; padding: 0;
-}
+        <style>
+            body {
+                margin: 0;
+                font-family: Arial, Helvetica, sans-serif;
+                width: 100%; height: 100%; margin: 0; padding: 0;
+            }
 
-.topnav {
-  overflow: hidden;
-  background-color: #333;
-}
+            html {
+                width: 100%; height: 100%; margin: 0; padding: 0;
+            }
 
-.topnav a {
-  float: left;
-  color: #f2f2f2;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  font-size: 17px;
-}
+            .topnav {
+                overflow: hidden;
+                background-color: #333;
+            }
 
-.topnav a:hover {
-  background-color: #ddd;
-  color: black;
-}
+            .topnav a {
+                float: left;
+                color: #f2f2f2;
+                text-align: center;
+                padding: 14px 16px;
+                text-decoration: none;
+                font-size: 17px;
+            }
 
-.topnav a.active {
-  background-color: #04AA6D;
-  color: white;
-}
-</style>
-</head>
-<body>
+            .topnav a:hover {
+                background-color: #ddd;
+                color: black;
+            }
 
-<div style="display:flex; width:100%; height:100%; flex-direction:column; overflow:hidden;">
+            .topnav a.active {
+                background-color: #04AA6D;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
 
-<div class="topnav">
-  <a class="menuItem active" id="home" href="/readme.html">AIME</a>
-  <a class="menuItem" id="llama2_chat" href="/llama2_chat.html"'>LLama2 Chat</a>
-  <a class="menuItem" id="sdxl-txt2img" href="/sdxl-txt2img/">Stable Diffusion XL</a>
-  <a class="menuItem" id="sc-m4tv2" href="/sc-m4tv2/">Seamless Communication</a>
-</div>
+        <div style="display:flex; width:100%; height:100%; flex-direction:column; overflow:hidden;">
 
- <iframe id='content_frame' src="/readme.html" style="flex-grow:1; border:none;" title="AIME API Server Demo Pages"></iframe> 
-</div>
-</body>
+            <div class="topnav">
+                <a class="menuItem active" id="home" href="/readme.html">AIME</a>
+                <a class="menuItem" id="llama2_chat" href="/llama2_chat.html"'>LLama2 Chat</a>
+                <a class="menuItem" id="sdxl-txt2img" href="/sdxl-txt2img/">Stable Diffusion XL</a>
+                <a class="menuItem" id="sc-m4tv2" href="/sc-m4tv2/">Seamless Communication</a>
+            </div>
+
+            <iframe id='content_frame' src="/readme.html" style="flex-grow:1; border:none;" title="AIME API Server Demo Pages"></iframe> 
+        </div>
+    
+        <script>
+            const menuItems = document.querySelectorAll(".menuItem");
+            
+            function clickedMenu(evt) {
+            evt.preventDefault();
+            clickedMenu = evt.currentTarget;
+            
+            var baseUrl = window.location.href;
+            if (baseUrl.indexOf('#') > 0) {
+                baseUrl = baseUrl.substring(0, baseUrl.indexOf('#'));
+            }
+            window.location.href = baseUrl + "#" + clickedMenu.id;
+            }
+            
+            function updateMenu(url) {
+            if (url.indexOf('#') >= 0) {
+                var anchorPath = url.substring(url.indexOf('#') + 1);
+            
+                menuItems.forEach( 
+                function(menuItem) {
+                    if(menuItem.id == anchorPath)
+                    {
+                        menuItem.classList.add("active");
+                        document.getElementById('content_frame').src = menuItem.href;
+                    }
+                    else
+                    {
+                        menuItem.classList.remove("active");          
+                    }
+                }
+                )
+            }
+            }
+            
+            menuItems.forEach( 
+            function(menuItem) { 
+                menuItem.addEventListener("click", clickedMenu, false);
+            }
+            )
+            
+            window.onhashchange = function () {
+            var url = location.hash
+            console.log("CHANGE: " + url);
+            updateMenu(url)
+            }
+            
+            
+            // robust on DOM ready hook
+            function docReady(fn) {
+                // see if DOM is already available
+                if (document.readyState === "complete" || document.readyState === "interactive") {
+                    // call on next available tick
+                    setTimeout(fn, 1);
+                } else {
+                    document.addEventListener("DOMContentLoaded", fn);
+                }
+            }   
+            
+            docReady(function() {
+            var url = window.location.href;
+            updateMenu(url);
+            });
+            
+        </script>
+    </body>
 </html>
-
-<script>
-
-const menuItems = document.querySelectorAll(".menuItem");
-
-function clickedMenu(evt) {
-  evt.preventDefault();
-  clickedMenu = evt.currentTarget;
-
-  var baseUrl = window.location.href;
-  if (baseUrl.indexOf('#') > 0) {
-    baseUrl = baseUrl.substring(0, baseUrl.indexOf('#'));
-  }
-  window.location.href = baseUrl + "#" + clickedMenu.id;
-}
-
-function updateMenu(url) {
-  if (url.indexOf('#') >= 0) {
-    var anchorPath = url.substring(url.indexOf('#') + 1);
-
-    menuItems.forEach( 
-      function(menuItem) {
-        if(menuItem.id == anchorPath)
-        {
-            menuItem.classList.add("active");
-            document.getElementById('content_frame').src = menuItem.href;
-        }
-        else
-        {
-            menuItem.classList.remove("active");          
-        }
-      }
-    )
-  }
-}
-
-menuItems.forEach( 
-  function(menuItem) { 
-    menuItem.addEventListener("click", clickedMenu, false);
-  }
-)
-
-window.onhashchange = function () {
-  var url = location.hash
-  console.log("CHANGE: " + url);
-  updateMenu(url)
-}
-
-
-// robust on DOM ready hook
-function docReady(fn) {
-    // see if DOM is already available
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-        // call on next available tick
-        setTimeout(fn, 1);
-    } else {
-        document.addEventListener("DOMContentLoaded", fn);
-    }
-}   
-
-docReady(function() {
-  var url = window.location.href;
-  updateMenu(url);
-});
-
-
-
-</script>
