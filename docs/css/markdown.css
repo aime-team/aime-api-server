@@ -280,15 +280,20 @@ body {
   line-height: 1.25;
 }
 
+.markdown-body h1 {
+  font-weight: 800;
+  line-height: 1.1;
+}
 .markdown-body h2 {
-  font-weight: 600;
+  font-weight: 800;
   padding-bottom: .3em;
   font-size: 1.5em;
   border-bottom: 1px solid hsla(210,18%,87%,1);
+  margin-top: 2em;
 }
 
 .markdown-body h3 {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.25em;
 }
 
@@ -772,8 +777,8 @@ body {
   font-size: 85%;
   line-height: 1.45;
   color: #1F2328;
-  background-color: #f6f8fa;
-  border-radius: 6px;
+  background-color: #e8f3ff;
+  border-radius: 5px;
 }
 
 .markdown-body pre code,
@@ -1083,7 +1088,7 @@ body {
 
 
 .codehilite .hll { background-color: #ffffcc }
-.codehilite { background: #f8f8f8; border-radius: 7px; }
+.codehilite { background: #f8f8f8; border-radius: 5px; border-left: 10px solid #4fbfd7; }
 .codehilite .c { color: #3D7B7B; font-style: italic } /* Comment */
 .codehilite .err { border: 1px solid #FF0000 } /* Error */
 .codehilite .k { color: #008000; font-weight: bold } /* Keyword */

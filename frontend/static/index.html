@@ -51,7 +51,7 @@
                                 <a id="sc-m4tv2" href="/sc-m4tv2/" class="menuItem demo-link block py-1 px-3 rounded-3xl text-aime_darkblue bg-aime_blue hover:bg-aime_green">Seamless Communication</a>
                             </li>
                             <li>
-                                <a id="hamburger-button" target="_blank" href="/docs" class="text-aime_darkblue bg-aime_green block rounded-3xl px-3 py-1 text-center hover:bg-aime_darkblue hover:text-white">Docs</a>
+                                <a target="_blank" href="/docs/index.html" class="text-aime_darkblue bg-aime_green block rounded-3xl px-3 py-1 text-center hover:bg-aime_darkblue hover:text-white">Docs</a>
                             </li>
                         </ul>
                     </div>
@@ -76,7 +76,7 @@
                         <a onclick="updateMenuHash('sc-m4tv2')" href="/#sc-m4tv2" class="demo-link block py-1 px-3 rounded-3xl text-aime_darkblue bg-aime_blue hover:bg-aime_green">Seamless Communication</a>
                     </li>
                     <li class="m-3">
-                        <a target="_blank" href="/docs" class="text-aime_darkblue bg-aime_green block rounded-3xl px-3 py-1 text-center hover:bg-aime_darkblue hover:text-white">Docs</a>
+                        <a target="_blank" href="/docs/index.html" class="text-aime_darkblue bg-aime_green block rounded-3xl px-3 py-1 text-center hover:bg-aime_darkblue hover:text-white">Docs</a>
                     </li>
                 </ul>
             </div>
@@ -88,7 +88,6 @@
         <script>
             const menuItems = document.querySelectorAll(".menuItem");
             const hamburgerOverlay = document.getElementById('hamburger-menu-overlay');
-            const hamburgerButton = document.getElementById('hamburger-button');
             const baseUrl = window.location.href.split('#')[0];
 
             function clickedMenu(evt) {
@@ -133,15 +132,6 @@
             function closeHamburgerOverlay() {
                 hamburgerOverlay.classList.add('hidden');
             }
-
-            hamburgerButton.addEventListener('click', function() {
-                const isMenuOpen = !hamburgerOverlay.classList.contains('hidden');
-                if (isMenuOpen) {
-                    closeHamburgerOverlay();
-                } else {
-                    openHamburgerOverlay();
-                }
-            });
             
             function docReady(fn) {
                 if (document.readyState === "complete" || document.readyState === "interactive") {
@@ -204,16 +194,15 @@
 
                 switch(iframePath) {
                     case '/readme.html':
-                        
+                        iframeDocument.body.style.fontFamily = 'Nunito', 'Helvetica', 'Arial', 'sans-serif';
                         break;
                     case '/llama2-chat/':
-                        // Aktionen für die zweite URL hier ausführen
                         break;
                     case '/sdxl-txt2img/':
-                        // Aktionen für die dritte URL hier ausführen
                         break;
-                        case '/sc-m4tv2/':
-                        // Aktionen für alle anderen URLs hier ausführen
+                    case '/sc-m4tv2/':
+                        break;
+                    case '/docs/index.html':
                         break;
                 }
             };
