@@ -1,9 +1,12 @@
-modelAPI = new ModelAPI('llama2_chat');
+const API_USER = 'aime'
+const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
+
+modelAPI = new ModelAPI('llama2_chat', API_USER, API_KEY);
 
 var inputContext = 'A dialog, where User interacts with an helpful, kind, obedient, honest and very reasonable assistant called Dave.\n';
 let readyToSendRequest = true;
 let chatboxContentEl;
-let info_box;
+let infoBox;
 let currentContext;
 
 function onSendAPIRequest() {
@@ -23,15 +26,15 @@ function onProgressCallback(progressInfo, progressData) {
 	const numWorkersOnline = progressInfo.num_workers_online;
 	const progress = progressInfo.progress;
 	
-    refreshResponseBubble(null, `queuePosition: ${queuePosition} | estimate: ${estimate}`)
+	refreshResponseBubble(null, `queuePosition: ${queuePosition} | estimate: ${estimate}`)
 
 	if(progressData != null) {
-        refreshResponseBubble(progressData.text, `answering... | progress: ${progress}`);
+		refreshResponseBubble(progressData.text, `answering... | progress: ${progress}`);
 		chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
 	}
 
 	document.getElementById('progress_label').innerText = 'Generated tokens: ' + progress;
-    document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
+	document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queuePosition;
 	document.getElementById('estimate').innerText = ' | Estimate time: ' + estimate;
 	document.getElementById('num_workers_online').innerText = ' | Workers online: ' + numWorkersOnline;
 };
@@ -49,7 +52,6 @@ function onResultCallback(data) {
 	else {
         enableSendButton();
         readyToSendRequest = true;
-        infoBox = document.getElementById('info_box');
         
 		if (data.total_duration) { 			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n'; }
 		if (data.compute_duration) { 		infoBox.textContent += 'Compute duration: ' + data.compute_duration + 's' + '\n'; }
@@ -141,8 +143,7 @@ function onButtonClick() {
     if(readyToSendRequest) {
         readyToSendRequest = false;
 
-        info_box = document.getElementById('info_box');
-        info_box.textContent = 'Request sent.\nWaiting for response...';
+        infoBox.textContent = 'Request sent.\nWaiting for response...';
 
         disableSendButton();
 
@@ -153,7 +154,7 @@ function onButtonClick() {
         }
 
         let chatInput = document.getElementById('chat_input');
-        info_box.textContent = 'Request sent.\nWaiting for response...';
+        infoBox.textContent = 'Request sent.\nWaiting for response...';
 
         currentContext = getChatboxContext();
         currentContext += 'User: ' + chatInput.value + '\nDave:';
@@ -311,8 +312,8 @@ window.addEventListener('load', function() {
     hljs.highlightAll();
 
     chatboxContentEl = document.getElementById('chatbox-content');
-    info_box = document.getElementById('info_box');
-	refreshRangeInputLayout();
+    infoBox = document.getElementById('info_box');
+		refreshRangeInputLayout();
 
     document.getElementById('input-context').textContent = inputContext;
     addChatboxBubble('Hello, Dave.', '', true);
@@ -345,5 +346,9 @@ window.addEventListener('load', function() {
 	
 	modelAPI.doAPILogin(function (data) {
 		console.log('Key: ' + modelAPI.clientSessionAuthKey)
-	});
+	},
+	function (error) {
+		infoBox.textContent = 'Login Error: ' + error + '\n';
+		disableSendButton();
+  });
 });

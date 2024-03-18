@@ -48,6 +48,9 @@ class APIEndpoint():
         version,
         client_request_limit,
         provide_worker_meta_data,
+        authentication,
+        authorization,
+        authorization_keys,     
         ep_input_param_config,
         ep_output_param_config,
         ep_progress_param_config,
@@ -62,6 +65,9 @@ class APIEndpoint():
         self.client_request_limit = client_request_limit
         self.provide_worker_meta_data = provide_worker_meta_data
         self.version = version
+        self.authentication = authentication
+        self.authorization = authorization
+        self.authorization_keys = authorization_keys
         self.ep_input_param_config = ep_input_param_config
         self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
         self.ep_input_param_config['wait_for_result'] = { 'type': 'bool'}     # add implicit input 
@@ -171,9 +177,37 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client containing the client session authentication key.
         """
+        user = request.args.get('user', None)
+        key = request.args.get('key', None)
+
+        authorization_error = None
+
+        if self.authentication == 'None':
+            pass
+        elif self.authentication == 'User':
+            if self.authorization == 'None':
+                pass
+            elif self.authorization == 'Key':
+                if user in self.authorization_keys:
+                    if key != self.authorization_keys[user]:
+                        authorization_error = 'authorization failed'
+                else:
+                    authorization_error = 'authentication failed'
+            else:
+                authorization_error = 'unknown authorization method'                
+        else:
+            authorization_error = 'unknown authentication method'
+
+        if authorization_error:
+            response = {
+                'success': False,
+                'error': authorization_error,
+            }
+            return sanic_json(response)
+
         client_session_auth_key = generate_auth_key()
         client_version = request.args.get('version','No version given from client')
-        
+
         self.app.registered_client_sessions[client_session_auth_key] = {self.endpoint_name: 0}
 
         APIEndpoint.logger.debug(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')

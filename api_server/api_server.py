@@ -311,14 +311,29 @@ class APIServer(Sanic):
 
 
     def get_endpoint_clients_config(self, ep_config):
-        endpoint_clients_config = ep_config.get('CLIENTS', {})
-        return endpoint_clients_config.get('client_request_limit', APIServer.default_client_request_limit), endpoint_clients_config.get('provide_worker_meta_data', APIServer.default_provide_worker_meta_data)
+        clients_config = ep_config.get('CLIENTS', {})
+        if not 'client_request_limit' in clients_config:
+            clients_config['client_request_limit'] = APIServer.default_client_request_limit
+
+        if not 'provide_worker_meta_data' in clients_config:
+            clients_config['provide_worker_meta_data'] = APIServer.default_provide_worker_meta_data
+
+        if not 'authentication' in clients_config:
+            clients_config['authentication'] = APIServer.default_authentication
+
+        if not 'authorization' in clients_config:
+            clients_config['authorization'] = APIServer.default_authorization
+
+        if not 'authorization_keys' in clients_config:
+            clients_config['authorization_keys'] = APIServer.default_authorization_keys
+
+        return clients_config['client_request_limit'], clients_config['provide_worker_meta_data'], clients_config['authentication'], clients_config['authorization'], clients_config['authorization_keys']
 
 
     def parse_server_clients_config(self, server_config):
         server_clients_config = server_config.get('CLIENTS', {})
-        APIServer.default_authentification = server_clients_config.get("default_authentification", "None")
-        APIServer.default_authorization = server_clients_config.get("default_authorization", "None")
+        APIServer.default_authentication = server_clients_config.get("default_authentication", "User")
+        APIServer.default_authorization = server_clients_config.get("default_authorization", "Key")
         APIServer.default_authorization_keys = server_clients_config.get("default_authorization_keys", {})
         APIServer.default_client_request_limit = server_clients_config.get("default_client_request_limit", 0)
         APIServer.default_provide_worker_meta_data = server_clients_config.get("default_provide_worker_meta_data", False)

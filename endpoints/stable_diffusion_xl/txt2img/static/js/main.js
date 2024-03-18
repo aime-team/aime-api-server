@@ -1,5 +1,9 @@
-const modelAPI = new ModelAPI('stable_diffusion_xl_txt2img');
-let info_box;
+const API_USER = 'aime'
+const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
+
+const modelAPI = new ModelAPI('stable_diffusion_xl_txt2img', API_USER, API_KEY);
+
+let infoBox;
 
 function onSendAPIRequest() {
     params = new Object({
@@ -71,7 +75,6 @@ function onResultCallback(data) {
         document.getElementById('progress_label').innerText = '';
         
         readyToSendRequest = true;
-        infoBox = document.getElementById('info_box');
 
         num_images = parseInt(document.getElementById('num_samples_range').value);
         imagesPerSec = num_images / data.total_duration
@@ -274,7 +277,6 @@ function handleKeyPress(event) {
     if(readyToSendRequest) {
         readyToSendRequest = false;
 
-        infoBox = document.getElementById('info_box');
         infoBox.textContent = 'Request sent.\nWaiting for response...';
 
         disableSendButton();
@@ -402,9 +404,17 @@ window.addEventListener('load', function() {
         });
     });
 
+    infoBox = document.getElementById('info_box');
+
     initializeSizeSwapButton();
     initializeImageContainer();
     refreshRangeInputLayout();
-    modelAPI.doAPILogin();
 
+    modelAPI.doAPILogin(function (data) {
+        console.log('Key: ' + modelAPI.clientSessionAuthKey)
+    },
+    function (error) {
+        infoBox.textContent = 'Login Error: ' + error + '\n';
+        disableSendButton();
+    });
 });

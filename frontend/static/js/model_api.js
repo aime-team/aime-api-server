@@ -6,7 +6,7 @@
  */
 class ModelAPI {
 
-    static version = 'JavaScript AIME API Client Interface 0.5.0';
+    static version = 'JavaScript AIME API Client Interface 0.7.0';
     
     /**
     * Constructor of the class.
@@ -14,8 +14,10 @@ class ModelAPI {
     * @param {string} endpointName - The name of the API endpoint.
     * @param {number} [defaultProgressIntervall=300] - The intervall for progress updates in milliseconds. The default progress update intervall is 300.
     */
-    constructor(endpointName, defaultProgressIntervall = 300) {
+    constructor(endpointName, user, key, defaultProgressIntervall = 300) {
         this.endpointName = endpointName;
+        this.user = user;
+        this.key = key;
         this.clientSessionAuthKey = null;
         this.defaultProgressIntervall = defaultProgressIntervall;
     }
@@ -28,13 +30,13 @@ class ModelAPI {
      */
     async fetchAuthKey() {
         
-        const response = await this.fetchAsync(`/${this.endpointName}/get_client_session_auth_key?version=${encodeURIComponent(ModelAPI.version)}`);
+        const response = await this.fetchAsync(`/${this.endpointName}/get_client_session_auth_key?user=${this.user}&key=${this.key}&version=${encodeURIComponent(ModelAPI.version)}`);
         
         if (response.success) {
             return response.client_session_auth_key;
         }
         else {
-            var errorMessage = `Authentication failed! ${response.msg}.`
+            var errorMessage = `${response.error}`
             if (response.ep_version) {
                 errorMessage += ` Endpoint version: ${response.ep_version}`
             }
@@ -57,19 +59,13 @@ class ModelAPI {
 
         const response = await fetch(url, { method, headers, body });
 
-        // if (response.ok) {
-        //    ...
-        // }
-        // else {
-        //     switch (response.status) {
-        //         case 401: // Unauthorized
-        //             // ...
-        //             break;
+        if (!response.ok) {
+            response.json().then((data) => {
+                alert(`Failed to fetch data from ${url}. Response: ${JSON.stringify(data)}`);
+            })
+            throw new Error(`Failed to fetch data from ${url}. Response ${response}`);
             
-        //         default:
-        //             break;
-        //     }
-        // }
+        }
 
         return response.json();
     }
@@ -79,7 +75,13 @@ class ModelAPI {
      * @async
      * @param {function} [resultCallback=null] - The callback after successful login.
      */
-    async doAPILogin(resultCallback = null) {
+    async doAPILogin(resultCallback = null, errorCallback = null, user = null, key = null) {
+        if (user != null) {
+            this.user = user;
+        }
+        if (key != null) {
+            this.key = key;
+        }
         try {
             const authKey = await this.fetchAuthKey();
             this.clientSessionAuthKey = authKey;
@@ -90,6 +92,9 @@ class ModelAPI {
         } 
         catch (error) {
             console.error('Error during API login:', error);
+            if (errorCallback && typeof errorCallback === 'function') {
+                errorCallback(error);
+            }
         }
     }
 
@@ -103,7 +108,9 @@ class ModelAPI {
      */
     async doAPIRequest(params, resultCallback, progressCallback = null, progressStream = false) {
         const url = `/${this.endpointName}`;
-        console.log(`sending API request to URL: ${url} with API Key: ${this.clientSessionAuthKey} and progressStream: ${progressStream}`);
+        console.log(`URL: ${url}`);
+        console.log(`API Key: ${this.clientSessionAuthKey}`);
+        console.log('progressStream: ', progressStream);
 
         params.client_session_auth_key = this.clientSessionAuthKey;
         params.wait_for_result = !progressCallback;
@@ -132,7 +139,7 @@ class ModelAPI {
             else {
                 resultCallback(response);
             }
-        }
+        } 
         else {
             resultCallback(response);
         }
