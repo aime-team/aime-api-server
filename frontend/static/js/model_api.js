@@ -6,12 +6,14 @@
  */
 class ModelAPI {
 
-    static version = 'JavaScript AIME API Client Interface 0.7.0';
+    static version = 'JavaScript AIME API Client Interface 0.7.1';
     
     /**
     * Constructor of the class.
     * @constructor
     * @param {string} endpointName - The name of the API endpoint.
+    * @param {string} user - api user
+    * @param {sting} key - api Key required to authenticate and authorize to use api endpoint    * 
     * @param {number} [defaultProgressIntervall=300] - The intervall for progress updates in milliseconds. The default progress update intervall is 300.
     */
     constructor(endpointName, user, key, defaultProgressIntervall = 300) {
@@ -74,6 +76,9 @@ class ModelAPI {
      * Method for API login.
      * @async
      * @param {function} [resultCallback=null] - The callback after successful login.
+     * @param {string} user - optinal: set to new api user
+     * @param {sting} key - optional: set to new api Key required to authenticate and authorize to use api endpoint
+     * 
      */
     async doAPILogin(resultCallback = null, errorCallback = null, user = null, key = null) {
         if (user != null) {
