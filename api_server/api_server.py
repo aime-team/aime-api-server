@@ -425,7 +425,7 @@ class APIServer(Sanic):
         config_dir = APIServer.args.ep_config
         APIServer.logger.info(f'--- Searching endpoints configurations in {config_dir}')
         if Path(config_dir).is_dir():
-            for config_file in Path(config_dir).glob('**/ml_api_endpoint.cfg'):
+            for config_file in Path(config_dir).glob('**/aime_api_endpoint.cfg'):
                 self.load_endpoint_configuration(config_file)
         elif Path(config_dir).is_file():
             self.load_endpoint_configuration(config_dir)
