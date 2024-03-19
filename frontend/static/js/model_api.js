@@ -32,7 +32,7 @@ class ModelAPI {
      */
     async fetchAuthKey() {
         
-        const response = await this.fetchAsync(`/${this.endpointName}/get_client_session_auth_key?user=${this.user}&key=${this.key}&version=${encodeURIComponent(ModelAPI.version)}`);
+        const response = await this.fetchAsync(`/${this.endpointName}/login?user=${this.user}&key=${this.key}&version=${encodeURIComponent(ModelAPI.version)}`);
         
         if (response.success) {
             return response.client_session_auth_key;

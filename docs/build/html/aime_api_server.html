@@ -62,8 +62,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint"><code class="docutils literal notranslate"><span class="pre">APIEndpoint</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.api_progress"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.api_progress()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.api_request"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.api_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.client_login"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.client_login()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.finalize_request"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.finalize_request()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.get_client_session_auth_key"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.get_client_session_auth_key()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.validate_input_parameters_for_job_data"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.validate_input_parameters_for_job_data()</span></code></a></li>
 </ul>
 </li>
@@ -438,6 +438,24 @@ the client gets a quick confirmation response and the result can be requested on
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.client_login">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">client_login</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.client_login" title="Permalink to this definition"></a></dt>
+<dd><p>Route for client interface to login to the API Server while receiving a client session
+authentication key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – Request from client.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response to client containing the client session authentication key.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.finalize_request">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_future</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.finalize_request" title="Permalink to this definition"></a></dt>
 <dd><p>Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future
@@ -455,24 +473,6 @@ initialized in api_request() to get the results.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>_type_</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.get_client_session_auth_key">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_client_session_auth_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.get_client_session_auth_key" title="Permalink to this definition"></a></dt>
-<dd><p>Route for client interface to login to the API Server while receiving a client session
-authentication key.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – Request from client.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Response to client containing the client session authentication key.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
 </dd>
 </dl>
 </dd></dl>
