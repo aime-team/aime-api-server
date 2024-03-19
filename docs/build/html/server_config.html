@@ -21,7 +21,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Endpoint configuration" href="endpoint_config.html" />
+    <link rel="next" title="Endpoint Configuration" href="endpoint_config.html" />
     <link rel="prev" title="Configuration" href="configuration.html" /> 
 </head>
 
@@ -48,7 +48,15 @@
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup &amp; Start API Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aime_api_server.html">Source Documentation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="configuration.html">Configuration</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Server</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Server</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-server-parameters">Basic Server Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#administrator-parameters">Administrator Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#worker-parameters">Worker Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#client-parameters">Client Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#input-parameters">Input Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#static-routes">Static Routes</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="endpoint_config.html">Endpoint</a></li>
 </ul>
 </li>
@@ -93,64 +101,118 @@
 <h1>Server configuration<a class="headerlink" href="#server-configuration" title="Permalink to this heading"></a></h1>
 <p>The server configuration file model_api_server.cfg is used to set server related parameters and can be found in the root directory of this repository.
 Is it divided to certain sections explained in detail below.</p>
+<section id="basic-server-parameters">
+<h2>Basic Server Parameters<a class="headerlink" href="#basic-server-parameters" title="Permalink to this heading"></a></h2>
 <p>The basic server parameters like its address and the location of the endpoint config files are set in the section [SERVER]:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">port</span></code> <em>(int): The port of the AIME API Server</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">host</span></code> <em>(str): The IP address of the AIME API Server</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">endpoint_configs</span></code> <em>(str): The location of the endpoint configuration files.</em></p></li>
+</ul>
+<p><em>Example:</em></p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[SERVER]</span>
-<span class="c1"># basic HTTP server configuration</span>
 <span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0000</span>
 <span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;0.0.0.0&quot;</span>
 <span class="n">endpoint_configs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;./endpoints&quot;</span><span class="w"> </span><span class="c1"># search path or list of endpoint configuration files to load on startup</span>
 </pre></div>
 </div>
-<p>The section [ADMIN] deals with administrator related settings:</p>
+</section>
+<section id="administrator-parameters">
+<h2>Administrator Parameters<a class="headerlink" href="#administrator-parameters" title="Permalink to this heading"></a></h2>
+<p>The section [ADMIN] deals with administrator backend related settings:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">user</span></code> <em>(str): The name of the administrator</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">password</span></code> <em>(str): The password of the administrator</em></p></li>
+</ul>
+<p>Example:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[ADMIN]</span>
-<span class="c1"># login credentials to admin backend</span>
 <span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;admin&quot;</span>
 <span class="n">password</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 </pre></div>
 </div>
-<p>Client related configurations can be done in the section [CLIENTS]:</p>
-<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[CLIENTS]</span>
-<span class="c1"># client default authorization method (can be overwritten in Endpoint configuration)</span>
-<span class="c1"># Available authentification: None, User, IP, Pubkey</span>
-<span class="n">default_authentification</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;User&quot;</span>
-<span class="c1"># Available authorization: None, Key</span>
-<span class="n">default_authorization</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Key&quot;</span>
-<span class="n">default_authorization_keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;aime&quot;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;6a17e2a5b70603cb1a3294b4a1df67da&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="n">default_provide_worker_meta_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">     </span><span class="c1"># default is false; used if not specified in endpoint config</span>
-<span class="n">default_client_request_limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="c1"># Allowed number of requests per client; used if not specified in endpoint config</span>
-</pre></div>
-</div>
+</section>
+<section id="worker-parameters">
+<h2>Worker Parameters<a class="headerlink" href="#worker-parameters" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">default_job_timeout</span></code> <em>(int): Default timeout in seconds after the worker will receive the response “no_job”, if no job was offered</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_auth_key</span></code> <em>(str): The default worker authorization key is used if the endpoint configuration file doesn’t contain the authorization key</em></p></li>
+</ul>
 <p>Settings concerning the workers like job_timeout and default auth keys are to be configured in the section [WORKERS]</p>
+<p>Example:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[WORKERS]</span>
-<span class="n">job_timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span>
-<span class="c1"># default_auth_key = &quot;5b07e305b50505ca2b3284b4ae5f65d7&quot;</span>
+<span class="n">default_job_timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span>
+<span class="n">default_auth_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;XXX&quot;</span>
 </pre></div>
 </div>
-<p>Restrictions certain input data types like the allowed formats can be set in the section [INPUTS]. Be aware that input data recognized in a format not being allowed here will be rejected no matter of the supported formats in the endpoint configuration file!</p>
+</section>
+<section id="client-parameters">
+<h2>Client Parameters<a class="headerlink" href="#client-parameters" title="Permalink to this heading"></a></h2>
+<p>Default configuration concerning the clients like its authorization and authentication, if not specified in the endpoint configuration file. To have different behaviour in specific endpoints</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_authentication</span></code> <em>(str): Default method for the client login authentication</em></p>
+<p><em>Available settings:</em></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;None&quot;</span></code> <em>(default): The client login request has no restrictions</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;User&quot;</span></code> <em>: The client login request has to contain the name of the user</em></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_authorization</span></code> <em>(str): Default method for the client login authorization</em></p>
+<p><em>Available settings:</em></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;None&quot;</span></code> <em>(default): The client login request has no restrictions</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Key&quot;</span></code> <em>: The client login request has to contain the name of the user (</em> <code class="docutils literal notranslate"><span class="pre">default_authentication</span></code> <em>has to be</em> <code class="docutils literal notranslate"><span class="pre">&quot;User&quot;</span></code> <em>) and the related key listed in</em> <code class="docutils literal notranslate"><span class="pre">default_authorization_keys</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_provide_worker_meta_data</span></code> <em>(bool): Whether the client receives meta data about the job from the worker. Default = false</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default_client_request_limit</span></code> <em>(int): The default maximum allowed number of requests per client. 0 = not limited. Default = 0</em></p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[CLIENTS]</span>
+<span class="n">default_authentication</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;User&quot;</span>
+<span class="n">default_authorization</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Key&quot;</span>
+<span class="n">default_authorization_keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;aime&quot;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;XXX&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">default_provide_worker_meta_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="n">default_client_request_limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+</pre></div>
+</div>
+</section>
+<section id="input-parameters">
+<h2>Input Parameters<a class="headerlink" href="#input-parameters" title="Permalink to this heading"></a></h2>
+<p>Attribute restrictions of certain input parameter types can be set in the section <code class="docutils literal notranslate"><span class="pre">[INPUTS]</span></code>. Be aware that all input parameters of that type having attributes with values not being allowed here will be rejected no matter of the supported values in the endpoint configuration file!</p>
+<p>Example:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[INPUTS]</span>
-<span class="c1"># Allowed formats for all media inputs of certain types. Formats not listed here will be rejected, no matter the supported formats in endpoint config file</span>
 <span class="n">image</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">allowed</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s1">&#39;png&#39;, &#39;jpeg&#39;</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
 <span class="n">audio</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">allowed</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s1">&#39;wav&#39;, &#39;mp3&#39;, &#39;ogg&#39;, &#39;webm&#39;, &#39;mp4&#39;</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
-<p>In the section [STATIC] the static routes can be redirected to a desired destination.</p>
+</section>
+<section id="static-routes">
+<h2>Static Routes<a class="headerlink" href="#static-routes" title="Permalink to this heading"></a></h2>
+<p>In the section <code class="docutils literal notranslate"><span class="pre">[STATIC]</span></code> the static routes can be redirected to a desired destination. All destinations here are relative to the location of the configuration file.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> <em>(str): To redirect a single file</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code> <em>(str): To redirect a whole path</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile</span></code> <em>(str): The type</em></p>
+<p><em>Available values:</em></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;None&quot;</span></code> <em>(default): No compilation.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;scss&quot;</span></code> <em>: scss files will be compiled to css in</em> <code class="docutils literal notranslate"><span class="pre">compiled_path</span></code> <em>.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;md&quot;</span></code> <em>: Markdown files will be compiled to html in</em> <code class="docutils literal notranslate"><span class="pre">compiled_path</span></code> <em>with related css file in</em> <code class="docutils literal notranslate"><span class="pre">css_file</span></code> <em>.</em></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compiled_path</span></code> <em>(str): Path to save the compiled files</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">css_file</span></code> <em>(str): Destination of the related css files for html compiled files</em></p></li>
+</ul>
+<p>Example:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[STATIC]</span>
-<span class="c1"># mount static served files, path relativ to location of the configuration file</span>
-<span class="c1"># supported types: &quot;file&quot; (default), &quot;scss&quot; (SCSS compiled CSS) and &quot;md&quot; (markdown, will be compiled to HTML)</span>
-
-<span class="c1"># demo endpoints shared resources</span>
-<span class="s2">&quot;/model_api/js/model_api.js&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./frontend/static/js/model_api.js&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="s2">&quot;/model_api/frontend&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./frontend/static&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="s2">&quot;/model_api/css&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./frontend/scss&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">compiled_path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./frontend/static/_compiled_/css&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;scss&quot;</span><span class="w"> </span><span class="p">}</span>
-
-<span class="c1"># README and Documentation</span>
-<span class="s2">&quot;/&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./README.md&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;md&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">compiled_path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./frontend/static/_compiled_/html&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">css_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./docs/css/markdown.css&quot;</span><span class="w"> </span><span class="p">}</span>
-
-<span class="s2">&quot;/docs&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./docs/build/html/&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="s2">&quot;/docs/css&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./docs/css/&quot;</span><span class="w"> </span><span class="p">}</span>
-<span class="s2">&quot;/docs/images&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./docs/images&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/desired/destination/to/js/client/interface.js&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./frontend/static/js/model_api.js&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/desired/destination/to/frontend/folder/&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./frontend/&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/desired/destination/to/css/folder&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">compile</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;scss&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./frontend/scss&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">compiled_path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./frontend/static/_compiled_/css&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/desired/destination/to/your/readme.html&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">compile</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;md&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./destination/to/your/md/readme/README.md&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">compiled_path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./destination/to/your/compiled/html/&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">css_file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./destination/to/your/css/file/md_style.css&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/desired/destination/to/your/documentation/path/&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./destination/to/your/documentation/path/&quot;</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
+</section>
 </section>
 
 
@@ -158,7 +220,7 @@ Is it divided to certain sections explained in detail below.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="endpoint_config.html" class="btn btn-neutral float-right" title="Endpoint configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="endpoint_config.html" class="btn btn-neutral float-right" title="Endpoint Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
