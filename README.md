@@ -13,7 +13,7 @@ Turn a console Python script to a secure and robust web API acting as your inter
 * Fast - asynchronous and multi process API server
 * Scalable & Robust- distributed cluster ready architecture
 * Secure - type safe interface and input validation
-* Aggregates requests to GPU batch jobs for maximum throughput
+* Aggregates API requests to GPU batch jobs for maximum throughput
 * Easy integratable into exisiting Python and Tensorflow projects
 * High performance image and audio input/ouput conversion for common web formats
 * Pythonic - easily extendable in your favourite programming language
