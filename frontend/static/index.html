@@ -140,6 +140,37 @@
                     document.addEventListener("DOMContentLoaded", fn);
                 }
             }
+
+            function convertIFrameContent_DemoModelTeasers() {
+                // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                // const headings = iframeDocument.querySelectorAll('h3');
+
+                // headings.forEach(heading => {
+                //     const nextSibling = heading.nextElementSibling;
+
+                //     if (nextSibling && nextSibling.tagName === 'P') {
+                //         const paragraph = nextSibling;
+                //         const anchor = paragraph.querySelector('a');
+                //         const image = anchor ? anchor.querySelector('img') : null;
+                //         const listParagraph = paragraph.nextElementSibling;
+                //         const unorderedList = listParagraph.nextElementSibling;
+
+                //         if (anchor && image && listParagraph && unorderedList && unorderedList.tagName === 'UL') {
+                //             // yea, we found the structure we were looking for
+                //             console.log('parent Node', heading, heading.parentNode);
+                //             const container = iframeDocument.createElement('div');
+                //             container.classList.add('max-w-sm', 'bg-white', 'border', 'border-gray-200', 'rounded-lg', 'shadow', 'dark:bg-gray-800', 'dark:border-gray-700');
+                //             anchor.appendChild(image);
+                //             container.appendChild(heading);
+                //             container.appendChild(paragraph);
+                //             container.appendChild(listParagraph);
+                //             listParagraph.appendChild(unorderedList);
+
+                //             heading.parentNode.replaceChild(container, heading);
+                //         }
+                //     }
+                // });
+            }
             
             docReady(function() {
                 var url = window.location.href;
@@ -185,7 +216,6 @@
 
             const iframe = document.getElementById('content-frame');
             iframe.onload = function() {
-                
                 const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
                 const iframeURL = new URL(iframeDocument.location.href);
                 const iframePath = iframeURL.pathname;
@@ -194,7 +224,8 @@
 
                 switch(iframePath) {
                     case '/readme.html':
-                        iframeDocument.body.style.fontFamily = 'Nunito', 'Helvetica', 'Arial', 'sans-serif';
+                        iframeDocument.body.style.fontFamily = "'Nunito', 'Helvetica', 'Arial', sans-serif !important";
+                        convertIFrameContent_DemoModelTeasers();
                         break;
                     case '/llama2-chat/':
                         break;
