@@ -6,7 +6,7 @@
  */
 class ModelAPI {
 
-    static version = 'JavaScript AIME API Client Interface 0.7.1';
+    static version = 'JavaScript AIME API Client Interface 0.7.2';
     
     /**
     * Constructor of the class.
@@ -61,13 +61,9 @@ class ModelAPI {
 
         const response = await fetch(url, { method, headers, body });
 
-        if (!response.ok) {
-            response.json().then((data) => {
-                alert(`Failed to fetch data from ${url}. Response: ${JSON.stringify(data)}`);
-            })
-            throw new Error(`Failed to fetch data from ${url}. Response ${response}`);
-            
-        }
+        //if (!response.ok) {
+        //    throw new Error(`Failed to fetch data from ${url}. Response ${response}`);
+        //}
 
         return response.json();
     }
@@ -144,7 +140,7 @@ class ModelAPI {
             else {
                 resultCallback(response);
             }
-        } 
+        }
         else {
             resultCallback(response);
         }

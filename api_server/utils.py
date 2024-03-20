@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+import shutil
 import uuid
 
 import asyncio
@@ -639,3 +640,12 @@ def check_if_valid_base64_string(test_string):
         return base64.b64encode(base64.b64decode(body.encode('utf-8'))).decode('utf-8') == body if body else False
     except (TypeError, base64.binascii.Error, ValueError):
         return False
+
+def copy_js_client_interface_to_frontend_folder():
+    js_client_interface_folder = Path('./api_client_interfaces/js')
+
+    if js_client_interface_folder.exists():
+        js_client_interface_filename = 'model_api.js'
+        frontend_folder = Path('./frontend/static/js/')
+        logger.info(f'Subrepository "AIME API Client Interfaces" folder in {js_client_interface_folder.parent.resolve()} is present. Javascript client interface {js_client_interface_filename} is copied from {js_client_interface_folder.resolve()} to {frontend_folder.resolve()}.')
+        shutil.copy(js_client_interface_folder / js_client_interface_filename, frontend_folder / js_client_interface_filename)
