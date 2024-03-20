@@ -225,6 +225,6 @@ Example:
 
     [STATIC]
     "/endpoint_name/" = { file = "./destination/of/your/index.html" }
-    "/endpoint_name/desired/destination/of/your/static/js//" = { path = "./destination/to/your/static/js/" }
+    "/endpoint_name/desired/destination/of/your/static/js/path/" = { path = "./destination/to/your/static/js/path/" }
     "/endpoint_name/desired/destination/of/your/static/css/style.css" = { file = "./destination/to/your/static/css/style.css" }
 

@@ -201,30 +201,32 @@ Example:
 Static Routes
 ^^^^^^^^^^^^^
 
-In the section ``[STATIC]`` the static routes can be redirected to a desired destination. All destinations here are relative to the location of the configuration file. Be aware that overwriting routes already declared in the server configuration will raise errors.
+In the section ``[STATIC]`` the static routes of your endpoint can be redirected to a desired destination the same way as in the server configuration files. All destinations here are relative to the location of the configuration file. Be aware that overwriting routes already declared in the server configuration will raise errors.
 
 
 * ``file`` *(str): To redirect a single file*
 
 * ``path`` *(str): To redirect a whole path*
 
-* ``compile`` *(str): Whether files will be compiled
+* ``compile`` *(str): To compile certain file types to a designated format*
+
   *Available values:*
 
   * ``"None"`` *(default): No compilation.*
-  * ``"scss"`` *: scss files will be compiled to css in* ``compiled_path`` *.*
-  * ``"md"`` *: Markdown files will be compiled to html in* ``compiled_path`` *with related css file in* ``css_file`` *.*
+  * ``"scss"`` *: scss files will be compiled to css and saved in* ``compiled_path`` *.*
+  * ``"md"`` *: Markdown files will be compiled to html sand saved in* ``compiled_path`` *with related css file in* ``css_file`` *.*
   
 * ``compiled_path`` *(str): Path to save the compiled files*
 
-* ``css_file`` *(str): Destination of the related css files for html compiled files*
+* ``css_file`` *(str): Destination to the related css files for html compiled files*
+
 
 Example:
 
 .. code-block:: toml
 
     [STATIC]
-    "/endpoint_name/" = { file = "./destination/of/your/index.html" }
-    "/endpoint_name/desired/destination/of/your/static/js//" = { path = "./destination/to/your/static/js/" }
-    "/endpoint_name/desired/destination/of/your/static/css/style.css" = { file = "./destination/to/your/static/css/style.css" }
+    "/your_endpoint_name/" = { file = "./destination/of/your/js/client/index.html" }
+    "/your_endpoint_name/desired/destination/to/your/js/client/path/" = { path = "./destination/to/your/js/client/path/" }
+    "/your_endpoint_name/desired/destination/to/your/css/style.css" = { file = "./destination/to/your/css/style.css" }
 
