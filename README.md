@@ -46,11 +46,11 @@ To illustrate the usage and capabilities of AIME API we currently run following 
 
 ### LLaMa2 Chat
 
-[![AIME LLaMa2 Chat Demo](/docs/images/aime_llama2_chat.jpg "AIME LLaMa2 Chat Demo")](/#llama2_chat){:target="_parent"}
+[![AIME LLaMa2 Chat Demo](/docs/images/aime_llama2_chat.jpg "AIME LLaMa2 Chat Demo")](/#llama2-chat){:target="_parent"}
 
 Chat with 'Dave', our LLaMa2 based chat-bot.
 
-* AIME Demo Server: [LLama2 Chat](/#llama2_chat){:target="_parent"}
+* AIME Demo Server: [LLama2 Chat](/#llama2-chat){:target="_parent"}
 * Your Local Server: [LLama2 Chat](/llama2_chat.html)
 * Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
 
