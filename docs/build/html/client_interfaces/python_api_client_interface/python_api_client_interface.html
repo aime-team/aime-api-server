@@ -46,8 +46,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../setup.html">Setup &amp; Start API Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration/configuration.html">Configure API Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../aime_api_server.html">Source Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
@@ -485,7 +485,7 @@ progress errors with successful initial request. Accepts synchronous functions a
     <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
 
 
-<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">}),</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">},</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Example usage with asynchronous callbacks:</p>
@@ -499,7 +499,7 @@ progress errors with successful initial request. Accepts synchronous functions a
     <span class="k">await</span> <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
 
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">}),</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">},</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Example progress result dictionary at start:</p>
@@ -595,7 +595,7 @@ called if request was successfull but progress got errors. Defaults to None.</p>
 <span class="k">def</span> <span class="nf">progress_error_callback</span><span class="p">(</span><span class="n">error_description</span><span class="p">):</span>
     <span class="k">pass</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">}),</span> <span class="n">progress_callback</span><span class="p">,</span> <span class="n">progress_error_callback</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">},</span> <span class="n">progress_callback</span><span class="p">,</span> <span class="n">progress_error_callback</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example progress result dictionary at start:</p>

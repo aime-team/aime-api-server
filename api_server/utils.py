@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+import shutil
 import uuid
 
 import asyncio
@@ -75,7 +76,7 @@ class StaticRouteHandler:
 
 
     def setup_file_route(self, slug, route):
-        route_path = Path(route.get('path', route.get('file', None)))
+        route_path = Path(route.get('path', route.get('file')))
         if route_path:
             if not route_path.is_absolute():
                 route_path = (self.config_file_path / route_path).resolve()
@@ -84,7 +85,7 @@ class StaticRouteHandler:
 
 
     def setup_markdown_route(self, slug, route):
-        route_path = route.get('path', route.get('file', None))
+        route_path = route.get('path', route.get('file'))
         compiled_path = (self.config_file_path / route.get('compiled_path')).resolve()
         css_file = route.get('css_file')
         output_file = compiled_path / f'{Path(route_path).stem}.html'
@@ -96,25 +97,25 @@ class StaticRouteHandler:
 
     def setup_scss_route(self, slug, route):
         compiled_path = (self.config_file_path / Path(route.get('compiled_path'))).resolve()
-        manifest = SassManifest(slug, str(compiled_path), route.get('path', route.get('file', None)), css_type='scss')
+        manifest = SassManifest(slug, str(compiled_path), route.get('path', route.get('file')), css_type='scss')
         manifest.compile_webapp(self.app, register_static=True)
         self.num += 1
 
 
     def setup_static_routes(self, static_routes):
         for slug, route in static_routes.items():
-            route_type = route.get('type', 'file')
-            if route_type == 'file':
-                self.setup_file_route(slug, route)
-            elif route_type == 'md':
+            compile_type = route.get('compile')
+            if compile_type == 'md':
                 self.setup_markdown_route(slug, route)
-            elif route_type == 'scss':
+            elif compile_type == 'scss':
                 self.setup_scss_route(slug, route)
-            self.log_static_info(slug, route_type, route.get('path', route.get('file')))
+            else:
+                self.setup_file_route(slug, route)
+            self.log_static_info(slug, compile_type, route.get('path', route.get('file')))
 
 
-    def log_static_info(self, slug, route_type, route_path):
-        self.app.logger.info(f'Static: {slug} -> [{route_type}] {route_path}')
+    def log_static_info(self, slug, compile_type, route_path):
+        self.app.logger.info(f'Static: {slug} -> [{compile_type}] {route_path}')
 
 
 
@@ -475,7 +476,7 @@ class InputValidationHandler():
                 return param_value
 
 
-    def validate_numerical_parameter(self, param_value, param_name, mode='max'):
+    def validate_numerical_parameter(self, param_value, param_name):
         param_value_unchanged = param_value
         param_value = self.validate_numerical_value(
             param_value,
@@ -639,3 +640,12 @@ def check_if_valid_base64_string(test_string):
         return base64.b64encode(base64.b64decode(body.encode('utf-8'))).decode('utf-8') == body if body else False
     except (TypeError, base64.binascii.Error, ValueError):
         return False
+
+def copy_js_client_interface_to_frontend_folder():
+    js_client_interface_folder = Path('./api_client_interfaces/js')
+
+    if js_client_interface_folder.exists():
+        js_client_interface_filename = 'model_api.js'
+        frontend_folder = Path('./frontend/static/js/')
+        logger.info(f'Subrepository "AIME API Client Interfaces" folder in {js_client_interface_folder.parent.resolve()} is present. Javascript client interface {js_client_interface_filename} is copied from {js_client_interface_folder.resolve()} to {frontend_folder.resolve()}.')
+        shutil.copy(js_client_interface_folder / js_client_interface_filename, frontend_folder / js_client_interface_filename)

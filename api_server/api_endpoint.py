@@ -81,7 +81,7 @@ class APIEndpoint():
 
         app.add_route(self.api_request, "/" + self.endpoint_name, methods=http_methods, name=self.endpoint_name)
         app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=http_methods, name=self.endpoint_name + "$progress")
-        app.add_route(self.get_client_session_auth_key, "/" + self.endpoint_name + "/get_client_session_auth_key", methods=http_methods, name=self.endpoint_name + "$get_client_session_auth_key")
+        app.add_route(self.client_login, "/" + self.endpoint_name + "/login", methods=http_methods, name=self.endpoint_name + "$login")
         self.app = app
         self.add_server_static_routes(static_files)
 
@@ -167,7 +167,7 @@ class APIEndpoint():
         return sanic_json(response)
 
 
-    async def get_client_session_auth_key(self, request):
+    async def client_login(self, request):
         """Route for client interface to login to the API Server while receiving a client session 
         authentication key.
 
