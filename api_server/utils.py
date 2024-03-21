@@ -530,7 +530,7 @@ class InputValidationHandler():
                     self.validation_errors.append(
                         f'Parameter {param_name} = {param_value} is too {"high" if mode == "max" else "low"}. '+\
                         f'{mode.capitalize()} supported value for {param_name} on this endpoint is {param_limit}!\n'+\
-                        f'\nSet auto_convert = true for {param_name} in the [INPUT] section of the endpoint config file to avoid this error.'
+                        f'\nSet auto_convert = true for {param_name} in the [INPUT] section of the endpoint config file to avoid this error.\n'
                     )
         elif isinstance(param_value, (list, tuple)) and isinstance(param_limit, (list, tuple)):
             return [self.convert_to_limit(element, param_name, element_limit, auto_convert, mode) for element, element_limit in zip(param_value, param_limit)]
@@ -539,7 +539,7 @@ class InputValidationHandler():
 
     def convert_to_align_value(self, param_value, param_name, align_value, min_value, auto_convert):
         if isinstance(param_value, (int, float)) and isinstance(align_value, (int, float)):
-            if not (param_value % align_value):
+            if param_value % align_value:
                 if auto_convert:
                     if isinstance(min_value, (int, float)) and (param_value - param_value % align_value) < min_value:
                         return param_value - param_value % align_value + align_value
@@ -547,9 +547,9 @@ class InputValidationHandler():
                         return param_value - param_value % align_value
                 else:
                     self.validation_errors.append(
-                        f'Parameter {self.ep_input_param_name}.{param_name} = {param_value} is not aligning with {align_value}. '+\
-                        f'Choose multiple of {align_value} for {self.ep_input_param_name}.{param_name} on this endpoint!\n'+\
-                        f'\nSet auto_convert = true for {self.ep_input_param_name}.{param_name} in the [INPUT] section of the endpoint config file to avoid this error.'
+                        f'Parameter {param_name} = {param_value} is not aligning with {align_value}. '+\
+                        f'Choose multiple of {align_value} for {param_name} on this endpoint!\n'+\
+                        f'\nSet auto_convert = true for {param_name} in the [INPUT] section of the endpoint config file to avoid this error.\n'
                     )
         elif isinstance(param_value, (list, tuple)) and isinstance(align_value, (list, tuple)):
             return [self.convert_to_align_value(element, param_name, element_align_value, min_value, auto_convert) for element, element_align_value in zip(param_value, align_value)]
