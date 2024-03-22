@@ -6,20 +6,16 @@
  */
 class ModelAPI {
 
-    static version = 'JavaScript AIME API Client Interface 0.8.0';
+    static version = 'JavaScript AIME API Client Interface 0.5.0';
     
     /**
     * Constructor of the class.
     * @constructor
     * @param {string} endpointName - The name of the API endpoint.
-    * @param {string} user - api user
-    * @param {sting} key - api Key required to authenticate and authorize to use api endpoint    * 
     * @param {number} [defaultProgressIntervall=300] - The intervall for progress updates in milliseconds. The default progress update intervall is 300.
     */
-    constructor(endpointName, user, key, defaultProgressIntervall = 300) {
+    constructor(endpointName, defaultProgressIntervall = 300) {
         this.endpointName = endpointName;
-        this.user = user;
-        this.key = key;
         this.clientSessionAuthKey = null;
         this.defaultProgressIntervall = defaultProgressIntervall;
     }
@@ -32,13 +28,13 @@ class ModelAPI {
      */
     async fetchAuthKey() {
         
-        const response = await this.fetchAsync(`/${this.endpointName}/login?user=${this.user}&key=${this.key}&version=${encodeURIComponent(ModelAPI.version)}`);
+        const response = await this.fetchAsync(`/${this.endpointName}/get_client_session_auth_key?version=${encodeURIComponent(ModelAPI.version)}`);
         
         if (response.success) {
             return response.client_session_auth_key;
         }
         else {
-            var errorMessage = `${response.error}`
+            var errorMessage = `Authentication failed! ${response.msg}.`
             if (response.ep_version) {
                 errorMessage += ` Endpoint version: ${response.ep_version}`
             }
@@ -72,17 +68,8 @@ class ModelAPI {
      * Method for API login.
      * @async
      * @param {function} [resultCallback=null] - The callback after successful login.
-     * @param {string} user - optinal: set to new api user
-     * @param {sting} key - optional: set to new api Key required to authenticate and authorize to use api endpoint
-     * 
      */
-    async doAPILogin(resultCallback = null, errorCallback = null, user = null, key = null) {
-        if (user != null) {
-            this.user = user;
-        }
-        if (key != null) {
-            this.key = key;
-        }
+    async doAPILogin(resultCallback = null) {
         try {
             const authKey = await this.fetchAuthKey();
             this.clientSessionAuthKey = authKey;
@@ -93,9 +80,6 @@ class ModelAPI {
         } 
         catch (error) {
             console.error('Error during API login:', error);
-            if (errorCallback && typeof errorCallback === 'function') {
-                errorCallback(error);
-            }
         }
     }
 
