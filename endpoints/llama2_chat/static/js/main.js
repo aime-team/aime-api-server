@@ -17,7 +17,6 @@ function onSendAPIRequest() {
 	params.temperature = parseFloat(document.getElementById('temperature_range').value);
 
 	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
-    // console.log('sent:', params);
 }
 
 function onProgressCallback(progressInfo, progressData) {
@@ -40,25 +39,27 @@ function onProgressCallback(progressInfo, progressData) {
 };
 
 function onResultCallback(data) {
-    if (data.error) {
-        if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-            modelAPI.doAPILogin( () => onSendAPIRequest() );
-            return;
-        }
-        else {
-            infoBox.textContent = 'Error: ' + data.error + '\n';
-        }
-    }
+  if (data.error) {
+      if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
+          modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
+            infoBox.textContent = 'Login Error: ' + error + '\n';
+            enableSendButton();                                 
+          });
+      }
+      else {
+          infoBox.textContent = 'Error: ' + data.error + '\n';
+          enableSendButton();
+      }
+  }
 	else {
-        enableSendButton();
-        readyToSendRequest = true;
+    enableSendButton();
         
 		if (data.total_duration) { 			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n'; }
 		if (data.compute_duration) { 		infoBox.textContent += 'Compute duration: ' + data.compute_duration + 's' + '\n'; }
 		if (data.num_generated_tokens) { 	infoBox.textContent += 'Generated tokens: ' + data.num_generated_tokens + '\n'; }
 		if (data.compute_duration && data.num_generated_tokens) {
-											tokensPerSec = data.num_generated_tokens / data.compute_duration
-											infoBox.textContent += 'Tokens per second: ' + tokensPerSec.toFixed(1) + '\n';
+				tokensPerSec = data.num_generated_tokens / data.compute_duration
+				infoBox.textContent += 'Tokens per second: ' + tokensPerSec.toFixed(1) + '\n';
 		}
 		if (data.model_name) { 				infoBox.textContent += '\nModel name: ' + data.model_name +'\n'; }
         document.getElementById('chat_input').value = '';
@@ -85,6 +86,7 @@ function onResultCallback(data) {
 };
 
 function disableSendButton() {
+		readyToSendRequest = false;
     const button = document.getElementById('chat_send');
     if (button) {
       button.disabled = true;
@@ -93,6 +95,7 @@ function disableSendButton() {
     }
 }
 function enableSendButton() {
+    readyToSendRequest = true;
     const button = document.getElementById('chat_send');
     if (button) {
         button.disabled = false;
@@ -141,11 +144,9 @@ function refreshRangeInputLayout() {
 
 function onButtonClick() {
     if(readyToSendRequest) {
-        readyToSendRequest = false;
+        disableSendButton();
 
         infoBox.textContent = 'Request sent.\nWaiting for response...';
-
-        disableSendButton();
 
         // set Tabs to output section
         const output_btn =  document.getElementById('tab_button_output');
@@ -264,91 +265,100 @@ function handleKeyPress(event) {
     }
 }
 
-window.addEventListener('load', function() {
-    // Styling with Tailwind CSS
-    tailwind.config = {
-        'theme': {
-            'screens': {
-                'xs': '475px',
-                'sm': '640',
-                'md': '768px',
-                'lg': '1024px',
-                'xl': '1280px',
-                '2xl': '1536px'
-            },
-            'extend': {
-                'colors': {
-                    'aime_blue': '#4FBFD7',
-                    'aime_darkblue': '#263743',
-                    'aime_orange': '#F6BE5C',
-                    'aime_green': '#CBE4C9',
-                    'aime_lightgreen': '#f2f6f2'
+function docReady(fn) {
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        setTimeout(fn, 1);
+    } else {
+        document.addEventListener("DOMContentLoaded", fn);
+    }
+}
+
+
+docReady(function() {
+  // Styling with Tailwind CSS
+  tailwind.config = {
+      'theme': {
+          'screens': {
+              'xs': '475px',
+              'sm': '640',
+              'md': '768px',
+              'lg': '1024px',
+              'xl': '1280px',
+              '2xl': '1536px'
+          },
+          'extend': {
+              'colors': {
+                  'aime_blue': '#4FBFD7',
+                  'aime_darkblue': '#263743',
+                  'aime_orange': '#F6BE5C',
+                  'aime_green': '#CBE4C9',
+                  'aime_lightgreen': '#f2f6f2'
+              },
+              'gradientColorStopPositions': {
+                  33: '33%',
                 },
-                'gradientColorStopPositions': {
-                    33: '33%',
+              'keyframes': {
+                  'blink': {
+                  '0%, 100%': { 'opacity': 0.8 },
+                  '50%': { 'opacity': 0.3 },
                   },
-                'keyframes': {
-                    'blink': {
-                    '0%, 100%': { 'opacity': 0.8 },
-                    '50%': { 'opacity': 0.3 },
-                    },
-                    'blinkDelay-1': {
-                        '0%, 100%': { 'opacity': 0.8 },
-                        '50%': { 'opacity': 0.3 },
-                    },
-                    'blinkDelay-2': {
-                        '0%, 100%': { 'opacity': 0.8 },
-                        '50%': { 'opacity': 0.3 },
-                    },
-                },
-                'animation': {
-                    'blink': 'blink 1s infinite ease-in-out',
-                    'blinkDelay-1': 'blinkDelay-1 1s infinite ease-in-out 0.3333s',
-                    'blinkDelay-2': 'blinkDelay-2 1s infinite ease-in-out 0.6666s',
-                },
-            }
-        }
-    };
-    hljs.highlightAll();
+                  'blinkDelay-1': {
+                      '0%, 100%': { 'opacity': 0.8 },
+                      '50%': { 'opacity': 0.3 },
+                  },
+                  'blinkDelay-2': {
+                      '0%, 100%': { 'opacity': 0.8 },
+                      '50%': { 'opacity': 0.3 },
+                  },
+              },
+              'animation': {
+                  'blink': 'blink 1s infinite ease-in-out',
+                  'blinkDelay-1': 'blinkDelay-1 1s infinite ease-in-out 0.3333s',
+                  'blinkDelay-2': 'blinkDelay-2 1s infinite ease-in-out 0.6666s',
+              },
+          }
+      }
+  };
+  hljs.highlightAll();
 
-    chatboxContentEl = document.getElementById('chatbox-content');
-    infoBox = document.getElementById('info_box');
-		refreshRangeInputLayout();
+	refreshRangeInputLayout();
 
-    document.getElementById('input-context').textContent = inputContext;
-    addChatboxBubble('Hello, Dave.', '', true);
-    addChatboxBubble('How can I assist you today?', '');
+  chatboxContentEl = document.getElementById('chatbox-content');
+  infoBox = document.getElementById('info_box');
 
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
+  document.getElementById('input-context').textContent = inputContext;
+  addChatboxBubble('Hello, Dave.', '', true);
+  addChatboxBubble('How can I assist you today?', '');
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const tabName = button.getAttribute('data-tab');
-            const tabGroup = button.getAttribute('data-tab-group');
-            
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
 
-            tabButtons.forEach(tabButton => {
-                if (tabButton.getAttribute('data-tab-group') === tabGroup) {
-                    tabButton.classList.remove('active');
-                }
-            });
-            tabContents.forEach(tabContent => {
-                if (tabContent.getAttribute('data-tab-group') === tabGroup) {
-                    tabContent.classList.add('hidden');
-                }
-            });
+  tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+          const tabName = button.getAttribute('data-tab');
+          const tabGroup = button.getAttribute('data-tab-group');
+          
 
-            button.classList.add('active');            
-            document.getElementById(tabName).classList.remove('hidden');
-        });
-    });
+          tabButtons.forEach(tabButton => {
+              if (tabButton.getAttribute('data-tab-group') === tabGroup) {
+                  tabButton.classList.remove('active');
+              }
+          });
+          tabContents.forEach(tabContent => {
+              if (tabContent.getAttribute('data-tab-group') === tabGroup) {
+                  tabContent.classList.add('hidden');
+              }
+          });
+
+          button.classList.add('active');            
+          document.getElementById(tabName).classList.remove('hidden');
+      });
+  });
 	
 	modelAPI.doAPILogin(function (data) {
 		console.log('Key: ' + modelAPI.clientSessionAuthKey)
 	},
 	function (error) {
 		infoBox.textContent = 'Login Error: ' + error + '\n';
-		disableSendButton();
   });
 });

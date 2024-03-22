@@ -57,11 +57,16 @@ function onSendAPIRequest() {
 function onResultCallback(data) {
     if (data.error) {
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-            modelAPI.doAPILogin( () => onSendAPIRequest() );
-            return;
+          modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
+            infoBox.textContent = 'Login Error2: ' + error + '\n';
+            enableSendButton();                     
+            removeSpinner(); 
+          });
         }
         else {
             infoBox.textContent = 'Error: ' + data.error + '\n';
+            enableSendButton();
+            removeSpinner();
         }
     }
     else {
@@ -73,8 +78,6 @@ function onResultCallback(data) {
         document.getElementById('num_workers_online').innerText = '';
         document.getElementById('progress_bar').value = 100;
         document.getElementById('progress_label').innerText = '';
-        
-        readyToSendRequest = true;
 
         num_images = parseInt(document.getElementById('num_samples_range').value);
         imagesPerSec = num_images / data.total_duration
@@ -168,6 +171,7 @@ function removeSpinner() {
 }
 
 function disableSendButton() {
+    readyToSendRequest = false;
     const button = document.getElementById('prompt_send');
     if (button) {
       button.disabled = true;
@@ -176,6 +180,7 @@ function disableSendButton() {
     }
 }
 function enableSendButton() {
+    readyToSendRequest = true;
     const button = document.getElementById('prompt_send');
     if (button) {
         button.disabled = false;
@@ -275,7 +280,6 @@ function handleKeyPress(event) {
  function onButtonClick() {
     
     if(readyToSendRequest) {
-        readyToSendRequest = false;
 
         infoBox.textContent = 'Request sent.\nWaiting for response...';
 
@@ -415,6 +419,5 @@ window.addEventListener('load', function() {
     },
     function (error) {
         infoBox.textContent = 'Login Error: ' + error + '\n';
-        disableSendButton();
     });
 });

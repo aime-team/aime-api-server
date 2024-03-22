@@ -95,16 +95,21 @@ function onSendAPIRequest() {
 function onResultCallback(data) {
     if (data.error) {
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-            modelAPI.doAPILogin( () => onSendAPIRequest() );
-            return;
+          modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
+            infoBox.textContent = 'Login Error: ' + error + '\n';
+            enableSendButton();
+            removeSpinner();
+          });
         }
         else {
             infoBox.textContent = 'Error: ' + data.error + '\n';
+            enableSendButton();
+            removeSpinner();            
         }
     } else {
         enableSendButton();
         removeSpinner();
-        readyToSendRequest = true;
+
         document.getElementById('textOutput').textContent = data.text_output;
         infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + ' s';
 
@@ -340,6 +345,7 @@ function removeSpinner() {
 }
 
 function disableSendButton() {
+    readyToSendRequest = false;
     const button = document.getElementById('sendButton');
     if (button) {
       button.disabled = true;
@@ -348,6 +354,7 @@ function disableSendButton() {
     }
 }
 function enableSendButton() {
+    readyToSendRequest = true;
     const button = document.getElementById('sendButton');
     if (button) {
         button.disabled = false;
@@ -481,8 +488,6 @@ function formatFileSize(size) {
 
 function onButtonClick() {
     if(readyToSendRequest) {
-        readyToSendRequest = false;
-
         infoBox.textContent = 'Request sent.\nWaiting for response...';
         document.getElementById('textOutput').textContent = '';
         disableSendButton();
@@ -608,6 +613,5 @@ window.addEventListener('load', function() {
     },
     function (error) {
         infoBox.textContent = 'Login Error: ' + error + '\n';
-        disableSendButton();
     });
 });
