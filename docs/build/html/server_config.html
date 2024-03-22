@@ -7,6 +7,7 @@
   <title>Server configuration &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/../css/aime_override.css" />
 
   
   <!--[if lt IE 9]>
@@ -122,7 +123,7 @@ Is it divided to certain sections explained in detail below.</p>
 <span class="n">default_authorization_keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;aime&quot;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;6a17e2a5b70603cb1a3294b4a1df67da&quot;</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
-<p>General settings like the allowed formats for input data are to be configured in the section [SETTINGS]. Note that input data recognized in a format not being allowed here will be rejected no matter of the settings in the endpoint configuration file!</p>
+<p>General settings like the allowed formats for input data are to be configured in the section [SETTINGS]. Note that input data recognized in a format not being allowed here will be rejected no matter of the supported formats in the endpoint configuration file!</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[SETTINGS]</span>
 
 <span class="n">image_input</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">allowed</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;png&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;jpeg&quot;</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="p">}</span>

@@ -42,7 +42,7 @@ Client related configurations can be done in the section [CLIENTS]:
     default_authorization = "Key"
     default_authorization_keys = { "aime" = "6a17e2a5b70603cb1a3294b4a1df67da" }
 
-General settings like the allowed formats for input data are to be configured in the section [SETTINGS]. Note that input data recognized in a format not being allowed here will be rejected no matter of the settings in the endpoint configuration file!
+General settings like the allowed formats for input data are to be configured in the section [SETTINGS]. Note that input data recognized in a format not being allowed here will be rejected no matter of the supported formats in the endpoint configuration file!
 
 .. code-block:: toml
 
