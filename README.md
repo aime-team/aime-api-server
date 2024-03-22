@@ -48,22 +48,22 @@ To illustrate the usage and capabilities of AIME API we currently run following 
 
 ### LLaMa2 Chat
 
-[![AIME LLaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_clrd.jpg "AIME LLaMa2 Chat Demo"){: width="450"}](/#llama2-chat){:target="_blank"}
+[![AIME LLaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_clrd.jpg "AIME LLaMa2 Chat Demo")](/#llama2-chat){:target="_parent"}
 
 Chat with 'Dave', our LLaMa2 based chat-bot.
 
-* AIME Demo Server: [LLama2 Chat](https://api.aime.info/llama2-chat/){:target="_parent"}
-* Your Local Server: [LLama2 Chat](/#llama2-chat){:target="_parent"}
+* AIME Demo Server: [LLama2 Chat](https://api.aime.info/#llama2-chat){:target="_parent"}
+* Your Local Server: [LLama2 Chat](/llama2-chat/){:target="_parent"}
 * Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat){:target="_blank"}
 
 ### Stable Diffusion XL
 
-[![AIME Stable Diffusion XL Demo](/docs/images/aime_api_demo-seamless-translate_clrd.jpg "AIME Stable Diffusion XL Demo"){: width="450"}](/#sdxl-txt2img){:target="_blank"}
+[![AIME Stable Diffusion XL Demo](/docs/images/aime_api_demo-seamless-translate_clrd.jpg "AIME Stable Diffusion XL Demo"){: width="450"}](/#sdxl-txt2img){:target="_parent"}
 
 Create photo realistic images from text prompts.
 
-* AIME Demo Server: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/){:target="_parent"}
-* Your Local Server: [Stable Diffusion XL](/#sdxl-txt2img){:target="_parent"}
+* AIME Demo Server: [Stable Diffusion XL](https://api.aime.info//#sdxl-txt2img){:target="_parent"}
+* Your Local Server: [Stable Diffusion XL](/sdxl-txt2img/){:target="_parent"}
 * Source: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl){:target="_blank"}
 
 ### Seamless Communication
@@ -72,8 +72,8 @@ Create photo realistic images from text prompts.
 
 Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, Text-to-Speech and Speech-to-Speech! 
 
-* AIME Demo Server: [Seamless Communication](https://api.aime.info/sc-m4tv2/){:target="_parent"}
-* Your local Server: [Seamless Communication](/#sc-m4tv2){:target="_parent"}
+* AIME Demo Server: [Seamless Communication](https://api.aime.info/#sc-m4tv2){:target="_parent"}
+* Your local Server: [Seamless Communication](/sc-m4tv2/){:target="_parent"}
 * Source: [https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication){:target="_blank"}
 
 
