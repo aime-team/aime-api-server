@@ -26,17 +26,17 @@ The AIME API server solution implements a distributed server architecture with a
 
 ### AIME API Server
 
-The central part is the [API Server](https://github.com/aime-team/aime-api-server), an efficient asynchronous HTTP/HTTPS web server which can be used stand-alone web server or integrated into Apache, NGINX or similar web servers. It takes the client requests, load balances the requests and distributes them to the API compute workers.
+The central part is the [API Server](https://github.com/aime-team/aime-api-server){:target="_blank"}, an efficient asynchronous HTTP/HTTPS web server which can be used stand-alone web server or integrated into Apache, NGINX or similar web servers. It takes the client requests, load balances the requests and distributes them to the API compute workers.
 
 ### Compute Workers
 
 The model compute jobs are processed through so called compute workers which connect to the API server through a secure HTTPS interface. 
 
-You can easily turn your existing Pytorch and Tensorflow script into an API compute worker by integrating the [AIME API Worker Interface](https://github.com/aime-team/aime-api-worker-interface).
+You can easily turn your existing Pytorch and Tensorflow script into an API compute worker by integrating the [AIME API Worker Interface](https://github.com/aime-team/aime-api-worker-interface){:target="_blank"}.
 
 ### Clients
 
-Clients, like web browsers, smartphones, desktop apps can easily integrating model inference API calss with the [AIME API Client Interfaces](https://github.com/aime-team/aime-api-client-interfaces).
+Clients, like web browsers, smartphones, desktop apps can easily integrating model inference API calss with the [AIME API Client Interfaces](https://github.com/aime-team/aime-api-client-interfaces){:target="_blank"}.
 
 
 ## Example Endpoints
@@ -45,33 +45,33 @@ To illustrate the usage and capabilities of AIME API we currently run following 
 
 ### LLaMa2 Chat
 
-[![AIME LLaMa2 Chat Demo](/docs/images/aime_llama2_chat.jpg "AIME LLaMa2 Chat Demo")](/#llama2_chat){:target="_parent"}
+[![AIME LLaMa2 Chat Demo|250](/docs/images/aime_api_demo-llm-chat.jpg "AIME LLaMa2 Chat Demo"){: width="450"}](/#llama2-chat){:target="_blank"}
 
 Chat with 'Dave', our LLaMa2 based chat-bot.
 
 * AIME Demo Server: [LLama2 Chat](/#llama2_chat){:target="_parent"}
-* Your Local Server: [LLama2 Chat](/llama2_chat.html)
-* Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
+* Your Local Server: [LLama2 Chat](https://api.aime.info/llama2_chat.html){:target="_blank"}
+* Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat){:target="_blank"}
 
 ### Stable Diffusion XL
 
-[![AIME Stable Diffusion XL Demo](/docs/images/aime_stable_diffusion_xl.jpg "AIME Stable Diffusion XL Demo")](/#sdxl-txt2img){:target="_parent"}
+[![AIME Stable Diffusion XL Demo](/docs/images/aime_api_demo-seamless-translate.jpg "AIME Stable Diffusion XL Demo"){: width="450"}](/#sdxl-txt2img){:target="_blank"}
 
 Create photo realistic images from text prompts.
 
 * AIME Demo Server: [Stable Diffusion XL](/#sdxl-txt2img){:target="_parent"}
-* Your Local Server: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/)
-* Source: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl)
+* Your Local Server: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/){:target="_blank"}
+* Source: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl){:target="_blank"}
 
 ### Seamless Communication
 
-[![AIME Seamless Communication Demo](/docs/images/aime_seamless_communication.jpg "AIME Seamless Communication Demo")](/#sc-m4tv2){:target="_parent"}
+[![AIME Seamless Communication Demo](/docs/images/aime_api_demo-sdxl.jpg "AIME Seamless Communication Demo"){: width="450"}](/#sc-m4tv2){:target="_blank"}
 
 Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, Text-to-Speech and Speech-to-Speech! 
 
 * AIME Demo Server: [Seamless Communication](/#sc-m4tv2){:target="_parent"}
-* Your local Server: [Seamless Communication](/sc-m4tv2/)
-* Source: [https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication)
+* Your local Server: [Seamless Communication](https://api.aime.info/sc-m4tv2/){:target="_blank"}
+* Source: [https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication){:target="_blank"}
 
 
 ## How to setup and start the AIME API Server
@@ -122,23 +122,23 @@ The server is now ready to connect corresponding compute workers.
 
 ## Compute Workers
 
-You can easily turn your existing Pytorch and Tensorflow script into an API compute worker by integrating the [AIME API Worker Interface](https://github.com/aime-team/aime-api-worker-interface).
+You can easily turn your existing Pytorch and Tensorflow script into an API compute worker by integrating the [AIME API Worker Interface](https://github.com/aime-team/aime-api-worker-interface){:target="_blank"}.
 
 Following example workers implementations are available as open source, which easily can be be adapted to similair use cases:
 
 ### How to run a LLaMa2 Chat Worker (Large Language Model Chat)
 
-[https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
+[https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat){:target="_blank"}
 
 
 ### How to run a Stable Diffusion Worker (Image Generation)
 
-[https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl)
+[https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl){:target="_blank"}
 
 
 ### How to run a Seamless Communication Worker (Text2Text, SpeechText, Text2Speech, Speech2Speech)
 
-[https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication)
+[https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication){:target="_blank"}
 
 ## Available Client Interfaces
 
@@ -162,8 +162,8 @@ We are currently working on sample interfaces for: iOS, Android, Java, PHP, Ruby
 
 ## Documentation
 
-For more information about the AIME read our blog article about [AIME API](https://www.aime.info/blog).
+For more information about the AIME read our blog article about [AIME API](https://www.aime.info/blog){:target="_blank"}.
 
-Or consult the [AIME API documentation](https://api.aime.info/docs/index.html) at: [/docs/index.html](/docs/index.html)
+Or consult the [AIME API documentation](https://api.aime.info/docs/index.html){:target="_blank"} at: [/docs/index.html](/docs/index.html){:target="_blank"}
 
 
