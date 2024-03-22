@@ -2,6 +2,8 @@
 Title: AIME API Server
 ---
 
+![AIME API Server](/docs/images/aime_api_banner.jpg "AIME API Server"){: width="100%" style="margin-bottom:60px;"}
+
 # AIME API Server - Scalable Model Inference API Server
 
 With AIME API one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.
@@ -45,7 +47,7 @@ To illustrate the usage and capabilities of AIME API we currently run following 
 
 ### LLaMa2 Chat
 
-[![AIME LLaMa2 Chat Demo|250](/docs/images/aime_api_demo-llm-chat_clrd.jpg "AIME LLaMa2 Chat Demo"){: width="450"}](/#llama2-chat){:target="_blank"}
+[![AIME LLaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_clrd.jpg "AIME LLaMa2 Chat Demo"){: width="450"}](/#llama2-chat){:target="_blank"}
 
 Chat with 'Dave', our LLaMa2 based chat-bot.
 
