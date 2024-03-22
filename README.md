@@ -15,6 +15,7 @@ Turn a console Python script to a secure and robust web API acting as your inter
 * Fast - asynchronous and multi process API server
 * Scalable & Robust- distributed cluster ready architecture
 * Secure - type safe interface and input validation
+* Aggregates API requests to GPU batch jobs for maximum throughput
 * Easy integratable into exisiting Python and Tensorflow projects
 * High performance image and audio input/ouput conversion for common web formats
 * Pythonic - easily extendable in your favourite programming language
@@ -87,10 +88,16 @@ python -m venv venv
 source ./venv/bin/activate
 ```
 
-Download or clone the api server:
+Download or clone the AIME API server:
 
 ```bash
-git clone https://github.com/aime-team/aime-api-server.git
+git clone --recurse-submodules https://github.com/aime-team/aime-api-server.git
+```
+
+Alternative, for excluding [Worker interface](https://github.com/aime-team/aime-api-worker-interface) and [Client interfaces](https://github.com/aime-team/aime-api-client-interfaces) submodules, which are not needed to run the API server itself, use:
+
+```bash
+git clone https://github.com/aime-team/aime-api-server.git 
 ```
 
 Then install required pip packages:
@@ -146,6 +153,8 @@ Following example workers implementations are available as open source, which ea
 
 ### Javascript
 
+Simplest example for an AIME API Server request with Javascript:
+
 ```js
 class ModelAPI {
 
@@ -158,16 +167,17 @@ class ModelAPI {
 
 ### Python
 
+Simplest example for an AIME API Server request with Python:
+
+
 ### More to come...
 
 We are currently working on sample interfaces for: iOS, Android, Java, PHP, Ruby, C/C++, 
 
 ## Documentation
 
-For more information about the AIME read our blog article about [AIME API](https://www.aime.info/blog){:target="_blank"}.
-
-Or consult the [AIME API documentation](https://api.aime.info/docs/index.html){:target="_blank"} at: [/docs/index.html](/docs/index.html){:target="_blank"}
+For more information about the AIME read our blog article about [AIME API](https://www.aime.info/en/blog/aime-api-server/){:target="_blank"}.
 
 The AIME API is free of charge for AIME customers. Details can be found in the [LICENSE](https://github.com/aime-team/aime-api-server/LICENSE){:target="_blank"} file. We look forward to hearing from you regarding collaboration or licensing on other devices: hello@aime.info.
 
-[Imprint](https://www.aime.info/imprint){:target="_blank"}
+Or consult the [AIME API documentation](https://api.aime.info/docs/index.html){:target="_blank"}.

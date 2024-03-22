@@ -27,6 +27,7 @@ EP_CONFIG_FILES = EP_CONFIG_FILE_MAIN_TESTWORKER + ',' + EP_CONFIG_FILE_CROP_TES
 HOST = '0.0.0.0'
 PORT = '7777'
 TYPES_DICT = {'string': str, 'integer':int, 'float':float, 'image': bytes}
+CLIENT_LOGIN_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
 
 
 
@@ -96,10 +97,13 @@ class ApiTest():
         client_session_auth_key_dict = {}
         for endpoint_name in self.ep_config_dict:
             try:
-                response = requests.get(f'http://{self.args.host}:{self.args.port}/{endpoint_name}/get_client_session_auth_key')
+                url = f'http://{self.args.host}:{self.args.port}/{endpoint_name}/login'
+                params = {'user': 'aime', 'key': CLIENT_LOGIN_KEY}
+                response = requests.get(url=url, params=params)
+                client_session_auth_key_dict[endpoint_name] = response.json().get('client_session_auth_key')
             except requests.exceptions.ConnectionError:
                 pytest.fail(f'Getting client session auth key failed. API server: http://{self.args.host}:{self.args.port} not available')
-            client_session_auth_key_dict[endpoint_name] = response.json().get('client_session_auth_key')
+                        
         return client_session_auth_key_dict
 
 
@@ -180,7 +184,6 @@ class ApiTest():
     def make_client_request_with_base64_image(self, image, endpoint_name):
 
         params = dict(self.dicts_with_required_parameters_for_all_endpoints.get(endpoint_name), **{'image': image})
-        
         try:
             response = self.fetch_sync(params, endpoint_name)
             assert response.status_code == 200, f'{response.text}'
@@ -436,19 +439,20 @@ class ApiTest():
         callback = Callback()
         callback_async = CallbackAsync()
         
-        result = asyncio.run(do_api_request_async(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, callback.result_callback, callback.progress_callback))
+        
+        result = asyncio.run(do_api_request_async(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, 'aime', CLIENT_LOGIN_KEY, callback.result_callback, callback.progress_callback))
         success = validate_result_image(result)
         assert success, f'Test for async request on model_api simple interface with sync callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
 
-        result = asyncio.run(do_api_request_async(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, callback_async.result_callback, callback_async.progress_callback))
+        result = asyncio.run(do_api_request_async(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, 'aime', CLIENT_LOGIN_KEY, callback_async.result_callback, callback_async.progress_callback))
         success = validate_result_image(result)
         assert success, f'Test for async request on model_api simple interface with async callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
 
-        result = do_api_request(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, callback.progress_callback)
+        result = do_api_request(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, 'aime', CLIENT_LOGIN_KEY, callback.progress_callback)
         success = validate_result_image(result)
         assert success, f'Test for sync request on model_api simple interface with progress callback on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
 
-        model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0])
+        model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
         model_api.do_api_login()
         result = model_api.do_api_request(params, callback.progress_callback)
         success = validate_result_image(result)
@@ -462,7 +466,7 @@ class ApiTest():
         success = validate_result_image(result)
         assert success, f'Test for async request on model_api with sync callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
         
-        model_api_no_login = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0])
+        model_api_no_login = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
         with pytest.raises(ConnectionRefusedError) as excinfo:  
             _ = model_api_no_login.do_api_request(params, callback.progress_callback, callback.progress_error_callback)
             assert excinfo
@@ -471,7 +475,7 @@ class ApiTest():
             _ = asyncio.run(self.run_async_model_api_test_no_login(params, callback_async))
             assert excinfo
 
-        result_no_prgress = do_api_request(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params)
+        result_no_prgress = do_api_request(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, 'aime', CLIENT_LOGIN_KEY)
         success = validate_result_image(result)
         
         
@@ -488,19 +492,19 @@ class ApiTest():
         return True
 
     async def run_async_model_invalid_url_test(self):
-        model_api_invalid_url = ModelAPI(f'http://wrong_url', self.endpoint_names[0])
+        model_api_invalid_url = ModelAPI(f'http://wrong_url', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
         await model_api_invalid_url.do_api_login_async()
         await model_api.close_session()
 
     async def run_async_model_api_test(self, params, callback):
-        model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0])
-        auth_key = await model_api.do_api_login_async(None)
+        model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
+        _ = await model_api.do_api_login_async(None)
         result = await model_api.do_api_request_async(params, callback.result_callback, callback.progress_callback)
         await model_api.close_session()
         return result
 
     async def run_async_model_api_test_no_login(self, params, callback):
-        model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0])
+        model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
         result = await model_api.do_api_request_async(params, callback.result_callback, callback.progress_callback)
         await model_api.close_session()
         return result

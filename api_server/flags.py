@@ -21,7 +21,7 @@ class Flags():
                             )
         parser.add_argument(
             '-s', '--server_config', type=str, required=False,
-            help='Pointer to file from where to load the server config (default model_api_server.cfg)'
+            help='Pointer to file from where to load the server config (default aime_api_server.cfg)'
                             )
         parser.add_argument(
             '-c', '--ep_config', type=str, required=False,
@@ -51,5 +51,5 @@ class Flags():
         if not self.args.ep_config:
             self.args.ep_config = './endpoints'
         if not self.args.server_config:
-            self.args.server_config = './model_api_server.cfg'
+            self.args.server_config = './aime_api_server.cfg'
 
