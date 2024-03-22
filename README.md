@@ -170,3 +170,4 @@ Or consult the [AIME API documentation](https://api.aime.info/docs/index.html){:
 
 The AIME API is free of charge for AIME customers. Details can be found in the [LICENSE](https://github.com/aime-team/aime-api-server/LICENSE){:target="_blank"} file. We look forward to hearing from you regarding collaboration or licensing on other devices: hello@aime.info.
 
+[Imprint](https://www.aime.info/imprint){:target="_blank"}
