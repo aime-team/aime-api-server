@@ -120,26 +120,26 @@ In the section ``[STATIC]`` the static routes can be redirected to a desired des
 
 * ``path`` *(str): To redirect a whole path*
 
-* ``compile`` *(str): The type*
+* ``compile`` *(str): To compile certain file types to a designated format*
 
   *Available values:*
 
   * ``"None"`` *(default): No compilation.*
-  * ``"scss"`` *: scss files will be compiled to css in* ``compiled_path`` *.*
-  * ``"md"`` *: Markdown files will be compiled to html in* ``compiled_path`` *with related css file in* ``css_file`` *.*
+  * ``"scss"`` *: scss files will be compiled to css and saved in* ``compiled_path`` *.*
+  * ``"md"`` *: Markdown files will be compiled to html sand saved in* ``compiled_path`` *with related css file in* ``css_file`` *.*
   
 * ``compiled_path`` *(str): Path to save the compiled files*
 
-* ``css_file`` *(str): Destination of the related css files for html compiled files*
+* ``css_file`` *(str): Destination to the related css files for html compiled files*
 
 Example:
 
 .. code-block:: toml
 
     [STATIC]
-    "/desired/destination/to/js/client/interface.js" = { file = "./frontend/static/js/model_api.js" }
-    "/desired/destination/to/frontend/folder/" = { path = "./frontend/" }
-    "/desired/destination/to/css/folder" = {compile = "scss", path = "./frontend/scss", compiled_path = "./frontend/static/_compiled_/css", }
-    "/desired/destination/to/your/readme.html" = { compile = "md", file = "./destination/to/your/md/readme/README.md", compiled_path = "./destination/to/your/compiled/html/", css_file = "./destination/to/your/css/file/md_style.css" }
+    "/desired/destination/to/the/js/client/interface.js" = { file = "./frontend/static/js/model_api.js" }
+    "/desired/destination/to/your/frontend/folder/" = { path = "./frontend/" }
+    "/desired/destination/to/your/css/folder" = {compile = "scss", path = "./frontend/scss", compiled_path = "./frontend/static/_compiled_/css", }
+    "/desired/destination/to/your/readme.html" = { compile = "md", file = "./destination/to/your/md/readme/README.md", compiled_path = "./destination/to/save/your/compiled/html/", css_file = "./destination/to/your/css/file/md_style.css" }
     "/desired/destination/to/your/documentation/path/" = { path = "./destination/to/your/documentation/path/" }
 
