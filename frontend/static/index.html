@@ -142,34 +142,80 @@
             }
 
             function convertIFrameContent_DemoModelTeasers() {
-                // const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-                // const headings = iframeDocument.querySelectorAll('h3');
+                const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                const headings = iframeDocument.querySelectorAll('h3');
 
-                // headings.forEach(heading => {
-                //     const nextSibling = heading.nextElementSibling;
+                headings.forEach(heading => {
+                    const nextSibling = heading.nextElementSibling;
 
-                //     if (nextSibling && nextSibling.tagName === 'P') {
-                //         const paragraph = nextSibling;
-                //         const anchor = paragraph.querySelector('a');
-                //         const image = anchor ? anchor.querySelector('img') : null;
-                //         const listParagraph = paragraph.nextElementSibling;
-                //         const unorderedList = listParagraph.nextElementSibling;
+                    if (nextSibling && nextSibling.tagName === 'P') {
+                        const paragraph = nextSibling;
+                        const anchor = paragraph.querySelector('a');
+                        const image = anchor ? anchor.querySelector('img') : null;
+                        const listParagraph = paragraph.nextElementSibling;
+                        const unorderedList = listParagraph.nextElementSibling;
 
-                //         if (anchor && image && listParagraph && unorderedList && unorderedList.tagName === 'UL') {
-                //             // yea, we found the structure we were looking for
-                //             console.log('parent Node', heading, heading.parentNode);
-                //             const container = iframeDocument.createElement('div');
-                //             container.classList.add('max-w-sm', 'bg-white', 'border', 'border-gray-200', 'rounded-lg', 'shadow', 'dark:bg-gray-800', 'dark:border-gray-700');
-                //             anchor.appendChild(image);
-                //             container.appendChild(heading);
-                //             container.appendChild(paragraph);
-                //             container.appendChild(listParagraph);
-                //             listParagraph.appendChild(unorderedList);
+                        if (anchor && image && listParagraph && unorderedList && unorderedList.tagName === 'UL') {
+                            // yea, we found the pattern we were looking for
+                            const container = iframeDocument.createElement('div');
+                            container.classList.add('model-demo', 'max-w-md', 'w-full', 'lg:max-w-xs', 'leading-4', 'bg-white', 'border', 'border-gray-200', 'rounded-lg', 'shadow', 'mb-3');
+                            image.classList.add('rounded-t-lg');
+                            const imageLink = iframeDocument.createElement('a');
+                            imageLink.href = anchor.href;
+                            anchor.removeChild(image);
+                            imageLink.appendChild(image);
+                            container.appendChild(imageLink);
 
-                //             heading.parentNode.replaceChild(container, heading);
-                //         }
-                //     }
-                // });
+                            const textContainer = iframeDocument.createElement('div');
+                            textContainer.classList.add('p-5');
+                            container.appendChild(textContainer);
+
+                            const titleLink = iframeDocument.createElement('a');
+                            titleLink.href = anchor.href;
+                            titleLink.classList.add('mb-2');
+                            textContainer.appendChild(titleLink);
+                            const title = iframeDocument.createElement('h3');
+                            title.style.margin = '0';
+                            title.style.marginBottom = '7px';
+                            title.classList.add('text-2xl', 'font-bold', 'tracking-tight', 'text-gray-900');
+                            title.textContent = heading.textContent;
+                            titleLink.appendChild(title);
+
+                            textContainer.appendChild(listParagraph);
+                            listParagraph.classList.add('text-sm');
+                            unorderedList.classList.add('leading-5', 'list-disc', 'text-sm');
+                            textContainer.appendChild(unorderedList);
+
+                            const parentOfHeading = heading.parentNode;
+                            parentOfHeading.removeChild(heading);
+                            parentOfHeading.insertBefore(container, nextSibling);
+                            paragraph.remove();
+                        }
+                    }
+                });
+
+                const modelContainers = iframeDocument.querySelectorAll('.model-demo');
+                if (modelContainers.length > 0) {
+                    const flexContainer = iframeDocument.createElement('div');
+                    flexContainer.classList.add('flex', 'flex-wrap', 'justify-around');
+                    const parentOfFirstContainer = modelContainers[0].parentNode;
+                    parentOfFirstContainer.insertBefore(flexContainer, modelContainers[0]);
+                    modelContainers.forEach(container => {
+                        flexContainer.appendChild(container);
+                    });
+                }
+
+                const fontLink = iframeDocument.createElement('link');
+                fontLink.setAttribute('rel', 'stylesheet');
+                fontLink.setAttribute('href', '/model_api/frontend/css/font.css');
+                iframeDocument.head.appendChild(fontLink);
+
+                const tw = iframeDocument.createElement('script');
+                tw.setAttribute("src", "/model_api/frontend/vendor/tailwind/tailwind_335.min.js");
+                tw.onload = function () {
+                    iframeDocument.body.innerHTML = iframeDocument.body.innerHTML; //re-render
+                };
+                iframeDocument.head.appendChild(tw);
             }
             
             docReady(function() {
@@ -197,13 +243,16 @@
                             'fontFamily': {
                                 'nunito': ['Nunito', 'Helvetica', 'Arial', 'sans-serif'],
                             },
+                            'fontSize': {
+                                'sm': ['12px', '20px']
+                            },
                             'height': {
                                 '63': '63px',
                             },
                             'width': {
                                 '126': '126px',
                             },
-                            translate: {
+                            'translate': {
                                 '50': '50px',
                             }
                         },
@@ -220,7 +269,8 @@
                 const iframeURL = new URL(iframeDocument.location.href);
                 const iframePath = iframeURL.pathname;
                 
-                iframeDocument.body.style.paddingTop = '90px';
+                // iframeDocument.body.style.padding = '90px auto';
+                iframeDocument.body.style.margin = '120px auto';
 
                 switch(iframePath) {
                     case '/readme.html':
