@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+import shutil
 import uuid
 
 import asyncio
@@ -75,15 +76,16 @@ class StaticRouteHandler:
 
 
     def setup_file_route(self, slug, route):
-        route_path = Path(route.get('path', route.get('file', None)))
+        route_path = Path(route.get('path', route.get('file')))
         if route_path:
             if not route_path.is_absolute():
                 route_path = (self.config_file_path / route_path).resolve()
             self.app.static(slug, route_path, name=f'{self.endpoint_name}_static{str(self.num)}')
             self.num += 1
 
+
     def setup_markdown_route(self, slug, route):
-        route_path = route.get('path', route.get('file', None))
+        route_path = route.get('path', route.get('file'))
         compiled_path = (self.config_file_path / route.get('compiled_path')).resolve()
         css_file = route.get('css_file')
         output_file = compiled_path / f'{Path(route_path).stem}.html'
@@ -95,34 +97,34 @@ class StaticRouteHandler:
 
     def setup_scss_route(self, slug, route):
         compiled_path = (self.config_file_path / Path(route.get('compiled_path'))).resolve()
-        manifest = SassManifest(slug, str(compiled_path), route.get('path', route.get('file', None)), css_type='scss')
+        manifest = SassManifest(slug, str(compiled_path), route.get('path', route.get('file')), css_type='scss')
         manifest.compile_webapp(self.app, register_static=True)
         self.num += 1
 
 
     def setup_static_routes(self, static_routes):
         for slug, route in static_routes.items():
-            route_type = route.get('type', 'file')
-            if route_type == 'file':
-                self.setup_file_route(slug, route)
-            elif route_type == 'md':
+            compile_type = route.get('compile')
+            if compile_type == 'md':
                 self.setup_markdown_route(slug, route)
-            elif route_type == 'scss':
+            elif compile_type == 'scss':
                 self.setup_scss_route(slug, route)
-            self.log_static_info(slug, route_type, route.get('path', route.get('file')))
+            else:
+                self.setup_file_route(slug, route)
+            self.log_static_info(slug, compile_type, route.get('path', route.get('file')))
 
 
-    def log_static_info(self, slug, route_type, route_path):
-        self.app.logger.info(f'Static: {slug} -> [{route_type}] {route_path}')
+    def log_static_info(self, slug, compile_type, route_path):
+        self.app.logger.info(f'Static: {slug} -> [{compile_type}] {route_path}')
 
 
 
 class InputValidationHandler():
 
-    def __init__(self, input_args, ep_input_param_config, server_settings):
+    def __init__(self, input_args, ep_input_param_config, server_input_type_config):
         self.input_args = input_args
         self.ep_input_param_config = ep_input_param_config
-        self.server_settings = server_settings
+        self.server_input_type_config = server_input_type_config
         self.validation_errors = list()
         self.arg_definition = dict()
         self.arg_type = str()
@@ -133,7 +135,6 @@ class InputValidationHandler():
 
 
     async def validate_input_parameter(self):
-
         job_data = dict()
         self.check_for_unknown_parameters()
         for ep_input_param_name, arg_definition in self.ep_input_param_config.items():
@@ -242,7 +243,7 @@ class InputValidationHandler():
     def validate_media_parameters_on_server(self, params):
         if params:
             for param_name, param in params.items():
-                arg_definition_server = self.server_settings.get(f'{self.arg_type}_input')
+                arg_definition_server = self.server_input_type_config.get(self.arg_type)
                 if arg_definition_server:
                     arg_param_definition_server = arg_definition_server.get(param_name)
                     if arg_param_definition_server:
@@ -368,7 +369,7 @@ class InputValidationHandler():
         media_format_list = result.get('format', {}).get('format_name', '').split(',')
         if media_format_list:
             if len(media_format_list) > 1:
-                allowed_formats = self.server_settings.get(f'{self.arg_type}_input', {}).get('format', {}).get('allowed', [])
+                allowed_formats = self.server_input_type_config.get(self.arg_type, {}).get('format', {}).get('allowed', [])
                 media_format_list = [media_format for media_format in media_format_list if media_format in allowed_formats]
             return media_format_list[0]
 
@@ -475,7 +476,7 @@ class InputValidationHandler():
                 return param_value
 
 
-    def validate_numerical_parameter(self, param_value, param_name, mode='max'):
+    def validate_numerical_parameter(self, param_value, param_name):
         param_value_unchanged = param_value
         param_value = self.validate_numerical_value(
             param_value,
@@ -529,7 +530,7 @@ class InputValidationHandler():
                     self.validation_errors.append(
                         f'Parameter {param_name} = {param_value} is too {"high" if mode == "max" else "low"}. '+\
                         f'{mode.capitalize()} supported value for {param_name} on this endpoint is {param_limit}!\n'+\
-                        f'\nSet auto_convert = true for {param_name} in the [INPUT] section of the endpoint config file to avoid this error.'
+                        f'\nSet auto_convert = true for {param_name} in the [INPUT] section of the endpoint config file to avoid this error.\n'
                     )
         elif isinstance(param_value, (list, tuple)) and isinstance(param_limit, (list, tuple)):
             return [self.convert_to_limit(element, param_name, element_limit, auto_convert, mode) for element, element_limit in zip(param_value, param_limit)]
@@ -538,7 +539,7 @@ class InputValidationHandler():
 
     def convert_to_align_value(self, param_value, param_name, align_value, min_value, auto_convert):
         if isinstance(param_value, (int, float)) and isinstance(align_value, (int, float)):
-            if not (param_value % align_value):
+            if param_value % align_value:
                 if auto_convert:
                     if isinstance(min_value, (int, float)) and (param_value - param_value % align_value) < min_value:
                         return param_value - param_value % align_value + align_value
@@ -546,9 +547,9 @@ class InputValidationHandler():
                         return param_value - param_value % align_value
                 else:
                     self.validation_errors.append(
-                        f'Parameter {self.ep_input_param_name}.{param_name} = {param_value} is not aligning with {align_value}. '+\
-                        f'Choose multiple of {align_value} for {self.ep_input_param_name}.{param_name} on this endpoint!\n'+\
-                        f'\nSet auto_convert = true for {self.ep_input_param_name}.{param_name} in the [INPUT] section of the endpoint config file to avoid this error.'
+                        f'Parameter {param_name} = {param_value} is not aligning with {align_value}. '+\
+                        f'Choose multiple of {align_value} for {param_name} on this endpoint!\n'+\
+                        f'\nSet auto_convert = true for {param_name} in the [INPUT] section of the endpoint config file to avoid this error.\n'
                     )
         elif isinstance(param_value, (list, tuple)) and isinstance(align_value, (list, tuple)):
             return [self.convert_to_align_value(element, param_name, element_align_value, min_value, auto_convert) for element, element_align_value in zip(param_value, align_value)]
@@ -639,3 +640,12 @@ def check_if_valid_base64_string(test_string):
         return base64.b64encode(base64.b64decode(body.encode('utf-8'))).decode('utf-8') == body if body else False
     except (TypeError, base64.binascii.Error, ValueError):
         return False
+
+def copy_js_client_interface_to_frontend_folder():
+    js_client_interface_folder = Path('./api_client_interfaces/js')
+
+    if js_client_interface_folder.exists():
+        js_client_interface_filename = 'model_api.js'
+        frontend_folder = Path('./frontend/static/js/')
+        logger.info(f'Subrepository "AIME API Client Interfaces" folder in {js_client_interface_folder.parent.resolve()} is present. Javascript client interface {js_client_interface_filename} is copied from {js_client_interface_folder.resolve()} to {frontend_folder.resolve()}.')
+        shutil.copy(js_client_interface_folder / js_client_interface_filename, frontend_folder / js_client_interface_filename)

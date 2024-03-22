@@ -39,7 +39,7 @@ class APIServer(Sanic):
     registered_client_sessions = {} # key: client_session_auth_key
     args = None
     static_routes = {}
-    settings = {}
+    input_type_config = {}
     default_authentification = "None"
     default_authorization = "None"
     default_authorization_keys = {}
@@ -143,6 +143,7 @@ class APIServer(Sanic):
         queue = APIServer.job_queues.get(req_json.get('job_type'))
         job_cmd = await self.validate_worker_queue(queue, req_json)
         if job_cmd['cmd'] not in ('ok', 'warning'):
+            APIServer.logger.warning(f"Worker {req_json.get('auth')} tried a job request for job type {req_json.get('job_type')}, but following error occured: {job_cmd.get('msg')}")
             return sanic_json(job_cmd)
              
         job_cmd = await self.wait_for_valid_job(queue, req_json)
@@ -161,13 +162,21 @@ class APIServer(Sanic):
             sanic.response.types.JSONResponse: Response to API worker interface with 'cmd': 'ok' when API server received data.
         """
         result = self.process_job_result(request)
+
+        job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(result.get('job_type')), result)
+        if job_cmd['cmd'] not in ('ok', 'warning'):
+            APIServer.logger.warning(f"Worker {result.get('auth')} tried to send job result for job type {result.get('job_type')}, but following error occured: {job_cmd.get('msg')}")
+            return sanic_json(job_cmd)
         job_id = result.get('job_id')
+
         try:
-            APIServer.job_result_futures.get(job_id).set_result(result)
+            APIServer.job_result_futures[job_id].set_result(result)
+            response = {'cmd': 'ok'}
         except KeyError:
             job_id = 'unknown job'
+            response = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
         APIServer.logger.info(f"Worker '{result.get('auth')}' processed job {job_id}")
-        response = {'cmd': 'ok'}
+        print('RESPONSE: ', response)
         return sanic_json(response)
 
     
@@ -213,15 +222,30 @@ class APIServer(Sanic):
                 }]
         """
         req_json = request.json
+        
         if not isinstance(req_json, list): # compatibility fix: api_worker_interface < version 0.70
             req_json = [req_json]
-
+        
+        job_cmd_list = list()
         for job_data in req_json:
             job_id = job_data.get('job_id')
-            # TODO: validation and error checking!
-            APIServer.progress_states[job_id] = job_data
-        result = {'cmd': 'ok'}
-        return sanic_json(result)
+            job_type = job_data.get('job_type')
+            job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(job_type), job_data)
+            if job_cmd.get('cmd') not in ('ok', 'warning'):
+                APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
+                return sanic_json(job_cmd) # Fast exit if worker is not authorized or wrong job type.
+
+            if APIServer.job_result_futures.get(job_id):
+                APIServer.progress_states[job_id] = job_data
+            else:
+                job_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
+                APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
+            job_cmd_list.append(job_cmd)
+
+
+        
+        return sanic_json(job_cmd_list)
+
 
 
     async def worker_check_server_status(self, request):
@@ -280,41 +304,65 @@ class APIServer(Sanic):
         config_file = APIServer.args.server_config
         APIServer.logger.info("Reading server config: " + str(config_file))
 
-        config = {}
         with open(config_file, "r") as f:
             config = toml.load(f)
 
-        clients_config = config.get('CLIENTS', {})
-        APIServer.default_authentification = clients_config.get("default_authentification", "None")
-        APIServer.default_authorization = clients_config.get("default_authorization", "None")
-        APIServer.default_authorization_keys = clients_config.get("default_authorization_keys", {})
-
+        self.parse_server_clients_config(config)
+        APIServer.input_type_config = config.get('INPUTS')
         APIServer.static_routes = config.get('STATIC', {})
-        APIServer.settings = config.get('SETTINGS')
+        
 
 
-    def get_endpoint_descriptions(self, config):
+    def get_endpoint_descriptions(self, ep_config):
         """Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.
 
         Args:
-            config (dict): Config dictionary
+            ep_config (dict): Config dictionary
 
         Returns:
-            tuple (str, str, str, int, list): Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.
+            tuple (str, str, str, int, list): Tuple with endpoint descriptions title, name, description, http_methods, version.
         """
-        ep_config = config['ENDPOINT']
-        name = ep_config['name']             
-        title = ep_config.get('title', name)  
-        description = ep_config.get('description', title)
-        client_request_limit = ep_config.get('client_request_limit', 0)
-        provide_worker_meta_data = ep_config.get('provide_worker_meta_data', False)
-        http_methods = self.get_http_methods(ep_config)
-        version = ep_config.get('version')
+        ep_description = ep_config['ENDPOINT']
+        name = ep_description['name']             
+        title = ep_description.get('title', name)  
+        description = ep_description.get('description', title)
+
+        http_methods = self.get_http_methods(ep_description)
+        version = ep_description.get('version')
         APIServer.logger.info(f'----------- {title} - {name} {http_methods}')
-        return title, name, description, client_request_limit, provide_worker_meta_data, http_methods, version
+        return title, name, description, http_methods, version
 
 
-    def get_http_methods(self, ep_config):
+    def get_endpoint_clients_config(self, ep_config):
+        clients_config = ep_config.get('CLIENTS', {})
+        if not 'client_request_limit' in clients_config:
+            clients_config['client_request_limit'] = APIServer.default_client_request_limit
+
+        if not 'provide_worker_meta_data' in clients_config:
+            clients_config['provide_worker_meta_data'] = APIServer.default_provide_worker_meta_data
+
+        if not 'authentication' in clients_config:
+            clients_config['authentication'] = APIServer.default_authentication
+
+        if not 'authorization' in clients_config:
+            clients_config['authorization'] = APIServer.default_authorization
+
+        if not 'authorization_keys' in clients_config:
+            clients_config['authorization_keys'] = APIServer.default_authorization_keys
+
+        return clients_config['client_request_limit'], clients_config['provide_worker_meta_data'], clients_config['authentication'], clients_config['authorization'], clients_config['authorization_keys']
+
+
+    def parse_server_clients_config(self, server_config):
+        server_clients_config = server_config.get('CLIENTS', {})
+        APIServer.default_authentication = server_clients_config.get("default_authentication", "User")
+        APIServer.default_authorization = server_clients_config.get("default_authorization", "Key")
+        APIServer.default_authorization_keys = server_clients_config.get("default_authorization_keys", {})
+        APIServer.default_client_request_limit = server_clients_config.get("default_client_request_limit", 0)
+        APIServer.default_provide_worker_meta_data = server_clients_config.get("default_provide_worker_meta_data", False)
+
+
+    def get_http_methods(self, ep_description):
         """Loads http methods defined in given endpoint config file
 
         Args:
@@ -323,7 +371,7 @@ class APIServer(Sanic):
         Returns:
             list: List of http methods like ['GET', 'POST']
         """
-        http_methods_str = ep_config.get('methods', "GET, POST")
+        http_methods_str = ep_description.get('methods', "GET, POST")
         http_methods = []
         for http_method in http_methods_str.replace(" ", "").split(","):
             if http_method == "GET":
@@ -335,38 +383,35 @@ class APIServer(Sanic):
         return http_methods
 
 
-    def get_param_config(self, config):
+    def get_param_config(self, ep_config):
         """Parses endpoint input-, output-, progress-, and session-parameter configuration from
         given endpoint config file.
 
         Args:
-            config (dict): Config dictionary
+            ep_config (dict): Config dictionary
 
         Returns:
             tuple (dict, dict, dict, dict): Tuple of dictionaries with input-, output-, progress-, 
                 and session-parameter configuration
         """
-        ep_input_param_config = config.get('INPUTS', {})
-        ep_output_param_config = config.get('OUTPUTS', {})
-        ep_progress_param_config = config.get('PROGRESS', {})
-        ep_session_param_config = config.get('SESSION', {}).get(("VARS"), {})
+        ep_input_param_config = ep_config.get('INPUTS', {})
 
         for ep_input_param_name in ep_input_param_config:
             APIServer.logger.debug(str(ep_input_param_name))
 
-        return ep_input_param_config, ep_output_param_config, ep_progress_param_config, ep_session_param_config
+        return ep_input_param_config, ep_config.get('OUTPUTS', {}), ep_config.get('PROGRESS', {}), ep_config.get('SESSION', {}).get(("VARS"), {})
 
 
-    def get_worker_params(self, config):
+    def get_worker_params(self, ep_config):
         """Parses worker parameters like job type and worker authorization key from endpoint config file.
 
         Args:
-            config (dict): Config dictionary
+            ep_config (dict): Config dictionary
 
         Returns:
             tuple (str, str): Tuple of job_type and worker_auth_key
         """
-        worker_config = config.get('WORKER', {})
+        worker_config = ep_config.get('WORKER', {})
         job_type = worker_config.get('job_type')    
         if job_type == None:
             APIServer.logger.error("No job_type for worker configured!")
@@ -378,28 +423,32 @@ class APIServer(Sanic):
 
     def load_endpoint_configuration(self, config_file):
         APIServer.logger.info(f'Reading endpoint config: {config_file}')
-        
-        config = None
         with open(config_file, 'r') as f:
-            config = toml.load(f)
+            ep_config = toml.load(f)
+        APIServer.logger.debug(str(ep_config))
+        endpoint_description = self.get_endpoint_descriptions(ep_config)
+        clients_config = self.get_endpoint_clients_config(ep_config)
+        worker_config = self.get_worker_params(ep_config)
+        param_config = self.get_param_config(ep_config)
 
-        endpoint_description = self.get_endpoint_descriptions(config)
-
-        APIServer.logger.debug(str(config))
-
-        param_config = self.get_param_config(config)
-        job_type, worker_auth_key = self.get_worker_params(config)
+        job_type, worker_auth_key = self.get_worker_params(ep_config)
 
         APIServer.endpoints[endpoint_description[1]] = APIEndpoint(
-            self, *endpoint_description, *param_config, job_type, worker_auth_key, config.get('HTML', {}), config_file
+            self,
+            *endpoint_description,
+            *clients_config,
+            *param_config,
+            *worker_config,
+            ep_config.get('STATIC', {}),
+            config_file
         )
         
 
     def load_endpoint_configurations(self, app):
         config_dir = APIServer.args.ep_config
-        APIServer.logger.info('--- Searching endpoints configurations in {config_dir}')
+        APIServer.logger.info(f'--- Searching endpoints configurations in {config_dir}')
         if Path(config_dir).is_dir():
-            for config_file in Path(config_dir).glob('**/ml_api_endpoint.cfg'):
+            for config_file in Path(config_dir).glob('**/aime_api_endpoint.cfg'):
                 self.load_endpoint_configuration(config_file)
         elif Path(config_dir).is_file():
             self.load_endpoint_configuration(config_dir)
@@ -419,9 +468,10 @@ class APIServer(Sanic):
                 job_cmd = { 'cmd': "warning", 'msg': f"No job queue for job_type: {job_type}" }
 
         elif queue.worker_auth_key != req_json.get('auth_key'):
-            job_cmd = { 'cmd': "error", 'msg': f"Worker not authorized." }
+            job_cmd = { 'cmd': "error", 'msg': f"Worker not authorized!" }
         else: 
             job_cmd = {'cmd': 'ok'}
+
             if not req_json.get('status_check'):
                 if req_json.get('auth') not in queue.registered_workers:
                     queue.registered_workers[req_json.get('auth')] = {
@@ -433,9 +483,12 @@ class APIServer(Sanic):
                     }
                 else:
                     worker = queue.registered_workers[req_json.get('auth')]
-                    worker['status'] = 'waiting'
                     worker['last_request'] = time.time()
-                    worker['job_timeout']: req_json.get('request_timeout', 60) * 0.9
+                    worker['job_timeout'] = req_json.get('request_timeout', 60) * 0.9
+                    if req_json.get('progress'):
+                        worker['status'] = f"processing job {req_json.get('job_id')}"
+                    else:
+                        worker['status'] = 'waiting'
 
         return job_cmd
 
@@ -502,8 +555,8 @@ class APIServer(Sanic):
         job_cmd = { 'cmd': 'job', 'api_server_version': __version__ }
         endpoint = APIServer.endpoints.get(endpoint_name)
         job_cmd['endpoint_name'] = endpoint_name
-        job_cmd['progress_descriptions'] = endpoint.ep_progress_param_config
-        job_cmd['output_descriptions'] = endpoint.ep_output_param_config
+        job_cmd['progress_output_descriptions'] = endpoint.ep_progress_param_config.get('OUTPUTS')
+        job_cmd['final_output_descriptions'] = endpoint.ep_output_param_config
         job_cmd['job_data'] = job_batch_data
         return job_cmd
 

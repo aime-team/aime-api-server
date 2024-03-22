@@ -1,5 +1,9 @@
-const modelAPI = new ModelAPI('stable_diffusion_xl_txt2img');
-let info_box;
+const API_USER = 'aime'
+const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
+
+const modelAPI = new ModelAPI('stable_diffusion_xl_txt2img', API_USER, API_KEY);
+
+let infoBox;
 
 function onSendAPIRequest() {
     params = new Object({
@@ -53,11 +57,16 @@ function onSendAPIRequest() {
 function onResultCallback(data) {
     if (data.error) {
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-            modelAPI.doAPILogin( () => onSendAPIRequest() );
-            return;
+          modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
+            infoBox.textContent = 'Login Error2: ' + error + '\n';
+            enableSendButton();                     
+            removeSpinner(); 
+          });
         }
         else {
             infoBox.textContent = 'Error: ' + data.error + '\n';
+            enableSendButton();
+            removeSpinner();
         }
     }
     else {
@@ -69,9 +78,6 @@ function onResultCallback(data) {
         document.getElementById('num_workers_online').innerText = '';
         document.getElementById('progress_bar').value = 100;
         document.getElementById('progress_label').innerText = '';
-        
-        readyToSendRequest = true;
-        infoBox = document.getElementById('info_box');
 
         num_images = parseInt(document.getElementById('num_samples_range').value);
         imagesPerSec = num_images / data.total_duration
@@ -165,6 +171,7 @@ function removeSpinner() {
 }
 
 function disableSendButton() {
+    readyToSendRequest = false;
     const button = document.getElementById('prompt_send');
     if (button) {
       button.disabled = true;
@@ -173,6 +180,7 @@ function disableSendButton() {
     }
 }
 function enableSendButton() {
+    readyToSendRequest = true;
     const button = document.getElementById('prompt_send');
     if (button) {
         button.disabled = false;
@@ -272,9 +280,7 @@ function handleKeyPress(event) {
  function onButtonClick() {
     
     if(readyToSendRequest) {
-        readyToSendRequest = false;
 
-        infoBox = document.getElementById('info_box');
         infoBox.textContent = 'Request sent.\nWaiting for response...';
 
         disableSendButton();
@@ -402,9 +408,16 @@ window.addEventListener('load', function() {
         });
     });
 
+    infoBox = document.getElementById('info_box');
+
     initializeSizeSwapButton();
     initializeImageContainer();
     refreshRangeInputLayout();
-    modelAPI.doAPILogin();
 
+    modelAPI.doAPILogin(function (data) {
+        console.log('Key: ' + modelAPI.clientSessionAuthKey)
+    },
+    function (error) {
+        infoBox.textContent = 'Login Error: ' + error + '\n';
+    });
 });
