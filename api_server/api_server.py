@@ -143,6 +143,7 @@ class APIServer(Sanic):
         queue = APIServer.job_queues.get(req_json.get('job_type'))
         job_cmd = await self.validate_worker_queue(queue, req_json)
         if job_cmd['cmd'] not in ('ok', 'warning'):
+            APIServer.logger.warning(f"Worker {req_json.get('auth')} tried a job request for job type {req_json.get('job_type')}, but following error occured: {job_cmd.get('msg')}")
             return sanic_json(job_cmd)
              
         job_cmd = await self.wait_for_valid_job(queue, req_json)
@@ -161,13 +162,21 @@ class APIServer(Sanic):
             sanic.response.types.JSONResponse: Response to API worker interface with 'cmd': 'ok' when API server received data.
         """
         result = self.process_job_result(request)
+
+        job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(result.get('job_type')), result)
+        if job_cmd['cmd'] not in ('ok', 'warning'):
+            APIServer.logger.warning(f"Worker {result.get('auth')} tried to send job result for job type {result.get('job_type')}, but following error occured: {job_cmd.get('msg')}")
+            return sanic_json(job_cmd)
         job_id = result.get('job_id')
+
         try:
-            APIServer.job_result_futures.get(job_id).set_result(result)
+            APIServer.job_result_futures[job_id].set_result(result)
+            response = {'cmd': 'ok'}
         except KeyError:
             job_id = 'unknown job'
+            response = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
         APIServer.logger.info(f"Worker '{result.get('auth')}' processed job {job_id}")
-        response = {'cmd': 'ok'}
+        print('RESPONSE: ', response)
         return sanic_json(response)
 
     
@@ -216,13 +225,27 @@ class APIServer(Sanic):
         
         if not isinstance(req_json, list): # compatibility fix: api_worker_interface < version 0.70
             req_json = [req_json]
-
+        
+        job_cmd_list = list()
         for job_data in req_json:
             job_id = job_data.get('job_id')
-            # TODO: validation and error checking!
-            APIServer.progress_states[job_id] = job_data
-        result = {'cmd': 'ok'}
-        return sanic_json(result)
+            job_type = job_data.get('job_type')
+            job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(job_type), job_data)
+            if job_cmd.get('cmd') not in ('ok', 'warning'):
+                APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
+                return sanic_json(job_cmd) # Fast exit if worker is not authorized or wrong job type.
+
+            if APIServer.job_result_futures.get(job_id):
+                APIServer.progress_states[job_id] = job_data
+            else:
+                job_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
+                APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
+            job_cmd_list.append(job_cmd)
+
+
+        
+        return sanic_json(job_cmd_list)
+
 
 
     async def worker_check_server_status(self, request):
@@ -445,9 +468,10 @@ class APIServer(Sanic):
                 job_cmd = { 'cmd': "warning", 'msg': f"No job queue for job_type: {job_type}" }
 
         elif queue.worker_auth_key != req_json.get('auth_key'):
-            job_cmd = { 'cmd': "error", 'msg': f"Worker not authorized." }
+            job_cmd = { 'cmd': "error", 'msg': f"Worker not authorized!" }
         else: 
             job_cmd = {'cmd': 'ok'}
+
             if not req_json.get('status_check'):
                 if req_json.get('auth') not in queue.registered_workers:
                     queue.registered_workers[req_json.get('auth')] = {
@@ -459,9 +483,12 @@ class APIServer(Sanic):
                     }
                 else:
                     worker = queue.registered_workers[req_json.get('auth')]
-                    worker['status'] = 'waiting'
                     worker['last_request'] = time.time()
-                    worker['job_timeout']: req_json.get('request_timeout', 60) * 0.9
+                    worker['job_timeout'] = req_json.get('request_timeout', 60) * 0.9
+                    if req_json.get('progress'):
+                        worker['status'] = f"processing job {req_json.get('job_id')}"
+                    else:
+                        worker['status'] = 'waiting'
 
         return job_cmd
 
