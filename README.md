@@ -2,6 +2,8 @@
 Title: AIME API Server
 ---
 
+![AIME API Server](/docs/images/aime_api_banner.jpg "AIME API Server"){: width="100%" style="margin-bottom:60px;"}
+
 # AIME API Server - Scalable Model Inference API Server
 
 With AIME API one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.
@@ -46,7 +48,7 @@ To illustrate the usage and capabilities of AIME API we currently run following 
 
 ### LLaMa2 Chat
 
-[![AIME LLaMa2 Chat Demo|250](/docs/images/aime_api_demo-llm-chat_clrd.jpg "AIME LLaMa2 Chat Demo"){: width="450"}](/#llama2-chat){:target="_blank"}
+[![AIME LLaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_clrd.jpg "AIME LLaMa2 Chat Demo"){: width="450"}](/#llama2-chat){:target="_blank"}
 
 Chat with 'Dave', our LLaMa2 based chat-bot.
 
@@ -176,5 +178,6 @@ We are currently working on sample interfaces for: iOS, Android, Java, PHP, Ruby
 
 For more information about the AIME read our blog article about [AIME API](https://www.aime.info/en/blog/aime-api-server/){:target="_blank"}.
 
+The AIME API is free of charge for AIME customers. Details can be found in the [LICENSE](https://github.com/aime-team/aime-api-server/LICENSE){:target="_blank"} file. We look forward to hearing from you regarding collaboration or licensing on other devices: hello@aime.info.
 
 Or consult the [AIME API documentation](https://api.aime.info/docs/index.html){:target="_blank"}.

@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath('../../api_worker_interface'))
 js_source_path = '../../frontend/static/js'
 
 project = 'AIME API Server'
-copyright = '2023, AIME GmbH'
+copyright = '2024, AIME GmbH'
 author = 'AIME GmbH'
 release = '0.8.0'
 
