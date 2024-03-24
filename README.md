@@ -48,7 +48,7 @@ To illustrate the usage and capabilities of AIME API we currently run following 
 
 ### LLaMa2 Chat
 
-[![AIME LLaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_clrd.jpg "AIME LLaMa2 Chat Demo"){: width="450"}](/#llama2-chat){:target="_blank"}
+[![AIME LLaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_clrd.jpg "AIME LLaMa2 Chat Demo"){: width="450"}](/#llama2-chat){:target="_parent"}
 
 Chat with 'Dave', our LLaMa2 based chat-bot.
 
@@ -58,7 +58,7 @@ Chat with 'Dave', our LLaMa2 based chat-bot.
 
 ### Stable Diffusion XL
 
-[![AIME Stable Diffusion XL Demo](/docs/images/aime_api_demo-seamless-translate_clrd.jpg "AIME Stable Diffusion XL Demo"){: width="450"}](/#sdxl-txt2img){:target="_blank"}
+[![AIME Stable Diffusion XL Demo](/docs/images/aime_api_demo-seamless-translate_clrd.jpg "AIME Stable Diffusion XL Demo"){: width="450"}](/#sdxl-txt2img){:target="_parent"}
 
 Create photo realistic images from text prompts.
 
@@ -68,7 +68,7 @@ Create photo realistic images from text prompts.
 
 ### Seamless Communication
 
-[![AIME Seamless Communication Demo](/docs/images/aime_api_demo-sdxl_clrd.jpg "AIME Seamless Communication Demo"){: width="450"}](/#sc-m4tv2){:target="_blank"}
+[![AIME Seamless Communication Demo](/docs/images/aime_api_demo-sdxl_clrd.jpg "AIME Seamless Communication Demo"){: width="450"}](/#sc-m4tv2){:target="_parent"}
 
 Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, Text-to-Speech and Speech-to-Speech! 
 
