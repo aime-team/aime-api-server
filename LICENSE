@@ -1,3 +1,61 @@
-The AIME API SERVER license falls under AIME COMMUNITY LICENSE AGREEMENT (found in subfolder/subrepo 'api_server')
 
-The AIME API WORKER INTERFACE and AIME API ENDPOINTS and AIME API CLIENT INTERFACES fall under MIT License.
+- The AIME API SERVER license falls under AIME COMMUNITY LICENSE AGREEMENT (as stated below)
+- The AIME API WORKER INTERFACE and AIME API ENDPOINTS and AIME API CLIENT INTERFACES fall under MIT License.
+
+----------------------------------------------
+AIME COMMUNITY LICENSE AGREEMENT
+AIME API Version Release Date: March 01, 2024
+----------------------------------------------
+
+"Agreement" means the terms and conditions for use, reproduction, distribution and modification of the AIME API set forth herein.
+
+"Documentation" means the specifications, manuals and documentation accompanying AIME API distributed by AIME GmbH on GitHub
+
+"Licensee" or "you" means you, or your employer or any other person or entity (if you are entering into this Agreement on such person or entity's behalf), of the age required under applicable laws, rules or regulations to provide legal consent and that has legal authority to bind your employer or such other person or entity if you are entering in this Agreement on their behalf.
+
+By using or distributing any portion or element of the AIME API, you agree to be bound by this Agreement.
+
+1. License Rights and Redistribution.
+
+a. Grant of Rights. 
+You are granted a non-exclusive, worldwide, non- transferable and royalty-free limited license under AIME's intellectual property or other rights owned by AIME.
+
+b. Redistribution and Use.
+
+i. If you distribute or make the AIME API, or any derivative works thereof, available to a third party, you shall provide a copy of this Agreement to such third party.
+ii. If you receive the AIME API, or any derivative works thereof, from a Licensee as part of an integrated end user product, then Section 2 of this Agreement will not apply to you.
+
+iii. You must retain in all copies of the AIME API that you distribute the following attribution notice within a "Notice" text file distributed as a part of such copies: 
+"AIME API is licensed under the AIME Community License, Copyright (c) AIME GmbH. All Rights Reserved."
+
+2. Additional Commercial Terms. 
+       
+The following use cases are free of charge:
+- Private and non commercial use
+- Commercial use on servers or workstations (on premise or in the cloud) purchased from or operated by AIME GmbH 
+
+For all other commercial use cases, please contact AIME GmbH at api@aime.info.
+
+We advocate active collaboration, for example in expanding the API interfaces for other programming languages or connecting and providing further open source AI models.
+    
+3. Disclaimer of Warranty. 
+
+UNLESS REQUIRED BY APPLICABLE LAW, THE AIME API AND ANY OUTPUT AND RESULTS THEREFROM ARE PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. YOU ARE SOLELY RESPONSIBLE FOR DETERMINING THE APPROPRIATENESS OF USING OR REDISTRIBUTING THE AIME API AND ASSUME ANY RISKS ASSOCIATED WITH YOUR USE OF THE AIME API AND ANY OUTPUT AND RESULTS.
+
+4. Limitation of Liability. 
+
+IN NO EVENT WILL AIME OR ITS AFFILIATES BE LIABLE UNDER ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, TORT, NEGLIGENCE, PRODUCTS LIABILITY, OR OTHERWISE, ARISING OUT OF THIS AGREEMENT, FOR ANY LOST PROFITS OR ANY INDIRECT, SPECIAL, CONSEQUENTIAL, INCIDENTAL, EXEMPLARY OR PUNITIVE DAMAGES, EVEN IF AIME OR ITS AFFILIATES HAVE BEEN ADVISED OF THE POSSIBILITY OF ANY OF THE FOREGOING.
+
+5. Intellectual Property.
+	
+a. No trademark licenses are granted under this Agreement, and in connection with the AIME API, neither AIME nor Licensee may use any name or mark owned by or associated with the other or any of its affiliates, except as required for reasonable and customary use in describing and redistributing the AIME API.
+
+b. Subject to AIME's ownership of the AIME API and derivatives made by or for AIME, with respect to any derivative works and modifications of the AIME API that are made by you, as between you and AIME, you are and will be the owner of such derivative works and modifications.
+
+6. Term and Termination. 
+
+The term of this Agreement will commence upon your acceptance of this Agreement or access to the AIME API and will continue in full force and effect until terminated in accordance with the terms and conditions herein. AIME may terminate this Agreement if you are in breach of any term or condition of this Agreement. Upon termination of this Agreement, you shall delete and cease use of the AIME API. Sections 3, 4 and 7 shall survive the termination of this Agreement.
+
+7. Governing Law and Jurisdiction. 
+
+The laws of the Federal Republic of Germany shall exclusively apply. For consumers who do not conclude the contract for professional or commercial purposes, this choice of law applies only to the extent that the protection granted is not withdrawn by mandatory provisions of the law of the state in which the consumer has his habitual residence.
