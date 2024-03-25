@@ -1,5 +1,9 @@
 # Configuration file for the Sphinx documentation builder.
 #
+# Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+#
+# This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
+#
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 

@@ -1,3 +1,7 @@
+# Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+#
+# This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
+
 from sanic.log import logging
 from sanic.response import json as sanic_json
 
@@ -275,11 +279,11 @@ class APIEndpoint():
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
                 request.ctx.session[ep_session_param_name] = result[ep_session_param_name]
-
+        APIEndpoint.logger.debug('job outputs: ')
         #--- read job outputs
         for ep_output_param_name in self.ep_output_param_config:
             if ep_output_param_name in result:
-                APIEndpoint.logger.debug('job outputs: ')
+                
                 APIEndpoint.logger.debug(f'{ep_output_param_name}: {shorten_strings(result[ep_output_param_name])}')
                 response[ep_output_param_name] = result[ep_output_param_name]
             else:
@@ -350,10 +354,10 @@ class APIEndpoint():
             progress_data_validated = dict()
             progress_data = progress_state.get('progress_data', None)
             if progress_data:
+                APIEndpoint.logger.debug('progress outputs: ')
                 for ep_progress_param_name in ep_progress_output_param_config:
                     if ep_progress_param_name in progress_data:
-                        APIEndpoint.logger.debug('progress outputs: ')
-                        APIEndpoint.logger.debug(shorten_strings(progress_data[ep_progress_param_name]))
+                        APIEndpoint.logger.debug(f'{ep_progress_param_name}: {shorten_strings(progress_data[ep_progress_param_name])}')
                         progress_data_validated[ep_progress_param_name] = progress_data[ep_progress_param_name]
             progress_state['progress_data'] = progress_data_validated
         else:

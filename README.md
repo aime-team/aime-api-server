@@ -153,22 +153,37 @@ Following example workers implementations are available as open source, which ea
 
 ### Javascript
 
-Simplest example for an AIME API Server request with Javascript:
+Simple single call example for an AIME API Server request on endpoint LLaMa 2 with Javascript:
 
-```js
-class ModelAPI {
+```html
 
-	constructor(endpoint_name) {
-	    this.endpoint_name = endpoint_name;
-	    this.client_session_auth_key = null;
-	}
+<script src="/js/model_api.js"></script>
+<script>
+function onResultCallback(data) {
+	console.log(data.text) // print generated text to console
 }
+
+params = new Object({
+	text : 'Your text prompt' 
+});
+
+doAPIRequest('llama2_chat', params, onResultCallback);
+</script>
 ```
 
 ### Python
 
-Simplest example for an AIME API Server request with Python:
+Simple synchronous single call example for an AIME API Server request on endpoint LLaMa 2 with Python:
 
+```python
+
+aime_api_client_interface import do_api_request 
+
+params = {'text': 'Your text prompt'}
+
+result = do_api_request('https://api.aime.info', 'llama2_chat', params)
+print(result.get('text')) # print generated text to console
+```
 
 ### More to come...
 
