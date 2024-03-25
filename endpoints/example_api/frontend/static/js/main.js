@@ -1,3 +1,7 @@
+// Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+//
+// This software may be used and distributed according to the terms of the MIT LICENSE
+
 const API_USER = 'aime'
 const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
 

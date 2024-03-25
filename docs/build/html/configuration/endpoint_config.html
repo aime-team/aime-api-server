@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="../">
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -16,9 +16,9 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=486e5634"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=6a14807c"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -106,9 +106,9 @@
            <div itemprop="articleBody">
              
   <section id="endpoint-configuration">
-<h1>Endpoint Configuration<a class="headerlink" href="#endpoint-configuration" title="Link to this heading"></a></h1>
+<h1>Endpoint Configuration<a class="headerlink" href="#endpoint-configuration" title="Permalink to this heading"></a></h1>
 <section id="basic-endpoint-parameters">
-<h2>Basic Endpoint Parameters<a class="headerlink" href="#basic-endpoint-parameters" title="Link to this heading"></a></h2>
+<h2>Basic Endpoint Parameters<a class="headerlink" href="#basic-endpoint-parameters" title="Permalink to this heading"></a></h2>
 <p>The basic endpoint parameters like its title, name and the http methods are set in the section <code class="docutils literal notranslate"><span class="pre">[ENDPOINT]</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">title</span></code> <em>(str): The full title of the endpoint</em></p></li>
@@ -128,7 +128,7 @@
 </div>
 </section>
 <section id="worker-parameters">
-<h2>Worker Parameters<a class="headerlink" href="#worker-parameters" title="Link to this heading"></a></h2>
+<h2>Worker Parameters<a class="headerlink" href="#worker-parameters" title="Permalink to this heading"></a></h2>
 <p>The section <code class="docutils literal notranslate"><span class="pre">[WORKER]</span></code> deals with worker related parameters.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">job_type</span></code> <em>(str): The type of jobs the related worker is assigned for</em></p></li>
@@ -144,7 +144,7 @@
 </div>
 </section>
 <section id="client-parameters">
-<h2>Client Parameters<a class="headerlink" href="#client-parameters" title="Link to this heading"></a></h2>
+<h2>Client Parameters<a class="headerlink" href="#client-parameters" title="Permalink to this heading"></a></h2>
 <p>Configuration concerning the clients like its authorization and authentication. If not specified here, the default values from the server configuration file are used.</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">authentication</span></code> <em>(str): Method for the client login authentication</em></p>
@@ -175,7 +175,7 @@
 </div>
 </section>
 <section id="input-parameters">
-<h2>Input Parameters<a class="headerlink" href="#input-parameters" title="Link to this heading"></a></h2>
+<h2>Input Parameters<a class="headerlink" href="#input-parameters" title="Permalink to this heading"></a></h2>
 <p>All job input parameters will be validated by the AIME API Server for security reasons before getting forwarded to the workers.
 The <code class="docutils literal notranslate"><span class="pre">[INPUTS]</span></code> section offers configuration of the following attributes to adjust that validation to your needs:</p>
 <ul class="simple">
@@ -184,7 +184,7 @@ Also if the specified type doesn’t match the recognized type of the parameter 
 Available types:</em> <code class="docutils literal notranslate"><span class="pre">&quot;boolean&quot;</span></code> <em>/</em> <code class="docutils literal notranslate"><span class="pre">&quot;bool&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code> <em>/</em> <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code> <em>/</em> <code class="docutils literal notranslate"><span class="pre">&quot;int&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code></p></li>
 </ul>
 <section id="all-parameter-types">
-<h3>All parameter types:<a class="headerlink" href="#all-parameter-types" title="Link to this heading"></a></h3>
+<h3>All parameter types:<a class="headerlink" href="#all-parameter-types" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">required</span></code> <em>(bool): Whether the parameter needs to be present in the client request or not. Client requests with missing required parameters will be rejected if</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is false.</em>
 <em>If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is true, required parameters need a default value the parameter will be converted to if missing.</em></p></li>
@@ -193,7 +193,7 @@ Available types:</em> <code class="docutils literal notranslate"><span class="pr
 </ul>
 </section>
 <section id="types-integer-and-float">
-<h3>Types <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>:<a class="headerlink" href="#types-integer-and-float" title="Link to this heading"></a></h3>
+<h3>Types <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>:<a class="headerlink" href="#types-integer-and-float" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">minimum</span></code> or <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>(int/float): The smallest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, smaller values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>value.</em></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">maximum</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>(int/float):The highest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, higher values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>value.</em></p></li>
@@ -201,13 +201,13 @@ Available types:</em> <code class="docutils literal notranslate"><span class="pr
 </ul>
 </section>
 <section id="type-string">
-<h3>Type <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code>:<a class="headerlink" href="#type-string" title="Link to this heading"></a></h3>
+<h3>Type <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code>:<a class="headerlink" href="#type-string" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">max_length</span></code> <em>(int): The maximum allowed length of the string. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, longer strings will be cut to the</em> <code class="docutils literal notranslate"><span class="pre">max_length</span></code> <em>value.</em></p></li>
 </ul>
 </section>
 <section id="types-image-image-list-and-audio">
-<h3>Types <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>,  <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:<a class="headerlink" href="#types-image-image-list-and-audio" title="Link to this heading"></a></h3>
+<h3>Types <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>,  <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:<a class="headerlink" href="#types-image-image-list-and-audio" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">format</span></code> <em>(str): The format supported by the workers</em></p>
 <ul>
@@ -259,7 +259,7 @@ Available types:</em> <code class="docutils literal notranslate"><span class="pr
 </section>
 </section>
 <section id="output-parameters">
-<h2>Output Parameters<a class="headerlink" href="#output-parameters" title="Link to this heading"></a></h2>
+<h2>Output Parameters<a class="headerlink" href="#output-parameters" title="Permalink to this heading"></a></h2>
 <p>Similar to the input parameters also the output parameters need to be declared. Job result parameters coming from the worker not being listed in the section <code class="docutils literal notranslate"><span class="pre">[OUTPUTS]</span></code> won’t be forwarded to the clients.</p>
 <p>Example:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[OUTPUTS]</span>
@@ -270,7 +270,7 @@ Available types:</em> <code class="docutils literal notranslate"><span class="pr
 </div>
 </section>
 <section id="progress">
-<h2>Progress<a class="headerlink" href="#progress" title="Link to this heading"></a></h2>
+<h2>Progress<a class="headerlink" href="#progress" title="Permalink to this heading"></a></h2>
 <p>The AIME API Server offers the possibility to transmit data between the workers and the clients during ongoing worker computations.
 Equivalent to the input and output parameters, the progress parameters need to be declared in the subsection <code class="docutils literal notranslate"><span class="pre">[OUTPUTS]</span></code>. (Currently only progress outputs are implemented)</p>
 <p>Example:</p>
@@ -283,7 +283,7 @@ Equivalent to the input and output parameters, the progress parameters need to b
 </div>
 </section>
 <section id="static-routes">
-<h2>Static Routes<a class="headerlink" href="#static-routes" title="Link to this heading"></a></h2>
+<h2>Static Routes<a class="headerlink" href="#static-routes" title="Permalink to this heading"></a></h2>
 <p>In the section <code class="docutils literal notranslate"><span class="pre">[STATIC]</span></code> the static routes of your endpoint can be redirected to a desired destination the same way as in the server configuration files. All destinations here are relative to the location of the configuration file. Be aware that overwriting routes already declared in the server configuration will raise errors.</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> <em>(str): To redirect a single file</em></p></li>
@@ -320,7 +320,7 @@ Equivalent to the input and output parameters, the progress parameters need to b
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, AIME GmbH.</p>
+    <p>&#169; Copyright 2024, AIME GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
