@@ -53,7 +53,7 @@ To illustrate the usage and capabilities of AIME API we currently run following 
 Chat with 'Dave', our LLaMa2 based chat-bot.
 
 * AIME Demo Server: [LLama2 Chat](https://api.aime.info/llama2-chat/)
-* Your Local Server: [LLama2 Chat](/#llama2-chat)
+* Your Local Server: [LLama2 Chat](/llama2-chat/)
 * Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
 
 ### Stable Diffusion XL
@@ -63,7 +63,7 @@ Chat with 'Dave', our LLaMa2 based chat-bot.
 Create photo realistic images from text prompts.
 
 * AIME Demo Server: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/)
-* Your Local Server: [Stable Diffusion XL](/#sdxl-txt2img)
+* Your Local Server: [Stable Diffusion XL](/sdxl-txt2img/)
 * Source: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl)
 
 ### Seamless Communication
@@ -73,7 +73,7 @@ Create photo realistic images from text prompts.
 Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, Text-to-Speech and Speech-to-Speech! 
 
 * AIME Demo Server: [Seamless Communication](https://api.aime.info/sc-m4tv2/)
-* Your local Server: [Seamless Communication](/#sc-m4tv2)
+* Your local Server: [Seamless Communication](/sc-m4tv2/)
 * Source: [https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication)
 
 
