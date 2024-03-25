@@ -3,7 +3,7 @@ const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
 
 const modelAPI = new ModelAPI('stable_diffusion_xl_txt2img', API_USER, API_KEY);
 
-let infoBox;
+let infoBox = document.getElementById('info_box');
 
 function onSendAPIRequest() {
     params = new Object({
