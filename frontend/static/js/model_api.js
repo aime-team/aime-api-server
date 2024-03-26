@@ -1,4 +1,7 @@
 // AIME Model API Request Javascript interface
+// Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+//
+// This software may be used and distributed according to the terms of the MIT LICENSE
 
 /**
  * Class for communication with the AIME Model API.
