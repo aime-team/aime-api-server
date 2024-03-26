@@ -95,10 +95,12 @@ class BenchmarkApiEndpoint():
         self.title_bar.close()
         if self.args.endpoint_name == 'llama2_chat':
             mean_result_string = f'; {round((self.args.total_requests*self.num_generated_tokens)/duration, 1)} tokens/s'
-            mean_result_string_warmup = f'; {round(((self.args.total_requests - self.args.warmup_requests)*self.num_generated_tokens)/duration_without_warmup, 1)} tokens/s'
+            if duration_without_warmup:
+                mean_result_string_warmup = f'; {round(((self.args.total_requests - self.args.warmup_requests)*self.num_generated_tokens)/duration_without_warmup, 1)} tokens/s'
         else:
             mean_result_string = f'; {round(self.args.total_requests/duration, 1)} images/s'
-            mean_result_string_warmup = f'; {round((self.args.total_requests - self.args.warmup_requests)/duration_without_warmup, 1)} images/s'
+            if duration_without_warmup:
+                mean_result_string_warmup = f'; {round((self.args.total_requests - self.args.warmup_requests)/duration_without_warmup, 1)} images/s'
 
         print(
             '---------------------------------'
@@ -108,7 +110,7 @@ class BenchmarkApiEndpoint():
             f'\n\n{self.args.total_requests} requests with {self.args.concurrent_requests} concurrent requests took {duration} seconds.'
             f'\nMean time per request: {round(duration/self.args.total_requests, 1)}s {mean_result_string}'
         )
-        if self.args.warmup_requests:
+        if self.args.warmup_requests and duration_without_warmup:
             print(
             f'\nExcluding the first {self.args.warmup_requests} warmup requests:'
             f'\n{self.args.total_requests - self.args.warmup_requests} requests with {self.args.concurrent_requests} concurrent requests took {duration_without_warmup} seconds.' \
