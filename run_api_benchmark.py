@@ -18,7 +18,10 @@ class BenchmarkApiEndpoint():
         self.title_bar = tqdm(total=0, bar_format='{desc}', leave=False)
         self.num_generated_tokens = 480
         self.num_finished_tasks = 0
-        self.start_time_after_warmup = time.time() # updated after warmup if self.args.warmup_requests > 0
+        self.warmup_stage = True
+        self.warmup_requests = 0
+        self.start = time.time()
+        self.start_time_after_warmup = time.time() # updated after warmup
 
 
     def load_flags(self):
@@ -39,7 +42,7 @@ class BenchmarkApiEndpoint():
             '-ep', '--endpoint_name', type=str, default='llama2_chat', required=False, help='Name of the endpoint'
         )
         parser.add_argument(
-            '-wr', '--warmup_requests', type=int, default=1, required=False, help='Number of warmup requests for calculation of additional mean results'
+            '-wt', '--waiting_time_to_get_warmup', type=int, default=1, required=False, help='Waiting time in seconds after getting the number of tasks in the first batch request to calculate the warmup'
         )
         args = parser.parse_args()
         if not args.config_file:
@@ -54,7 +57,6 @@ class BenchmarkApiEndpoint():
             f'Starting Benchmark on {self.args.api_server}/{self.args.endpoint_name} with\n'
             f'{self.args.total_requests} total requests\n'
             f'{self.args.concurrent_requests} concurrent requests\n'
-            f'{self.args.warmup_requests} warmup requests\n'
             f'Job parameters:'
         )
         for key, value in params.items():
@@ -85,22 +87,21 @@ class BenchmarkApiEndpoint():
         params = self.get_default_values_from_config()
         self.print_start_message(params)
         loop = self.get_loop()
-        start = time.time()
         semaphore = asyncio.Semaphore(self.args.concurrent_requests)
         tasks = [asyncio.ensure_future(self.do_request(params, semaphore)) for _ in range(self.args.total_requests)]
         loop.run_until_complete(asyncio.gather(*tasks))
         stop = time.time()
-        duration = round(stop - start)
+        duration = round(stop - self.start)
         duration_without_warmup = round(stop - self.start_time_after_warmup)
         self.title_bar.close()
         if self.args.endpoint_name == 'llama2_chat':
             mean_result_string = f'; {round((self.args.total_requests*self.num_generated_tokens)/duration, 1)} tokens/s'
             if duration_without_warmup:
-                mean_result_string_warmup = f'; {round(((self.args.total_requests - self.args.warmup_requests)*self.num_generated_tokens)/duration_without_warmup, 1)} tokens/s'
+                mean_result_string_warmup = f'; {round(((self.args.total_requests - self.warmup_requests)*self.num_generated_tokens)/duration_without_warmup, 1)} tokens/s'
         else:
             mean_result_string = f'; {round(self.args.total_requests/duration, 1)} images/s'
             if duration_without_warmup:
-                mean_result_string_warmup = f'; {round((self.args.total_requests - self.args.warmup_requests)/duration_without_warmup, 1)} images/s'
+                mean_result_string_warmup = f'; {round((self.args.total_requests - self.warmup_requests)/duration_without_warmup, 1)} images/s'
 
         print(
             '---------------------------------'
@@ -110,11 +111,11 @@ class BenchmarkApiEndpoint():
             f'\n\n{self.args.total_requests} requests with {self.args.concurrent_requests} concurrent requests took {duration} seconds.'
             f'\nMean time per request: {round(duration/self.args.total_requests, 1)}s {mean_result_string}'
         )
-        if self.args.warmup_requests and duration_without_warmup:
+        if self.warmup_requests and duration_without_warmup:
             print(
-            f'\nExcluding the first {self.args.warmup_requests} warmup requests:'
-            f'\n{self.args.total_requests - self.args.warmup_requests} requests with {self.args.concurrent_requests} concurrent requests took {duration_without_warmup} seconds.' \
-            f'\nMean time per request: {round(duration_without_warmup/(self.args.total_requests - self.args.warmup_requests), 1)}s {mean_result_string_warmup}'
+            f'\nExcluding the first batch with {self.warmup_requests} warmup requests:'
+            f'\n{self.args.total_requests - self.warmup_requests} requests with {self.args.concurrent_requests} concurrent requests took {duration_without_warmup} seconds.' \
+            f'\nMean time per request: {round(duration_without_warmup/(self.args.total_requests - self.warmup_requests), 1)}s {mean_result_string_warmup}'
             )
         
     def get_loop(self):
@@ -126,6 +127,10 @@ class BenchmarkApiEndpoint():
         return loop
 
     def progress_callback(self, progress_info, progress_data):
+        job_id = progress_info['job_id']
+        if (time.time() - self.start) < self.args.waiting_time_to_get_warmup:#self.warmup_stage:
+            self.warmup_requests = sum(1 for value in self.progress_bar_dict.values() if value)
+
         job_id = progress_info['job_id']
         if not self.progress_bar_dict.get(job_id):
             if progress_info['queue_position'] == 0:
@@ -146,8 +151,9 @@ class BenchmarkApiEndpoint():
         
 
     def result_callback(self, result):
+        #self.warmup_stage = False
         self.num_finished_tasks += 1
-        if self.num_finished_tasks == self.args.warmup_requests:
+        if self.num_finished_tasks == self.warmup_requests:
             self.start_time_after_warmup = time.time()
         self.num_generated_tokens = result.get('num_generated_tokens')
         self.remove_progress_bar_when_finished(result['job_id'])
