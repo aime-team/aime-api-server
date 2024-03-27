@@ -1,0 +1,299 @@
+@ -1,298 +0,0 @@
+<!DOCTYPE html>
+<!-- 
+Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+
+This software may be used and distributed according to the terms of the MIT LICENSE
+-->
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
+        
+        <title>AIME API</title>
+
+        <link rel="stylesheet" href="/model_api/frontend/css/font.css">
+        <script src="/model_api/frontend/vendor/tailwind/tailwind_335.min.js"></script>  <!-- from https://cdn.tailwindcss.com -->
+
+        <style>
+            a.active.demo-link {
+                text-decoration: underline;
+                /* font-weight: bold; */
+                /* border: 1px solid #263743; */
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            }
+        </style>
+    </head>
+
+    <body class="font-nunito h-screen w-screen m-0 p-0">
+        <div class="flex flex-col w-full h-full overflow-hidden">
+
+            <nav id="topnav" class="absolute bg-white bg-opacity-90 w-screen flex items-center justify-end fixed shadow-sm p-2">
+                <div class="max-w-screen-xl flex flex-wrap items-center justify-between p-4">
+                    <a id="home" href="/readme.html" class="menuItem flex items-center space-x-3 absolute w-126 h-63 bg-aime_darkblue rounded-full left-0 transform -translate-x-9 z-10">
+                        <img src="/docs/images/AIME-API_logo.svg" class="h-9 left-0 transform translate-x-50" alt="AIME-API Logo" />
+                        <span class="self-center hidden text-2xl font-semibold whitespace-nowrap">AIME API</span>
+                    </a>
+                    <div class="flex md:order-2 space-x-3 md:space-x-0 justify-end">
+                        <button type="button" class="inline-flex items-center p-2 w-10 w-20 h-10 justify-center text-sm text-aime_darkblue rounded-3xl bg-aime_green md:hidden hover:ring-aime_blue active:bg-aime_orange" onclick="openHamburgerOverlay()"">
+                            <span class="sr-only">Open main menu</span>
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="items-center hidden justify-end w-full md:flex md:w-auto md:order-1">
+                        <ul class="flex flex-col text-md font-medium md:space-x-8 md:flex-row">
+                            <li>
+                                <a id="llama2-chat" href="/llama2-chat/" class="menuItem demo-link block py-1 px-3 rounded-3xl text-aime_darkblue bg-aime_red hover:bg-aime_green">LLama2 Chat</a>
+                            </li>
+                            <li>
+                                <a id="sdxl-txt2img" href="/sdxl-txt2img/" class="menuItem demo-link block py-1 px-3 rounded-3xl text-aime_darkblue bg-aime_orange hover:bg-aime_green">Stable Diffusion XL</a>
+                            </li>
+                            <li>
+                                <a id="sc-m4tv2" href="/sc-m4tv2/" class="menuItem demo-link block py-1 px-3 rounded-3xl text-aime_darkblue bg-aime_blue hover:bg-aime_green">Seamless Communication</a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="/docs/index.html" class="text-aime_darkblue bg-aime_green block rounded-3xl px-3 py-1 text-center hover:bg-aime_darkblue hover:text-white">Docs</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div id="hamburger-menu-overlay" class="fixed inset-0 flex justify-center items-center bg-white bg-opacity-90 z-40 hidden">
+                <button id="closeMenu" class="absolute top-4 right-4 text-gray-600 hover:text-gray-800" onclick="closeHamburgerOverlay()">
+                    <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <ul class="flex flex-col text-lg font-medium md:space-x-8 md:flex-row">
+                    <li class="m-3">
+                        <a onclick="updateMenuHash('llama2-chat')" href="/#llama2-chat" class="demo-link block py-1 px-3 rounded-3xl text-aime_darkblue bg-aime_red hover:bg-aime_green">LLama2 Chat</a>
+                    </li>
+                    <li class="m-3">
+                        <a onclick="updateMenuHash('sdxl-txt2img')" href="/#sdxl-txt2img" class="demo-link block py-1 px-3 rounded-3xl text-aime_darkblue bg-aime_orange hover:bg-aime_green">Stable Diffusion XL</a>
+                    </li>
+                    <li class="m-3">
+                        <a onclick="updateMenuHash('sc-m4tv2')" href="/#sc-m4tv2" class="demo-link block py-1 px-3 rounded-3xl text-aime_darkblue bg-aime_blue hover:bg-aime_green">Seamless Communication</a>
+                    </li>
+                    <li class="m-3">
+                        <a target="_blank" href="/docs/index.html" class="text-aime_darkblue bg-aime_green block rounded-3xl px-3 py-1 text-center hover:bg-aime_darkblue hover:text-white">Docs</a>
+                    </li>
+                </ul>
+            </div>
+
+
+            <iframe id='content-frame' src="/readme.html" style="flex-grow:1; border:none;" title="AIME API Server Demo Pages"></iframe> 
+        </div>
+    
+        <script>
+            const menuItems = document.querySelectorAll(".menuItem");
+            const hamburgerOverlay = document.getElementById('hamburger-menu-overlay');
+            const baseUrl = window.location.href.split('#')[0];
+
+            function clickedMenu(evt) {
+                evt.preventDefault();
+                const clickedMenuItem = evt.currentTarget;
+                window.location.href = baseUrl + "#" + clickedMenuItem.id;
+            }
+
+            function updateMenu(url) {
+                if (url.indexOf('#') >= 0) {
+                const anchorPath = url.substring(url.indexOf('#') + 1);
+                
+                menuItems.forEach(menuItem => {
+                    if (menuItem.id === anchorPath) {
+                        menuItem.classList.add('active');
+                        document.getElementById('content-frame').src = menuItem.href;
+                    } else {
+                        menuItem.classList.remove('active');
+                    }
+                });
+                }
+            }
+
+            function updateMenuHash(hash) {
+                window.location.href = baseUrl + "#" + hash;
+                closeHamburgerOverlay();
+            }
+            
+            menuItems.forEach(menuItem => {
+                menuItem.addEventListener('click', clickedMenu);
+            });
+            
+            window.onhashchange = function() {
+                var url = location.hash;
+                updateMenu(url);
+            }
+
+            function openHamburgerOverlay() {
+                hamburgerOverlay.classList.remove('hidden');
+            }
+
+            function closeHamburgerOverlay() {
+                hamburgerOverlay.classList.add('hidden');
+            }
+            
+            function docReady(fn) {
+                if (document.readyState === "complete" || document.readyState === "interactive") {
+                    setTimeout(fn, 1);
+                } else {
+                    document.addEventListener("DOMContentLoaded", fn);
+                }
+            }
+
+            function convertIFrameContent_DemoModelTeasers() {
+                const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                const headings = iframeDocument.querySelectorAll('h3');
+
+                headings.forEach(heading => {
+                    const nextSibling = heading.nextElementSibling;
+
+                    if (nextSibling && nextSibling.tagName === 'P') {
+                        const paragraph = nextSibling;
+                        const anchor = paragraph.querySelector('a');
+                        const image = anchor ? anchor.querySelector('img') : null;
+                        const listParagraph = paragraph.nextElementSibling;
+                        const unorderedList = listParagraph.nextElementSibling;
+
+                        if (anchor && image && listParagraph && unorderedList && unorderedList.tagName === 'UL') {
+                            // yea, we found the pattern we were looking for
+                            const container = iframeDocument.createElement('div');
+                            container.classList.add('model-demo', 'max-w-md', 'w-full', 'lg:max-w-xs', 'leading-4', 'bg-white', 'border', 'border-gray-200', 'rounded-lg', 'shadow', 'mb-3');
+                            image.classList.add('rounded-t-lg');
+                            const imageLink = iframeDocument.createElement('a');
+                            imageLink.href = anchor.href;
+                            anchor.removeChild(image);
+                            imageLink.appendChild(image);
+                            container.appendChild(imageLink);
+
+                            const textContainer = iframeDocument.createElement('div');
+                            textContainer.classList.add('p-5');
+                            container.appendChild(textContainer);
+
+                            const titleLink = iframeDocument.createElement('a');
+                            titleLink.href = anchor.href;
+                            titleLink.classList.add('mb-2');
+                            textContainer.appendChild(titleLink);
+                            const title = iframeDocument.createElement('h3');
+                            title.style.margin = '0';
+                            title.style.marginBottom = '7px';
+                            title.classList.add('text-2xl', 'font-bold', 'tracking-tight', 'text-gray-900');
+                            title.textContent = heading.textContent;
+                            titleLink.appendChild(title);
+
+                            textContainer.appendChild(listParagraph);
+                            listParagraph.classList.add('text-sm');
+                            unorderedList.classList.add('leading-5', 'list-disc', 'text-sm');
+                            textContainer.appendChild(unorderedList);
+
+                            const parentOfHeading = heading.parentNode;
+                            parentOfHeading.removeChild(heading);
+                            parentOfHeading.insertBefore(container, nextSibling);
+                            paragraph.remove();
+                        }
+                    }
+                });
+
+                const modelContainers = iframeDocument.querySelectorAll('.model-demo');
+                if (modelContainers.length > 0) {
+                    const flexContainer = iframeDocument.createElement('div');
+                    flexContainer.classList.add('flex', 'flex-wrap', 'justify-around');
+                    const parentOfFirstContainer = modelContainers[0].parentNode;
+                    parentOfFirstContainer.insertBefore(flexContainer, modelContainers[0]);
+                    modelContainers.forEach(container => {
+                        flexContainer.appendChild(container);
+                    });
+                }
+
+                const fontLink = iframeDocument.createElement('link');
+                fontLink.setAttribute('rel', 'stylesheet');
+                fontLink.setAttribute('href', '/model_api/frontend/css/font.css');
+                iframeDocument.head.appendChild(fontLink);
+
+                const tw = iframeDocument.createElement('script');
+                tw.setAttribute("src", "/model_api/frontend/vendor/tailwind/tailwind_335.min.js");
+                tw.onload = function () {
+                    iframeDocument.body.innerHTML = iframeDocument.body.innerHTML; //re-render
+                };
+                iframeDocument.head.appendChild(tw);
+            }
+            
+            docReady(function() {
+                var url = window.location.href;
+                updateMenu(url);
+
+                tailwind.config = {
+                    'theme': {
+                        'screens': {
+                            'xs': '475px',
+                            'sm': '640',
+                            'md': '768px',
+                            'lg': '1024px',
+                            'xl': '1280px',
+                            '2xl': '1536px'
+                        },
+                        'extend': {
+                            'colors': {
+                                'aime_blue': '#4FBFD7',
+                                'aime_darkblue': '#263743',
+                                'aime_red': '#D55151',
+                                'aime_orange': '#F6BE5C',
+                                'aime_green': '#CBE4C9'
+                            },
+                            'fontFamily': {
+                                'nunito': ['Nunito', 'Helvetica', 'Arial', 'sans-serif'],
+                            },
+                            'fontSize': {
+                                'sm': ['12px', '20px']
+                            },
+                            'height': {
+                                '63': '63px',
+                            },
+                            'width': {
+                                '126': '126px',
+                            },
+                            'translate': {
+                                '50': '50px',
+                            }
+                        },
+                    //   container: {
+                    //     padding: '2rem',
+                    //   },
+                    }
+                };
+            });
+
+            const iframe = document.getElementById('content-frame');
+            iframe.onload = function() {
+                const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
+                const iframeURL = new URL(iframeDocument.location.href);
+                const iframePath = iframeURL.pathname;
+                
+                // iframeDocument.body.style.padding = '90px auto';
+                iframeDocument.body.style.margin = '120px auto';
+
+                switch(iframePath) {
+                    case '/readme.html':
+                        iframeDocument.body.style.fontFamily = "'Nunito', 'Helvetica', 'Arial', sans-serif !important";
+                        //convertIFrameContent_DemoModelTeasers();
+                        break;
+                    case '/llama2-chat/':
+                        break;
+                    case '/sdxl-txt2img/':
+                        break;
+                    case '/sc-m4tv2/':
+                        break;
+                    case '/docs/index.html':
+                        break;
+                }
+            };
+            
+        </script>
+    </body>
+</html>
