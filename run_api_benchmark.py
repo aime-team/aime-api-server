@@ -14,14 +14,18 @@ class BenchmarkApiEndpoint():
 
     def __init__(self):
         self.args = self.load_flags()
+        self.params = self.get_default_values_from_config()
+        self.semaphore = asyncio.Semaphore(self.args.concurrent_requests)
         self.progress_bar_dict = dict()
-        self.title_bar = tqdm(total=0, bar_format='{desc}', leave=False)
+        self.title_bar_1 = tqdm(total=0, bar_format='{desc}', leave=False, position=0)
+        self.title_bar_2 = tqdm(total=0, bar_format='{desc}', leave=False, position=1)
         self.num_generated_tokens = 480
         self.num_finished_tasks = 0
-        self.warmup_stage = True
-        self.warmup_requests = 0
-        self.start = time.time()
-        self.start_time_after_warmup = time.time() # updated after warmup
+        self.start_time = time.time()
+        self.start_time_second_batch = time.time() # updated after warmup if self.args.warmup_requests > 0
+        self.first_batch = True
+        self.jobs_first_batch = dict()
+        self.num_jobs_first_batch = 0
 
 
     def load_flags(self):
@@ -30,7 +34,7 @@ class BenchmarkApiEndpoint():
             '-as', '--api_server', type=str, default="http://0.0.0.0:7777", required=False, help='Address of the API server'
         )
         parser.add_argument(
-            '-tr', '--total_requests', type=int, default=4, required=False, help='Total number of requests'
+            '-tr', '--total_requests', type=int, default=4, required=False, help="Total number of requests. Choose a multiple of the worker's batchsize to have a full last batch"
         )
         parser.add_argument(
             '-cr', '--concurrent_requests', type=int, default=40, required=False, help='Number of concurrent asynchronous requests limited with asyncio.Semaphore()'
@@ -42,7 +46,7 @@ class BenchmarkApiEndpoint():
             '-ep', '--endpoint_name', type=str, default='llama2_chat', required=False, help='Name of the endpoint'
         )
         parser.add_argument(
-            '-wt', '--waiting_time_to_get_warmup', type=int, default=1, required=False, help='Waiting time in seconds after getting the number of tasks in the first batch request to calculate the warmup'
+            '-tfb', '--time_to_get_first_batch_jobs', type=int, default=1, required=False, help='Time in seconds after start to get the number of jobs in the first batch'
         )
         args = parser.parse_args()
         if not args.config_file:
@@ -52,14 +56,15 @@ class BenchmarkApiEndpoint():
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
         return args
 
-    def print_start_message(self, params):
+    def print_start_message(self):
         print(
             f'Starting Benchmark on {self.args.api_server}/{self.args.endpoint_name} with\n'
             f'{self.args.total_requests} total requests\n'
             f'{self.args.concurrent_requests} concurrent requests\n'
+            f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s\n'
             f'Job parameters:'
         )
-        for key, value in params.items():
+        for key, value in self.params.items():
             print(f'{key}: {value}')
         print()
 
@@ -79,45 +84,36 @@ class BenchmarkApiEndpoint():
             params['text'] = 'Once upon a time'
         return params
 
-    async def do_request(self, params, semaphore):
-        async with semaphore:
-            await do_api_request_async(self.args.api_server, self.args.endpoint_name, params, 'aime', '6a17e2a5b70603cb1a3294b4a1df67da', self.result_callback, self.progress_callback)
+    async def do_request_with_semaphore(self):
+        """Limits the concurrent requests
+        """
+        async with self.semaphore:
+            await do_api_request_async(self.args.api_server, self.args.endpoint_name, self.params, 'aime', '6a17e2a5b70603cb1a3294b4a1df67da', self.result_callback, self.progress_callback)
 
     def run(self):
-        params = self.get_default_values_from_config()
-        self.print_start_message(params)
+        self.print_start_message()
         loop = self.get_loop()
-        semaphore = asyncio.Semaphore(self.args.concurrent_requests)
-        tasks = [asyncio.ensure_future(self.do_request(params, semaphore)) for _ in range(self.args.total_requests)]
-        loop.run_until_complete(asyncio.gather(*tasks))
-        stop = time.time()
-        duration = round(stop - self.start)
-        duration_without_warmup = round(stop - self.start_time_after_warmup)
-        self.title_bar.close()
+        tasks = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.args.total_requests)]
+        loop.run_forever()
+        duration = time.time() - self.start_time_second_batch
+        self.title_bar_1.close()
+        self.title_bar_2.close()
         if self.args.endpoint_name == 'llama2_chat':
-            mean_result_string = f'; {round((self.args.total_requests*self.num_generated_tokens)/duration, 1)} tokens/s'
-            if duration_without_warmup:
-                mean_result_string_warmup = f'; {round(((self.args.total_requests - self.warmup_requests)*self.num_generated_tokens)/duration_without_warmup, 1)} tokens/s'
+            mean_result_string = f'| {round((self.args.total_requests*self.num_generated_tokens)/duration, 1)} tokens/s'
         else:
-            mean_result_string = f'; {round(self.args.total_requests/duration, 1)} images/s'
-            if duration_without_warmup:
-                mean_result_string_warmup = f'; {round((self.args.total_requests - self.warmup_requests)/duration_without_warmup, 1)} images/s'
+            mean_result_string = f'| {round(self.args.total_requests/duration, 1)} images/s'
 
         print(
-            '---------------------------------'
-            '\nFinished'
             '\n---------------------------------\n'
-            '\nResult:'
-            f'\n\n{self.args.total_requests} requests with {self.args.concurrent_requests} concurrent requests took {duration} seconds.'
-            f'\nMean time per request: {round(duration/self.args.total_requests, 1)}s {mean_result_string}'
+            'Finished'
+            '\n---------------------------------\n\n'
+            'Result:\n'
+            f'First batch containing {self.num_jobs_first_batch} jobs being skipped.\n'
+            f'{self.args.total_requests} requests with {self.args.concurrent_requests} concurrent requests took {round(duration)} seconds.\n'
+            f'Mean time per request: {round(duration/self.args.total_requests, 1)}s {mean_result_string}'
         )
-        if self.warmup_requests and duration_without_warmup:
-            print(
-            f'\nExcluding the first batch with {self.warmup_requests} warmup requests:'
-            f'\n{self.args.total_requests - self.warmup_requests} requests with {self.args.concurrent_requests} concurrent requests took {duration_without_warmup} seconds.' \
-            f'\nMean time per request: {round(duration_without_warmup/(self.args.total_requests - self.warmup_requests), 1)}s {mean_result_string_warmup}'
-            )
-        
+
+
     def get_loop(self):
         try:
             loop = asyncio.get_running_loop()
@@ -126,48 +122,67 @@ class BenchmarkApiEndpoint():
             asyncio.set_event_loop(loop)
         return loop
 
-    def progress_callback(self, progress_info, progress_data):
-        job_id = progress_info['job_id']
-        if (time.time() - self.start) < self.args.waiting_time_to_get_warmup:#self.warmup_stage:
-            self.warmup_requests = sum(1 for value in self.progress_bar_dict.values() if value)
 
+    async def progress_callback(self, progress_info, progress_data):
         job_id = progress_info['job_id']
+
         if not self.progress_bar_dict.get(job_id):
             if progress_info['queue_position'] == 0:
-                self.progress_bar_dict[job_id] = tqdm(range(0, 100), desc=f'Current job: {job_id}', leave=False)
-            else:
-                self.progress_bar_dict[job_id] = None
-
-        self.title_bar.set_description_str(f'Remaining jobs: {self.args.total_requests - self.num_finished_tasks} / {self.args.total_requests}')
-        current_progress_bar = self.progress_bar_dict[job_id]
+                self.progress_bar_dict[job_id] = tqdm(range(0, 100), desc=f'Job ID: {job_id}', leave=False)
+        self.num_current_running_jobs = sum([1 for progress_bar in self.progress_bar_dict.values() if progress_bar.n])
+        if not self.num_jobs_first_batch:
+            if (time.time() - self.start_time) >= self.args.time_to_get_first_batch_jobs:
+                self.jobs_first_batch = {job_id: progress_bar for job_id, progress_bar in self.progress_bar_dict.items() if progress_bar.n}
+                self.num_jobs_first_batch = self.num_current_running_jobs
+                loop = self.get_loop()
+                _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.num_jobs_first_batch)]
+        else:
+            if self.first_batch and progress_info.get('progress') and progress_info.get('job_id') not in self.jobs_first_batch.keys():
+                self.first_batch = False
+                self.start_time_second_batch = time.time()
+        self.update_title()
+        current_progress_bar = self.progress_bar_dict.get(job_id)
         if current_progress_bar:
             if self.args.endpoint_name == 'llama2_chat':
                 current_progress_bar.n = round(100*progress_info['progress']/self.num_generated_tokens)
             else:
                 current_progress_bar.n = progress_info['progress']
             current_progress_bar.refresh()
-            current_progress_bar.set_description(f'Current job: {job_id}')
-            #self.remove_progress_bar_when_finished(job_id)
+            current_progress_bar.set_description(f'Job ID: {job_id}')
+
+
+    def update_title(self):
+        if self.first_batch:
+            title_str_1 = f'Processing first batch! Not taken into account for benchmark results!'
+            if self.num_jobs_first_batch:
+                title_str_1 += f' Remaining jobs in first batch: {self.num_jobs_first_batch - self.num_finished_tasks} / {self.num_jobs_first_batch}'
+        else:
+            title_str_1 = f'Warmup stage with first batch containing {self.num_jobs_first_batch} jobs finished. Benchmark running.'
+            title_str_2 = f'Remaining jobs: {self.args.total_requests + self.num_jobs_first_batch - self.num_finished_tasks} / {self.args.total_requests} | Current running jobs: {self.num_current_running_jobs}'
+            self.title_bar_2.set_description_str(title_str_2)
+        self.title_bar_1.set_description_str(title_str_1)
+
+
+    async def result_callback(self, result):
+        self.num_finished_tasks += 1
+        if self.first_batch:
+            self.first_batch = False
+            self.start_time_second_batch = time.time()
+        if self.num_finished_tasks == self.args.total_requests + self.num_jobs_first_batch:
+            self.get_loop().stop()
+        self.num_generated_tokens = result.get('num_generated_tokens')
+        self.remove_progress_bar(result['job_id'])
+        
         
 
-    def result_callback(self, result):
-        #self.warmup_stage = False
-        self.num_finished_tasks += 1
-        if self.num_finished_tasks == self.warmup_requests:
-            self.start_time_after_warmup = time.time()
-        self.num_generated_tokens = result.get('num_generated_tokens')
-        self.remove_progress_bar_when_finished(result['job_id'])
+    def remove_progress_bar(self, job_id):
+        current_progress_bar = self.progress_bar_dict.get(job_id)       
         
-        #result.pop('images')
-        #print('result ', result)
-        
-    def remove_progress_bar_when_finished(self, job_id):
-        current_progress_bar = self.progress_bar_dict.get(job_id)
-        if current_progress_bar:# or progress_info['progress'] == 100:
+        if current_progress_bar:
+            current_position = current_progress_bar.pos
             current_progress_bar.close()
             del self.progress_bar_dict[job_id]
-
-
+            
 
 def main():
     benchmark_api = BenchmarkApiEndpoint()
