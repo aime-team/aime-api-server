@@ -1,4 +1,6 @@
-
+.. Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+   This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
+   
 AIME API Server
 ===============
 
@@ -7,8 +9,9 @@ AIME API Server
    :hidden:
 
    Setup & Start API Server <setup>
+   Configure API Server <configuration/configuration>
    Source Documentation <aime_api_server>
-   Configuration <configuration>
+
 
 .. toctree::
    :maxdepth: 4

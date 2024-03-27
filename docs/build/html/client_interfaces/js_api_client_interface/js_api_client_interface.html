@@ -7,6 +7,7 @@
   <title>Documentation AIME API JavaScript Client Interface &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/../css/aime_override.css" />
 
   
   <!--[if lt IE 9]>
@@ -46,8 +47,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../setup.html">Setup &amp; Start API Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration/configuration.html">Configure API Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../aime_api_server.html">Source Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
@@ -105,25 +106,29 @@
 <h1>Documentation AIME API JavaScript Client Interface<a class="headerlink" href="#documentation-aime-api-javascript-client-interface" title="Permalink to this heading"></a></h1>
 <dl class="js class">
 <dt class="sig sig-object js" id="ModelAPI">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">ModelAPI</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpointName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultProgressIntervall=300</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">ModelAPI</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpointName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultProgressIntervall=300</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI" title="Permalink to this definition"></a></dt>
 <dd><p>Class for communication with the AIME Model API.</p>
 <p>Constructor of the class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>endpointName</strong> (<em>string</em>) – The name of the API endpoint.</p></li>
+<li><p><strong>user</strong> (<em>string</em>) – api user</p></li>
+<li><p><strong>key</strong> (<em>sting</em>) – api Key required to authenticate and authorize to use api endpoint    *</p></li>
 <li><p><strong>defaultProgressIntervall</strong> (<em>number</em>) – The intervall for progress updates in milliseconds. The default progress update intervall is 300.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="js function">
 <dt class="sig sig-object js" id="ModelAPI.doAPILogin">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doAPILogin</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resultCallback=null</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.doAPILogin" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doAPILogin</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resultCallback=null</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user=&quot;null&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key=null</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.doAPILogin" title="Permalink to this definition"></a></dt>
 <dd><p>Method for API login.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>resultCallback</strong> (<em>function</em>) – The callback after successful login.</p></li>
+<li><p><strong>user</strong> (<em>string</em>) – optinal: set to new api user</p></li>
+<li><p><strong>key</strong> (<em>sting</em>) – optional: set to new api Key required to authenticate and authorize to use api endpoint</p></li>
 </ul>
 </dd>
 </dl>
@@ -224,7 +229,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, AIME GmbH.</p>
+    <p>&#169; Copyright 2024, AIME GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

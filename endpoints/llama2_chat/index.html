@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!-- 
+Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+
+This software may be used and distributed according to the terms of the MIT LICENSE
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -19,7 +24,7 @@
 </head>
 
 <body>
-	<div class="pl-5 pr-5 max-w-7xl mx-auto">
+	<div class="pl-5 pr-5 max-w-7xl mx-auto min-h-screen">
         <div id="top">
             <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: LlaMa 2 - Simple Chat</h2>
         </div>
@@ -40,9 +45,9 @@
 							<button id="chat_send" title="Send" class="bg-gray-500 text-white p-2 rounded-r-md border-gray-500" onclick="onButtonClick();">
 								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
 									<path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
-								</svg>							  
+								</svg>
 							</button>
-						</div>					
+						</div>
 					</div>	
 				</div>
 
@@ -167,5 +172,11 @@
 			</div> <!-- /END RIGHT COLUMN -->
 		</div>
 	</div>
+	<footer class="text-xs p-4 mt-20 text-center">
+		<div class="flex items-center justify-center space-x-2">
+			<span>&copy; 2024 AIME GmbH | Powered by <a href="https://api.aime.info" target="_blank" class="text-aime_darkblue font-bold">AIME API</a> | <a href="https://www.aime.info/imprint" target="_blank" class="text-aime_darkblue font-bold">Imprint</a></span>
+		</div>
+		<div class="text-xs text-gray-400 p-5 leading-3 max-w-2xl mx-auto">Disclaimer: The content provided on this platform is for informational and educational purposes only, and its use is at your own risk. We do not assume any liability for the accuracy, completeness, or usefulness of the information provided. Viewer discretion is advised as the content may contain explicit material. This platform is intended for research and demonstration purposes only and should not be used as a substitute for professional advice. By accessing this platform, you agree to these terms and conditions.</div>
+	</footer>
 </body>
 </html>

@@ -6,6 +6,7 @@
   <title>Index &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/../css/aime_override.css" />
 
   
   <!--[if lt IE 9]>
@@ -43,8 +44,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup &amp; Start API Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration/configuration.html">Configure API Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aime_api_server.html">Source Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
@@ -129,15 +130,13 @@
 </li>
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.check_periodically_if_server_online">check_periodically_if_server_online() (aime_api_worker_interface.APIWorkerInterface method)</a>
 </li>
-      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.client_session_auth_key">client_session_auth_key (aime_api_client_interface.ModelAPI attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.client_login">client_login() (api_server.api_endpoint.APIEndpoint method)</a>
+</li>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.client_session_auth_key">client_session_auth_key (aime_api_client_interface.ModelAPI attribute)</a>
+</li>
       <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.close_session">close_session() (aime_api_client_interface.ModelAPI method)</a>
-</li>
-      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.current_job_batch_data">current_job_batch_data() (aime_api_worker_interface.APIWorkerInterface method)</a>
-</li>
-      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.current_job_data">current_job_data() (aime_api_worker_interface.APIWorkerInterface method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -191,16 +190,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="aime_api_server.html#api_server.job_queue.JobQueue.get">get() (api_server.job_queue.JobQueue method)</a>
 </li>
-      <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.get_client_session_auth_key">get_client_session_auth_key() (api_server.api_endpoint.APIEndpoint method)</a>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_current_job_batch_data">get_current_job_batch_data() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_current_job_data">get_current_job_data() (aime_api_worker_interface.APIWorkerInterface method)</a>
 </li>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_endpoint_descriptions">get_endpoint_descriptions() (api_server.api_server.APIServer method)</a>
 </li>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_http_methods">get_http_methods() (api_server.api_server.APIServer method)</a>
 </li>
-      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_job_batch_parameter">get_job_batch_parameter() (aime_api_worker_interface.APIWorkerInterface method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_job_batch_parameter">get_job_batch_parameter() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_param_config">get_param_config() (api_server.api_server.APIServer method)</a>
 </li>
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_pnginfo_metadata">get_pnginfo_metadata() (aime_api_worker_interface.APIWorkerInterface method)</a>
@@ -337,7 +338,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, AIME GmbH.</p>
+    <p>&#169; Copyright 2024, AIME GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

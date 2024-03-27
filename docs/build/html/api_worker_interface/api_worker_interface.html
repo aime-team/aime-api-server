@@ -7,6 +7,7 @@
   <title>Documentation AIME API Worker Interface &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/../css/aime_override.css" />
 
   
   <!--[if lt IE 9]>
@@ -46,8 +47,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../setup.html">Setup &amp; Start API Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration/configuration.html">Configure API Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../aime_api_server.html">Source Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index_api_worker_interface.html">API Worker Interface</a><ul class="current">
@@ -56,8 +57,8 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Documentation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.progress_data_received"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.progress_data_received</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.current_job_data"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.current_job_data()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.current_job_batch_data"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.current_job_batch_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.get_current_job_data"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.get_current_job_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.get_current_job_batch_data"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.get_current_job_batch_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.get_job_batch_parameter"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.get_job_batch_parameter()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.has_job_finished"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.has_job_finished()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_worker_interface.APIWorkerInterface.have_all_jobs_finished"><code class="docutils literal notranslate"><span class="pre">APIWorkerInterface.have_all_jobs_finished()</span></code></a></li>
@@ -219,34 +220,34 @@ job type and auth_key. Waiting for and receiving job data and sending job result
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.current_job_data">
-<span class="sig-name descname"><span class="pre">current_job_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.current_job_data" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.get_current_job_data">
+<span class="sig-name descname"><span class="pre">get_current_job_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.get_current_job_data" title="Permalink to this definition"></a></dt>
 <dd><p>get the job_data of current job to be processed</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>job_id</strong> (<em>string</em>) – For single job processing (max_job_batch=1) the job_id is not required.
+<dd class="field-odd"><p><strong>job_id</strong> (<em>string</em><em>, </em><em>optional</em>) – For single job processing (max_job_batch=1) the job_id is not required.
 For batch job processing (max_job_batch&gt;1) the job_id is required to specify
-the job the data should be returned.</p>
+the job the data should be returned. Defaults to None.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the job_data of the current only job or the job with the given job_id</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>job_data</p>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.current_job_batch_data">
-<span class="sig-name descname"><span class="pre">current_job_batch_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.current_job_batch_data" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.get_current_job_batch_data">
+<span class="sig-name descname"><span class="pre">get_current_job_batch_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.get_current_job_batch_data" title="Permalink to this definition"></a></dt>
 <dd><p>get the job_datas of the current batch as list</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the list of job_datas of the current jobs to be processed</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>[job_data]</p>
+<dd class="field-even"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -257,10 +258,10 @@ the job the data should be returned.</p>
 <dd><p>get the job_data parameter values for a specific parameter as value array</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>the value list of the paramter across the batch</p>
+<dd class="field-odd"><p>The value list of the parameter across the batch</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>[values]</p>
+<dd class="field-even"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -307,7 +308,7 @@ the job the data should be returned.</p>
 <dd class="field-odd"><p>job data with worker [INPUT] parameters received from API server.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dict</p>
+<dd class="field-even"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -324,10 +325,10 @@ responds with ‘cmd’:’no_job’ and the worker requests a job again on endp
 <dd class="field-odd"><p><strong>max_job_batch</strong> – max job batch size of jobs to process. One to max job batch size jobs will be returned</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Array of job data with worker [INPUT] parameters received from API server.</p>
+<dd class="field-even"><p>List of job data with worker [INPUT] parameters received from API server.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Array</p>
+<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -400,6 +401,7 @@ Example progress data: :{‘progress_images’: [&lt;PIL.Image.Image&gt;, &lt;PI
 Called when progress_data is received. Defaults to None.</p></li>
 <li><p><strong>progress_error_callback</strong> (<em>callable</em><em>, </em><em>optional</em>) – Callback function with requests.exceptions.ConnectionError or
 http response with :status_code == 503: as argument. Called when API server replied with error. Defaults to None.</p></li>
+<li><p><strong>job_data</strong> (<em>dict</em><em>, </em><em>optional</em>) – To use different job_data than the received one.</p></li>
 </ul>
 </dd>
 </dl>
@@ -407,21 +409,21 @@ http response with :status_code == 503: as argument. Called when API server repl
 
 <dl class="py method">
 <dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.send_batch_progress">
-<span class="sig-name descname"><span class="pre">send_batch_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_batch_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_batch_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_received_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_batch_progress" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">send_batch_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_batch_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_received_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_error_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_batch_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.send_batch_progress" title="Permalink to this definition"></a></dt>
 <dd><p>Processes/converts job progress information and data and sends it to API Server on route /worker_job_progress asynchronously
 to main thread using Pool().apply_async() from multiprocessing.dummy. When Api server received progress data,
 self.progress_data_received is set to True. Use progress_received_callback and progress_error_callback for response.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>[</strong> (<em>progress_batch_data</em>) – current progress (f.i. percent or number of generated tokens)</p></li>
-<li><p><strong>[</strong> – dictionary with progress_images or text while worker is computing.
+<li><p><strong>batch_progress</strong> (<em>list</em><em>(</em><em>int</em><em>, </em><em>int</em><em>, </em><em>...</em><em>)</em>) – current progress (f.i. percent or number of generated tokens)</p></li>
+<li><p><strong>progress_batch_data</strong> (<em>list</em><em>(</em><em>dict</em><em>, </em><em>dict</em><em>, </em><em>...</em><em>)</em><em>, </em><em>optional</em>) – dictionary with progress_images or text while worker is computing.
 Example progress data: :{‘progress_images’: [&lt;PIL.Image.Image&gt;, &lt;PIL.Image.Image&gt;, …]}:. Defaults to None.</p></li>
-<li><p><strong>job_batch_data</strong> – </p></li>
 <li><p><strong>progress_received_callback</strong> (<em>callable</em><em>, </em><em>optional</em>) – Callback function with API server response as argument.
 Called when progress_data is received. Defaults to None.</p></li>
 <li><p><strong>progress_error_callback</strong> (<em>callable</em><em>, </em><em>optional</em>) – Callback function with requests.exceptions.ConnectionError or
 http response with :status_code == 503: as argument. Called when API server replied with error. Defaults to None.</p></li>
+<li><p><strong>job_batch_data</strong> (<em>list</em><em>(</em><em>dict</em><em>, </em><em>dict</em><em>, </em><em>...</em>) – List of job datas converning jobs ready to send progress</p></li>
 </ul>
 </dd>
 </dl>
@@ -504,7 +506,7 @@ Called when server replied with error. Defaults to None.</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, AIME GmbH.</p>
+    <p>&#169; Copyright 2024, AIME GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

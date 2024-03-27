@@ -1,3 +1,10 @@
+// Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+//
+// This software may be used and distributed according to the terms of the MIT LICENSE
+
+const API_USER = 'aime'
+const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
+
 const languages = [
 	{ code: 'arb', name: 'Modern Standard Arabic' },
 	{ code: 'ben', name: 'Bengali' },
@@ -45,14 +52,13 @@ let mediaRecorder;
 let audioChunks = [];
 let timerInterval;
 
-const modelAPI = new ModelAPI('sc_m4tv2');
+const modelAPI = new ModelAPI('sc_m4tv2', API_USER, API_KEY);
 
 function onSendAPIRequest() {
 
     const textInput = document.getElementById('textInput').value;
     const textTabButton= document.getElementById('tab_button_text_input');
     const audioTabButton= document.getElementById('tab_button_audio_input');
-    // let infoBox = document.getElementById('infoBox');
 
 	let params = new Object();
 	params.src_lang = document.getElementById('srcLang').value;
@@ -91,57 +97,46 @@ function onSendAPIRequest() {
 }
 
 function onResultCallback(data) {
-	enableSendButton();
-    removeSpinner();
-    readyToSendRequest = true;
-	document.getElementById('textOutput').textContent = data.text_output;
-    
-    let infoBox = document.getElementById('infoBox');
-
     if (data.error) {
-        
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-            modelAPI.doAPILogin();
-            onButtonClick();
+          modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
+            infoBox.textContent = 'Login Error: ' + error + '\n';
+            enableSendButton();
+            removeSpinner();
+          });
         }
         else {
-            infoBox.textContent = 'Error: ' + data.error;
+            infoBox.textContent = 'Error: ' + data.error + '\n';
+            enableSendButton();
+            removeSpinner();            
         }
-        
     } else {
-        infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's';
-    }
+        enableSendButton();
+        removeSpinner();
 
-    if (data.model_name) {
-        infoBox.textContent += '\nModel name: ' + data.model_name;
-    }
-    
-    if (data.task) {
-        infoBox.textContent += '\nTask: ' + data.task;
-    }
-    
-    if (data.auth) {
-        infoBox.textContent += '\nWorker: ' + data.auth;
-    }
-    
-    if (data.worker_interface_version) {
-        infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
-    }
-    
-    adjustTextareasHeight();
+        document.getElementById('textOutput').textContent = data.text_output;
+        infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + ' s';
 
-    let audioOutputContainer = document.getElementById('audioOutputContainer');
-    let audioOutput = document.getElementById('audioPlayerOutput');
-    audioOutputContainer.classList.remove('hidden');
-	
-    if (data.audio_output) {
-		audioOutputElement.src = data.audio_output;
-    	audioOutput.src = data.audio_output;
-        audioOutput.play();
-	} else {
-        audioOutputElement.src = '';
-    	audioOutput.src = '';
-        audioOutputContainer.classList.add('hidden');
+        if (data.model_name) {              infoBox.textContent += '\nModel name: ' + data.model_name; }
+        if (data.task) {                    infoBox.textContent += '\nTask: ' + data.task; }
+        if (data.auth) {                    infoBox.textContent += '\nWorker: ' + data.auth; }
+        if (data.worker_interface_version) { infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version; }
+        
+        adjustTextareasHeight();
+    
+        let audioOutputContainer = document.getElementById('audioOutputContainer');
+        let audioOutput = document.getElementById('audioPlayerOutput');
+        audioOutputContainer.classList.remove('hidden');
+        
+        if (data.audio_output) {
+            audioOutputElement.src = data.audio_output;
+            audioOutput.src = data.audio_output;
+            audioOutput.play();
+        } else {
+            audioOutputElement.src = '';
+            audioOutput.src = '';
+            audioOutputContainer.classList.add('hidden');
+        }
     }
 }
 
@@ -319,7 +314,6 @@ function adjustTextareasHeight() {
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
 
-    let infoBox = document.getElementById('infoBox');
     infoBox.style.height = 'auto';
     infoBox.style.height = infoBox.scrollHeight + 'px';
 }
@@ -355,6 +349,7 @@ function removeSpinner() {
 }
 
 function disableSendButton() {
+    readyToSendRequest = false;
     const button = document.getElementById('sendButton');
     if (button) {
       button.disabled = true;
@@ -363,6 +358,7 @@ function disableSendButton() {
     }
 }
 function enableSendButton() {
+    readyToSendRequest = true;
     const button = document.getElementById('sendButton');
     if (button) {
         button.disabled = false;
@@ -496,9 +492,6 @@ function formatFileSize(size) {
 
 function onButtonClick() {
     if(readyToSendRequest) {
-        readyToSendRequest = false;
-
-        let infoBox = document.getElementById('infoBox');
         infoBox.textContent = 'Request sent.\nWaiting for response...';
         document.getElementById('textOutput').textContent = '';
         disableSendButton();
@@ -571,6 +564,8 @@ window.addEventListener('load', function() {
     initializeLanguageSwapButton();
     initializeDropZone();
     updateWordCount();
+
+    infoBox = document.getElementById('infoBox');
     
     document.addEventListener('keydown', function(event) {
         if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
@@ -617,5 +612,10 @@ window.addEventListener('load', function() {
         });
     });
 
-    modelAPI.doAPILogin();
+    modelAPI.doAPILogin(function (data) {
+        console.log('Key: ' + modelAPI.clientSessionAuthKey)
+    },
+    function (error) {
+        infoBox.textContent = 'Login Error: ' + error + '\n';
+    });
 });

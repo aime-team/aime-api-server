@@ -1,4 +1,11 @@
-const modelAPI = new ModelAPI('example_api');
+// Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+//
+// This software may be used and distributed according to the terms of the MIT LICENSE
+
+const API_USER = 'aime'
+const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
+
+const modelAPI = new ModelAPI('example_api', API_USER, API_KEY);
 
 let readyToSendRequest = true;
 let log_textarea, chat_input, infoBox;
@@ -85,6 +92,12 @@ function onSendAPIRequest() {
                 adjustTextareasHeight();
             }
         );
+    },
+    function (error) {
+        infoBox.textContent = 'Login Error: ' + error;
+        readyToSendRequest = true;
+        enableSendButton();
+        removeSpinner();        
     });
 }
 

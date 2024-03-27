@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Endpoint Configuration &mdash; AIME API Server 0.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/../css/aime_override.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=6a14807c"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="AIME API Server Documentation" href="../aime_api_server.html" />
+    <link rel="prev" title="Server configuration" href="server_config.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            AIME API Server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">Setup &amp; Start API Server</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="configuration.html">Configure API Server</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="server_config.html">Server</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Endpoint</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-endpoint-parameters">Basic Endpoint Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#worker-parameters">Worker Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#client-parameters">Client Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#input-parameters">Input Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#all-parameter-types">All parameter types:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#types-integer-and-float">Types <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#type-string">Type <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code>:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#types-image-image-list-and-audio">Types <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>,  <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#output-parameters">Output Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#progress">Progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#static-routes">Static Routes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../aime_api_server.html">Source Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Client Interfaces:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../client_interfaces/python_api_client_interface/index_python_api_client_interface.html">Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../client_interfaces/http_interface.html">HTTP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../client_interfaces/js_api_client_interface/index_js_api_client_interface.html">JavaScript</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../client_interfaces/more.html">More coming soon</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">AIME API Server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="configuration.html">Configuration files documentation</a></li>
+      <li class="breadcrumb-item active">Endpoint Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/configuration/endpoint_config.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="endpoint-configuration">
+<h1>Endpoint Configuration<a class="headerlink" href="#endpoint-configuration" title="Permalink to this heading"></a></h1>
+<section id="basic-endpoint-parameters">
+<h2>Basic Endpoint Parameters<a class="headerlink" href="#basic-endpoint-parameters" title="Permalink to this heading"></a></h2>
+<p>The basic endpoint parameters like its title, name and the http methods are set in the section <code class="docutils literal notranslate"><span class="pre">[ENDPOINT]</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">title</span></code> <em>(str): The full title of the endpoint</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> <em>(str): The name of the endpoint to address it</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">description</span></code> <em>(str): The full description of the endpoint</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">methods</span></code> <em>(str): The allowed http methods</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">version</span></code> <em>(int): The endpoint version no.</em></p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[ENDPOINT]</span>
+<span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;This is the endpoint title&quot;</span>
+<span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;endpoint_name&quot;</span>
+<span class="n">description</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;The full description of the endpoint&quot;</span>
+<span class="n">methods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;GET, POST&quot;</span>
+<span class="n">version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+</pre></div>
+</div>
+</section>
+<section id="worker-parameters">
+<h2>Worker Parameters<a class="headerlink" href="#worker-parameters" title="Permalink to this heading"></a></h2>
+<p>The section <code class="docutils literal notranslate"><span class="pre">[WORKER]</span></code> deals with worker related parameters.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">job_type</span></code> <em>(str): The type of jobs the related worker is assigned for</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auth_key</span></code> <em>(str): The authorization key the worker job request has to contain</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">job_timeout</span></code> <em>(int): Timeout in seconds after the worker will receive the response “no_job”, if no job was offered</em></p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[WORKER]</span>
+<span class="n">job_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;endpoint_name_job_type_a&quot;</span>
+<span class="n">auth_key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;XXX&quot;</span>
+<span class="n">job_timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span>
+</pre></div>
+</div>
+</section>
+<section id="client-parameters">
+<h2>Client Parameters<a class="headerlink" href="#client-parameters" title="Permalink to this heading"></a></h2>
+<p>Configuration concerning the clients like its authorization and authentication. If not specified here, the default values from the server configuration file are used.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">authentication</span></code> <em>(str): Method for the client login authentication</em></p>
+<p><em>Available settings:</em></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;None&quot;</span></code> <em>: The client login request has no restrictions</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;User&quot;</span></code> <em>: The client login request has to contain the name of the user</em></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">authorization</span></code> <em>(str): Method for the client login authorization</em></p>
+<p><em>Available settings:</em></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;None&quot;</span></code> <em>: The client login request has no restrictions</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Key&quot;</span></code> <em>: The client login request has to contain the name of the user (</em> <code class="docutils literal notranslate"><span class="pre">authentication</span></code> <em>has to be</em> <code class="docutils literal notranslate"><span class="pre">&quot;User&quot;</span></code> <em>) and the related key listed in</em> <code class="docutils literal notranslate"><span class="pre">authorization_keys</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">provide_worker_meta_data</span></code> <em>(bool): Whether the client receives meta data about the job from the worker.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">client_request_limit</span></code> <em>(int): The maximum allowed number of requests per client. 0 = not limited</em></p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[CLIENTS]</span>
+<span class="n">authentification</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;User&quot;</span>
+<span class="n">authorization</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Key&quot;</span>
+<span class="n">authorization_keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s2">&quot;aime&quot;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;XXX&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">client_request_limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="n">provide_worker_meta_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</pre></div>
+</div>
+</section>
+<section id="input-parameters">
+<h2>Input Parameters<a class="headerlink" href="#input-parameters" title="Permalink to this heading"></a></h2>
+<p>All job input parameters will be validated by the AIME API Server for security reasons before getting forwarded to the workers.
+The <code class="docutils literal notranslate"><span class="pre">[INPUTS]</span></code> section offers configuration of the following attributes to adjust that validation to your needs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> <em>(str): The most important attribute. Each input parameter needs at least the specification of its type or the related client request will be rejected by the AIME API Server.
+Also if the specified type doesn’t match the recognized type of the parameter and the attribute</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is not set to</em> <code class="docutils literal notranslate"><span class="pre">true</span></code> <em>(It’s</em> <code class="docutils literal notranslate"><span class="pre">false</span></code> <em>by default).
+Available types:</em> <code class="docutils literal notranslate"><span class="pre">&quot;boolean&quot;</span></code> <em>/</em> <code class="docutils literal notranslate"><span class="pre">&quot;bool&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code> <em>/</em> <code class="docutils literal notranslate"><span class="pre">&quot;str&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code> <em>/</em> <code class="docutils literal notranslate"><span class="pre">&quot;int&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code></p></li>
+</ul>
+<section id="all-parameter-types">
+<h3>All parameter types:<a class="headerlink" href="#all-parameter-types" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">required</span></code> <em>(bool): Whether the parameter needs to be present in the client request or not. Client requests with missing required parameters will be rejected if</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is false.</em>
+<em>If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is true, required parameters need a default value the parameter will be converted to if missing.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> <em>(same type as parameter): The value missing required parameters will be converted to.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>(bool): Whether invalid parameters will be automatically converted to valid parameters if possible. Default is false.</em></p></li>
+</ul>
+</section>
+<section id="types-integer-and-float">
+<h3>Types <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>:<a class="headerlink" href="#types-integer-and-float" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">minimum</span></code> or <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>(int/float): The smallest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, smaller values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>value.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maximum</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>(int/float):The highest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, higher values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>value.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align</span></code> <em>(int/float): Only multiples of the align value are allowed. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, parameters with values not aligning will be converted to the nearest aligned value.</em></p></li>
+</ul>
+</section>
+<section id="type-string">
+<h3>Type <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code>:<a class="headerlink" href="#type-string" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_length</span></code> <em>(int): The maximum allowed length of the string. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, longer strings will be cut to the</em> <code class="docutils literal notranslate"><span class="pre">max_length</span></code> <em>value.</em></p></li>
+</ul>
+</section>
+<section id="types-image-image-list-and-audio">
+<h3>Types <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>,  <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:<a class="headerlink" href="#types-image-image-list-and-audio" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">format</span></code> <em>(str): The format supported by the workers</em></p>
+<ul>
+<li><p><em>Available values for the type</em> <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code> <em>:</em> <code class="docutils literal notranslate"><span class="pre">&quot;wav&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;mp3&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;ogg&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;webm&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;mp4&quot;</span></code></p></li>
+<li><p><em>Available values for the type</em> <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code> <em>or</em> <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> <em>:</em> <code class="docutils literal notranslate"><span class="pre">&quot;jpeg&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;jpg&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;png&quot;</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">color_space</span></code> <em>(str): The color space of images supported by the workers. Available values:</em> <code class="docutils literal notranslate"><span class="pre">&quot;rgb&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;cmyk&quot;</span></code> <em>,</em> <code class="docutils literal notranslate"><span class="pre">&quot;ycbcr&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> <em>(array): The size of images [width, height]</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_rate</span></code> <em>(int): The sample rate of audio data supported by the workers. Available values:</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_bit_depth</span></code> <em>(int): The sample bit depth of audio data supported by the workers.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">audio_bit_rate</span></code> <em>(int): The audio bit rate in bits/second supported by the workers.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">channels</span></code> <em>(int): The number of channels (Mono=1, Stereo=2, etc.) of audio data supported by the workers.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code> <em>(int): The duration in seconds of audio data supported by the workers.</em></p></li>
+</ul>
+<p>Since the attributes of media data need specifications for each attribute seperately, we use nested attributes to do so. That means each attribute above will be configured using the following attributes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">supported</span></code> <em>(array): Values supported by the workers. Values not listed here will be rejected by the AIME API Server, if</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>is false.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto_convert</span></code> <em>(bool): Whether invalid parameters will be automatically converted to valid parameters if possible. Default is false</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code> <em>(same type as parent attribute): If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>parameters with values not listed in</em> <code class="docutils literal notranslate"><span class="pre">supported</span></code> <em>, will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">default</span></code> <em>value.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minimum</span></code> or <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>(int/float): The smallest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, parameters with smaller values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">min</span></code> <em>value.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maximum</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>(int/float):The highest allowed value. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, parameters with higher values will be converted to the</em> <code class="docutils literal notranslate"><span class="pre">max</span></code> <em>value.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align</span></code> <em>(int): Only multiples of the align value are allowed. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, parameters with values not aligning will be converted to the nearest aligned value.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resize_method</span></code> <em>(str): The method to use for resizing images. Availabe values:</em> <code class="docutils literal notranslate"><span class="pre">&quot;crop&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;scale&quot;</span></code></p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[INPUTS]</span>
+<span class="n">integer_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">min</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">float_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">minimum</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">maximum</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">string_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">max_length</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+
+<span class="n">audio_param</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;audio&quot;</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;mp3&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;wav&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;wav&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">sample_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">16000</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">16000</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">sample_bit_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">audio_bit_rate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">192000</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1"># in bits/s</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">channels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">audio_param</span><span class="p">.</span><span class="n">duration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1"># in seconds</span>
+
+<span class="n">image_param</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;image&quot;</span>
+<span class="n">image_param</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;JPG&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PNG&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;JPG&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">image_param</span><span class="p">.</span><span class="n">color_space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;RGB&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;RGB&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+
+<span class="n">image_list_param</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;image_list&quot;</span>
+<span class="n">image_list_param</span><span class="p">.</span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;JPG&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PNG&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;JPG&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">image_list_param</span><span class="p">.</span><span class="n">color_space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">supported</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;RGB&quot;</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;RGB&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="output-parameters">
+<h2>Output Parameters<a class="headerlink" href="#output-parameters" title="Permalink to this heading"></a></h2>
+<p>Similar to the input parameters also the output parameters need to be declared. Job result parameters coming from the worker not being listed in the section <code class="docutils literal notranslate"><span class="pre">[OUTPUTS]</span></code> won’t be forwarded to the clients.</p>
+<p>Example:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[OUTPUTS]</span>
+<span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">num_generated_tokens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="n">model_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="progress">
+<h2>Progress<a class="headerlink" href="#progress" title="Permalink to this heading"></a></h2>
+<p>The AIME API Server offers the possibility to transmit data between the workers and the clients during ongoing worker computations.
+Equivalent to the input and output parameters, the progress parameters need to be declared in the subsection <code class="docutils literal notranslate"><span class="pre">[OUTPUTS]</span></code>. (Currently only progress outputs are implemented)</p>
+<p>Example:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[PROGRESS]</span>
+
+<span class="w">    </span><span class="k">[PROGRESS.OUTPUTS]</span>
+<span class="w">    </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="n">num_generated_tokens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="static-routes">
+<h2>Static Routes<a class="headerlink" href="#static-routes" title="Permalink to this heading"></a></h2>
+<p>In the section <code class="docutils literal notranslate"><span class="pre">[STATIC]</span></code> the static routes of your endpoint can be redirected to a desired destination the same way as in the server configuration files. All destinations here are relative to the location of the configuration file. Be aware that overwriting routes already declared in the server configuration will raise errors.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> <em>(str): To redirect a single file</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path</span></code> <em>(str): To redirect a whole path</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile</span></code> <em>(str): To compile certain file types to a designated format</em></p>
+<p><em>Available values:</em></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;None&quot;</span></code> <em>(default): No compilation.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;scss&quot;</span></code> <em>: scss files will be compiled to css and saved in</em> <code class="docutils literal notranslate"><span class="pre">compiled_path</span></code> <em>.</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;md&quot;</span></code> <em>: Markdown files will be compiled to html sand saved in</em> <code class="docutils literal notranslate"><span class="pre">compiled_path</span></code> <em>with related css file in</em> <code class="docutils literal notranslate"><span class="pre">css_file</span></code> <em>.</em></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compiled_path</span></code> <em>(str): Path to save the compiled files</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">css_file</span></code> <em>(str): Destination to the related css files for html compiled files</em></p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[STATIC]</span>
+<span class="s2">&quot;/your_endpoint_name/&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./destination/of/your/js/client/index.html&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/your_endpoint_name/desired/destination/to/your/js/client/path/&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./destination/to/your/js/client/path/&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="s2">&quot;/your_endpoint_name/desired/destination/to/your/css/style.css&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">file</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;./destination/to/your/css/style.css&quot;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="server_config.html" class="btn btn-neutral float-left" title="Server configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../aime_api_server.html" class="btn btn-neutral float-right" title="AIME API Server Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, AIME GmbH.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

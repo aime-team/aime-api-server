@@ -1,3 +1,7 @@
+# Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+#
+# This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
+
 from sanic.log import logging
 from sanic.response import json as sanic_json
 
@@ -44,10 +48,13 @@ class APIEndpointOld():
         title,
         name,
         description,
-        client_request_limit,
-        provide_worker_meta_data,
         http_methods,
         version,
+        client_request_limit,
+        provide_worker_meta_data,
+        authentication,
+        authorization,
+        authorization_keys,     
         ep_input_param_config,
         ep_output_param_config,
         ep_progress_param_config,
@@ -62,6 +69,9 @@ class APIEndpointOld():
         self.client_request_limit = client_request_limit
         self.provide_worker_meta_data = provide_worker_meta_data
         self.version = version
+        self.authentication = authentication
+        self.authorization = authorization
+        self.authorization_keys = authorization_keys
         self.ep_input_param_config = ep_input_param_config
         self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
         self.ep_input_param_config['wait_for_result'] = { 'type': 'bool'}     # add implicit input 
@@ -75,7 +85,7 @@ class APIEndpointOld():
 
         app.add_route(self.api_request, "/" + self.endpoint_name, methods=http_methods, name=self.endpoint_name)
         app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=http_methods, name=self.endpoint_name + "$progress")
-        app.add_route(self.get_client_session_auth_key, "/" + self.endpoint_name + "/get_client_session_auth_key", methods=http_methods, name=self.endpoint_name + "$get_client_session_auth_key")
+        app.add_route(self.client_login, "/" + self.endpoint_name + "/login", methods=http_methods, name=self.endpoint_name + "$login")
         self.app = app
         self.add_server_static_routes(static_files)
 
@@ -161,7 +171,7 @@ class APIEndpointOld():
         return sanic_json(response)
 
 
-    async def get_client_session_auth_key(self, request):
+    async def client_login(self, request):
         """Route for client interface to login to the API Server while receiving a client session 
         authentication key.
 
@@ -171,9 +181,37 @@ class APIEndpointOld():
         Returns:
             sanic.response.types.JSONResponse: Response to client containing the client session authentication key.
         """
+        user = request.args.get('user', None)
+        key = request.args.get('key', None)
+
+        authorization_error = None
+
+        if self.authentication == 'None':
+            pass
+        elif self.authentication == 'User':
+            if self.authorization == 'None':
+                pass
+            elif self.authorization == 'Key':
+                if user in self.authorization_keys:
+                    if key != self.authorization_keys[user]:
+                        authorization_error = 'authorization failed'
+                else:
+                    authorization_error = 'authentication failed'
+            else:
+                authorization_error = 'unknown authorization method'                
+        else:
+            authorization_error = 'unknown authentication method'
+
+        if authorization_error:
+            response = {
+                'success': False,
+                'error': authorization_error,
+            }
+            return sanic_json(response)
+
         client_session_auth_key = generate_auth_key()
         client_version = request.args.get('version','No version given from client')
-        
+
         self.app.registered_client_sessions[client_session_auth_key] = {self.endpoint_name: 0}
 
         APIEndpoint.logger.debug(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
@@ -241,11 +279,11 @@ class APIEndpointOld():
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
                 request.ctx.session[ep_session_param_name] = result[ep_session_param_name]
-
+        APIEndpoint.logger.debug('job outputs: ')
         #--- read job outputs
         for ep_output_param_name in self.ep_output_param_config:
             if ep_output_param_name in result:
-                APIEndpoint.logger.debug('job outputs: ')
+                
                 APIEndpoint.logger.debug(f'{ep_output_param_name}: {shorten_strings(result[ep_output_param_name])}')
                 response[ep_output_param_name] = result[ep_output_param_name]
             else:
@@ -268,7 +306,7 @@ class APIEndpointOld():
     async def validate_input_parameters_for_job_data(self, input_args):
         """Check if worker input parameters received from client are as specified in the endpoint config file
         """
-        input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.settings)
+        input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.input_type_config)
         return await input_validator.validate_input_parameter()
            
 
@@ -310,15 +348,16 @@ class APIEndpointOld():
     def get_and_validate_progress_data(self, job_id):
         progress_state = self.app.progress_states.get(job_id, {})
         queue = self.app.job_queues.get(self.worker_job_type)
+        ep_progress_output_param_config = self.ep_progress_param_config.get('OUTPUTS')
         if progress_state:
             
             progress_data_validated = dict()
             progress_data = progress_state.get('progress_data', None)
             if progress_data:
-                for ep_progress_param_name in self.ep_progress_param_config:
+                APIEndpoint.logger.debug('progress outputs: ')
+                for ep_progress_param_name in ep_progress_output_param_config:
                     if ep_progress_param_name in progress_data:
-                        APIEndpoint.logger.debug('progress outputs: ')
-                        APIEndpoint.logger.debug(shorten_strings(progress_data[ep_progress_param_name]))
+                        APIEndpoint.logger.debug(f'{ep_progress_param_name}: {shorten_strings(progress_data[ep_progress_param_name])}')
                         progress_data_validated[ep_progress_param_name] = progress_data[ep_progress_param_name]
             progress_state['progress_data'] = progress_data_validated
         else:

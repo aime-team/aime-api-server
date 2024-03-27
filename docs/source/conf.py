@@ -1,5 +1,9 @@
 # Configuration file for the Sphinx documentation builder.
 #
+# Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+#
+# This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
+#
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
@@ -15,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../../api_worker_interface'))
 js_source_path = '../../frontend/static/js'
 
 project = 'AIME API Server'
-copyright = '2023, AIME GmbH'
+copyright = '2024, AIME GmbH'
 author = 'AIME GmbH'
 release = '0.8.0'
 
@@ -38,3 +42,4 @@ napoleon_google_docstring = True
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+html_css_files = ['../css/aime_override.css']

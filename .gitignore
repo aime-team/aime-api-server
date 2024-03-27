@@ -13,3 +13,5 @@ api_server/log_api_server.log
 !.gitignore
 *.pyc
 frontend/static/_compiled_/*
+docs/build/doctrees/*
+.DS_Store
