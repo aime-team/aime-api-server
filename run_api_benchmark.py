@@ -157,7 +157,7 @@ class BenchmarkApiEndpoint():
             if self.num_jobs_first_batch:
                 title_str_1 += f' Remaining jobs in first batch: {self.num_jobs_first_batch - self.num_finished_tasks} / {self.num_jobs_first_batch}'
         else:
-            title_str_1 = f'Warmup stage with first batch containing {self.num_jobs_first_batch} jobs finished. Benchmark running.'
+            title_str_1 = f'Warmup stage with first batch containing {self.num_jobs_first_batch} jobs finished. Benchmark running...'
             title_str_2 = f'Remaining jobs: {self.args.total_requests + self.num_jobs_first_batch - self.num_finished_tasks} / {self.args.total_requests} | Current running jobs: {self.num_current_running_jobs}'
             self.title_bar_2.set_description_str(title_str_2)
         self.title_bar_1.set_description_str(title_str_1)
@@ -176,10 +176,8 @@ class BenchmarkApiEndpoint():
         
 
     def remove_progress_bar(self, job_id):
-        current_progress_bar = self.progress_bar_dict.get(job_id)       
-        
+        current_progress_bar = self.progress_bar_dict.get(job_id)     
         if current_progress_bar:
-            current_position = current_progress_bar.pos
             current_progress_bar.close()
             del self.progress_bar_dict[job_id]
             
