@@ -156,12 +156,11 @@ class BenchmarkApiEndpoint():
                 f'Warmup stage with first batch containing {self.num_jobs_first_batch} jobs finished. ' \
                     f'Benchmark running for {round(time.time() - self.start_time_second_batch)}s'
             )
-            self.update_meta_data_in_title()
             self.title_bar_list[6].set_description_str(
                 f'Remaining jobs: {self.args.total_requests + self.num_jobs_first_batch - self.num_finished_jobs} / {self.args.total_requests}' \
                 f' | Current running jobs: {self.num_current_running_jobs}')
             if job_finished:
-
+                self.update_meta_data_in_title()
                 self.title_bar_list[7].set_description_str(self.make_benchmark_result_string())
 
 
