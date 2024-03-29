@@ -180,7 +180,6 @@ class APIServer(Sanic):
             job_id = 'unknown job'
             response = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
         APIServer.logger.info(f"Worker '{result.get('auth')}' processed job {job_id}")
-        print('RESPONSE: ', response)
         return sanic_json(response)
 
     

@@ -12,6 +12,8 @@ PORT = '7777'
 
 
 def performance_test():
+	"""Performance test of the API server requesting a high number of jobs on test workers with immediate responses.
+	"""	
 	args, _ = load_flags()
 	args.hide_logging = True
 	performance_test_single_worker = ApiTest(args, EP_CONFIG, 1)
