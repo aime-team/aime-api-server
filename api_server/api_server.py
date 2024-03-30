@@ -20,7 +20,7 @@ import asyncio
 
 from .api_endpoint import APIEndpoint
 from .job_queue import JobQueue, JobState
-
+from .flags import Flags
 from .utils import StaticRouteHandler, shorten_strings
 from .__version import __version__
 
@@ -48,20 +48,23 @@ class APIServer(Sanic):
     default_authorization = "None"
     default_authorization_keys = {}
     logger = logging.getLogger('API')
+    host = None
+    port = None
 
-
-    def __init__(self, api_name, args):
+    def __init__(self, api_name):
         """Constructor
 
         Args:
             api_name (str): Name of API server
             args (argparse.Namespace): Command line arguments parsed with argparse
         """
-        APIServer.args = args
+        flags = Flags()
+        APIServer.args = flags.args
+        APIServer.host, APIServer.port = APIServer.get_host_and_port()
         self.configure_logger()
-        super().__init__(api_name, configure_logging=not args.no_sanic_logger)      
-        self.init(args)
-        
+        super().__init__(api_name, configure_logging=not APIServer.args.no_sanic_logger)      
+        self.init(APIServer.args)
+
 
     async def worker_job_request_json(self, request):
         """Request from API worker interface for a job on route /worker_job_request. If the worker is validated and a job is put in the job_queue
@@ -180,7 +183,6 @@ class APIServer(Sanic):
             job_id = 'unknown job'
             response = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
         APIServer.logger.info(f"Worker '{result.get('auth')}' processed job {job_id}")
-        print('RESPONSE: ', response)
         return sanic_json(response)
 
     
@@ -229,7 +231,6 @@ class APIServer(Sanic):
         
         if not isinstance(req_json, list): # compatibility fix: api_worker_interface < version 0.70
             req_json = [req_json]
-        
         job_cmd_list = list()
         for job_data in req_json:
             job_id = job_data.get('job_id')
@@ -240,14 +241,13 @@ class APIServer(Sanic):
                 return sanic_json(job_cmd) # Fast exit if worker is not authorized or wrong job type.
 
             if APIServer.job_result_futures.get(job_id):
+
                 APIServer.progress_states[job_id] = job_data
             else:
                 job_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
                 APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
             job_cmd_list.append(job_cmd)
-
-
-        
+       
         return sanic_json(job_cmd_list)
 
 
@@ -310,58 +310,15 @@ class APIServer(Sanic):
 
         with open(config_file, "r") as f:
             server_config = toml.load(f)
-
-        self.parse_server_clients_config(config)
-        APIServer.input_type_config = config.get('INPUTS')
-        APIServer.static_routes = config.get('STATIC', {})
-
-
-    def get_endpoint_descriptions(self, ep_config):
-        """Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.
-
-        Args:
-            ep_config (dict): Config dictionary
-
-        Returns:
-            tuple (str, str, str, int, list): Tuple with endpoint descriptions title, name, description, http_methods, version.
-        """
-        ep_description = ep_config['ENDPOINT']
-        name = ep_description['name']             
-        title = ep_description.get('title', name)  
-        description = ep_description.get('description', title)
-
-        http_methods = self.get_http_methods(ep_description)
-        version = ep_description.get('version')
-        APIServer.logger.info(f'----------- {title} - {name} {http_methods}')
-        return title, name, description, http_methods, version
+        self.set_server_clients_config(server_config)
+        self.set_server_sanic_config(server_config, app)
+        if not self.args.ep_config:
+            self.args.ep_config = server_config.get('SERVER').get('endpoint_configs', './endpoints')
+        APIServer.input_type_config = server_config.get('INPUTS', {})
+        APIServer.static_routes = server_config.get('STATIC', {})
 
 
-    def get_endpoint_clients_config(self, ep_config):
-        endpoint_clients_config = ep_config.get('CLIENTS', {})
-        return endpoint_clients_config.get('client_request_limit', 0), endpoint_clients_config.get('provide_worker_meta_data', False)
-
-
-    def get_endpoint_clients_config(self, ep_config):
-        clients_config = ep_config.get('CLIENTS', {})
-        if not 'client_request_limit' in clients_config:
-            clients_config['client_request_limit'] = APIServer.default_client_request_limit
-
-        if not 'provide_worker_meta_data' in clients_config:
-            clients_config['provide_worker_meta_data'] = APIServer.default_provide_worker_meta_data
-
-        if not 'authentication' in clients_config:
-            clients_config['authentication'] = APIServer.default_authentication
-
-        if not 'authorization' in clients_config:
-            clients_config['authorization'] = APIServer.default_authorization
-
-        if not 'authorization_keys' in clients_config:
-            clients_config['authorization_keys'] = APIServer.default_authorization_keys
-
-        return clients_config['client_request_limit'], clients_config['provide_worker_meta_data'], clients_config['authentication'], clients_config['authorization'], clients_config['authorization_keys']
-
-
-    def parse_server_clients_config(self, server_config):
+    def set_server_clients_config(self, server_config):
         server_clients_config = server_config.get('CLIENTS', {})
         APIServer.default_authentication = server_clients_config.get("default_authentication", "User")
         APIServer.default_authorization = server_clients_config.get("default_authorization", "Key")
@@ -370,122 +327,24 @@ class APIServer(Sanic):
         APIServer.default_provide_worker_meta_data = server_clients_config.get("default_provide_worker_meta_data", False)
 
 
-    def get_http_methods(self, ep_description):
-        """Loads http methods defined in given endpoint config file
-
-        Args:
-            config (dict): Config dictionary
-
-        Returns:
-            list: List of http methods like ['GET', 'POST']
-        """
-        http_methods_str = ep_description.get('methods', "GET, POST")
-        http_methods = []
-        for http_method in http_methods_str.replace(" ", "").split(","):
-            if http_method == "GET":
-                http_methods.append("GET")
-            elif http_method == "POST":
-                http_methods.append("POST")
-            else:
-                APIServer.logger.error("unknown HTTP method: " + http_method)
-        return http_methods
-
-
-    def get_param_config(self, ep_config):
-        """Parses endpoint input-, output-, progress-, and session-parameter configuration from
-        given endpoint config file.
-
-        Args:
-            ep_config (dict): Config dictionary
-
-        Returns:
-            tuple (dict, dict, dict, dict): Tuple of dictionaries with input-, output-, progress-, 
-                and session-parameter configuration
-        """
-
-        ep_input_param_config = ep_config.get('INPUTS', {})
-
-        for ep_input_param_name in ep_input_param_config:
-            APIServer.logger.debug(str(ep_input_param_name))
-
-        return ep_input_param_config, ep_config.get('OUTPUTS', {}), ep_config.get('PROGRESS', {}), ep_config.get('SESSION', {}).get(("VARS"), {})
-
-
-    def get_worker_params(self, ep_config):
-        """Parses worker parameters like job type and worker authorization key from endpoint config file.
-
-        Args:
-            ep_config (dict): Config dictionary
-
-        Returns:
-            tuple (str, str): Tuple of job_type and worker_auth_key
-        """
-        worker_config = ep_config.get('WORKER', {})
-        job_type = worker_config.get('job_type')    
-        if job_type == None:
-            APIServer.logger.error("No job_type for worker configured!")
-        else:
-            APIServer.logger.info("Worker job type: " + job_type)
-        worker_auth_key = worker_config.get('auth_key')
-        return job_type, worker_auth_key   
-
-
-    def load_endpoint_configuration(self, config_file):
-        APIServer.logger.info(f'Reading endpoint config: {config_file}')
-        with open(config_file, 'r') as f:
-            ep_config = toml.load(f)
-        APIServer.logger.debug(str(ep_config))
-        endpoint_description = self.get_endpoint_descriptions(ep_config)
-        clients_config = self.get_endpoint_clients_config(ep_config)
-        worker_config = self.get_worker_params(ep_config)
-        param_config = self.get_param_config(ep_config)
-
-        job_type, worker_auth_key = self.get_worker_params(ep_config)
-
-        APIServer.endpoints[endpoint_description[1]] = APIEndpoint(
-            self,
-            *endpoint_description,
-            *clients_config,
-            *param_config,
-            *worker_config,
-            ep_config.get('STATIC', {}),
-            config_file
-        )
-
     def init_endpoint(self, config_file):
-        with open(config_file, 'r') as f:
-            config = toml.load(f)
+        with open(config_file, 'r') as file:
+            config = toml.load(file)
             name = config.get('ENDPOINT', {}).get('name')
-        APIServer.endpoints[name] = APIEndpoint(config_file)
+        APIServer.endpoints[name] = APIEndpoint(self, config_file)
 
-    def init_all_endpoints(self, app):
+    def init_all_endpoints(self, app, loop):
+
         config_dir = APIServer.args.ep_config
-        APIServer.logger.info('--- Searching endpoints configurations in {config_dir}')
+        APIServer.logger.info(f'--- Searching endpoints configurations in {config_dir}')
         if Path(config_dir).is_dir():
-            for config_file in Path(config_dir).glob('**/ml_api_endpoint.cfg'):
+            for config_file in Path(config_dir).glob('**/aime_api_endpoint.cfg'):
                 self.init_endpoint(config_file)
         elif Path(config_dir).is_file():
             self.init_endpoint(config_dir)
         elif ',' in config_dir:
             for config_file in config_dir.split(','):
                 self.init_endpoint(config_file)
-        else:
-            APIServer.logger.error("!!! No Endpoint Configuration found, please specify where to load ml_api_endpoing.cfg with the --ep_config argument")
-
-
-        
-
-    def load_endpoint_configurations(self, app):
-        config_dir = APIServer.args.ep_config
-        APIServer.logger.info(f'--- Searching endpoints configurations in {config_dir}')
-        if Path(config_dir).is_dir():
-            for config_file in Path(config_dir).glob('**/aime_api_endpoint.cfg'):
-                self.load_endpoint_configuration(config_file)
-        elif Path(config_dir).is_file():
-            self.load_endpoint_configuration(config_dir)
-        elif ',' in config_dir:
-            for config_file in config_dir.split(','):
-                self.load_endpoint_configuration(config_file)
         else:
             APIServer.logger.error("!!! No Endpoint Configuration found, please specify where to load ml_api_endpoing.cfg with the --ep_config argument")
 
@@ -651,15 +510,12 @@ class APIServer(Sanic):
         return sanic_response.ResponseStream(stream_sse, headers=headers)
 
 
-
-
-
     def init(self, args):
         
         self.__setup_worker_interface() # has to be done before app.run() is called
         self.register_listener(self.load_server_configuration, 'before_server_start') # maybe better without listener to have config in every main and worker process?
         self.register_listener(self.setup_static_routes, 'before_server_start')
-        self.register_listener(self.load_endpoint_configurations, 'before_server_start')
+        self.register_listener(self.init_all_endpoints, 'before_server_start')
         self.register_listener(self.create_job_queues, "after_server_start")
 
 
@@ -686,6 +542,27 @@ class APIServer(Sanic):
         static_route_handler.setup_static_routes(app.static_routes)
 
 
+    def set_server_sanic_config(self, server_config, app):
+        config = server_config.get('SANIC', {})
+        app.update_config({key.upper(): value for key, value in config.items()})
+
+
+    @staticmethod
+    def get_host_and_port():
+        with open(APIServer.args.server_config, "r") as file:
+            server_config = toml.load(file).get('SERVER')
+            
+            if APIServer.args.host:
+                host = APIServer.args.host
+            else:
+                host = server_config.get('host')
+            if APIServer.args.port:
+                port = APIServer.args.port
+            else:            
+                port = server_config.get('port')
+        return host, port
+
+
     def configure_logger(self):
 
         file_handler = logging.FileHandler(filename='api_server/log_api_server.log', mode='w')
@@ -702,7 +579,6 @@ class APIServer(Sanic):
             APIServer.logger.addHandler(stream_handler)
 
         sanic_loggers = ('sanic.access', 'sanic.root', 'sanic.error')
-        
         for logger_name in sanic_loggers:
             logger = logging.getLogger(logger_name)
             self.set_logger_level(logger)  # Bugged logger sanic.access: "INFO" messages only appear in "DEBUG" (args.dev = True) mode
@@ -710,8 +586,6 @@ class APIServer(Sanic):
             logger.addHandler(file_handler) # not working for sanic loggers
             if not APIServer.args.hide_logging:
                 logger.addHandler(stream_handler)
-
-        APIServer.logger.debug('Command line arguments:\n' + str(APIServer.args))  
 
 
     def set_logger_level(self, logger):

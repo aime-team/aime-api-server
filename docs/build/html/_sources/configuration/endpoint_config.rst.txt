@@ -16,7 +16,7 @@ The basic endpoint parameters like its title, name and the http methods are set 
 
 * ``description`` *(str): The full description of the endpoint*
 
-* ``methods`` *(str): The allowed http methods*
+* ``methods`` *(array(str)): The allowed http methods*
 
 * ``version`` *(int): The endpoint version no.*
 
@@ -28,7 +28,7 @@ Example:
     title = "This is the endpoint title"
     name = "endpoint_name"
     description = "The full description of the endpoint"
-    methods = "GET, POST"
+    methods = [ "GET", "POST" ]
     version = 0
 
 
@@ -71,6 +71,8 @@ Configuration concerning the clients like its authorization and authentication. 
 
   * ``"None"`` *: The client login request has no restrictions*
   * ``"Key"`` *: The client login request has to contain the name of the user (* ``authentication`` *has to be* ``"User"`` *) and the related key listed in* ``authorization_keys``
+
+* ``authorization_keys`` *(dict): Authorized user name - key pairs* ``{ "name" = "key" }``
 
 * ``provide_worker_meta_data`` *(bool): Whether the client receives meta data about the job from the worker.*
 
@@ -157,9 +159,9 @@ Example:
     audio_param.type = "audio"
     audio_param.format = { supported = [ "mp3", "wav" ], default = "wav", auto_convert = true }
     audio_param.sample_rate = { supported = [ 16000 ], default = 16000, auto_convert = true }
-    audio_param.sample_bit_depth = { supported = [ 16, 32], default = 16, auto_convert = true }
+    audio_param.sample_bit_depth = { supported = [ 16, 32 ], default = 16, auto_convert = true }
     audio_param.audio_bit_rate = { max = 192000, auto_convert = true } # in bits/s
-    audio_param.channels = { supported = [1], default = 1, auto_convert = true }
+    audio_param.channels = { supported = [ 1 ], default = 1, auto_convert = true }
     audio_param.duration = { max = 30, auto_convert = true } # in seconds
 
     image_param.type = "image"

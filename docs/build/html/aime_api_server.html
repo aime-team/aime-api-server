@@ -50,10 +50,6 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration/configuration.html">Configure API Server</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Source Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#api_server.api_server.APIServer"><code class="docutils literal notranslate"><span class="pre">APIServer</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_endpoint_descriptions"><code class="docutils literal notranslate"><span class="pre">APIServer.get_endpoint_descriptions()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_http_methods"><code class="docutils literal notranslate"><span class="pre">APIServer.get_http_methods()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_param_config"><code class="docutils literal notranslate"><span class="pre">APIServer.get_param_config()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_worker_params"><code class="docutils literal notranslate"><span class="pre">APIServer.get_worker_params()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.load_server_configuration"><code class="docutils literal notranslate"><span class="pre">APIServer.load_server_configuration()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_check_server_status"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_check_server_status()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_job_progress"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_job_progress()</span></code></a></li>
@@ -66,6 +62,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.api_request"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.api_request()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.client_login"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.client_login()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.finalize_request"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.finalize_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.get_endpoint_description"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.get_endpoint_description()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.get_http_methods"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.get_http_methods()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.get_param_config"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.get_param_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.get_worker_params"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.get_worker_params()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.validate_input_parameters_for_job_data"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.validate_input_parameters_for_job_data()</span></code></a></li>
 </ul>
 </li>
@@ -118,7 +118,7 @@
 <h1>AIME API Server Documentation<a class="headerlink" href="#aime-api-server-documentation" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_server.</span></span><span class="sig-name descname"><span class="pre">APIServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_server.</span></span><span class="sig-name descname"><span class="pre">APIServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer" title="Permalink to this definition"></a></dt>
 <dd><p>AIME ML API Server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -128,79 +128,6 @@
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_endpoint_descriptions">
-<span class="sig-name descname"><span class="pre">get_endpoint_descriptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_endpoint_descriptions" title="Permalink to this definition"></a></dt>
-<dd><p>Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ep_config</strong> (<em>dict</em>) – Config dictionary</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple with endpoint descriptions title, name, description, http_methods, version.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple (str, str, str, int, list)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_http_methods">
-<span class="sig-name descname"><span class="pre">get_http_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_description</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_http_methods" title="Permalink to this definition"></a></dt>
-<dd><p>Loads http methods defined in given endpoint config file</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of http methods like [‘GET’, ‘POST’]</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_param_config">
-<span class="sig-name descname"><span class="pre">get_param_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_param_config" title="Permalink to this definition"></a></dt>
-<dd><p>Parses endpoint input-, output-, progress-, and session-parameter configuration from
-given endpoint config file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ep_config</strong> (<em>dict</em>) – Config dictionary</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Tuple of dictionaries with input-, output-, progress-,</dt><dd><p>and session-parameter configuration</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple (dict, dict, dict, dict)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_worker_params">
-<span class="sig-name descname"><span class="pre">get_worker_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_worker_params" title="Permalink to this definition"></a></dt>
-<dd><p>Parses worker parameters like job type and worker authorization key from endpoint config file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ep_config</strong> (<em>dict</em>) – Config dictionary</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple of job_type and worker_auth_key</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple (str, str)</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.load_server_configuration">
 <span class="sig-name descname"><span class="pre">load_server_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.load_server_configuration" title="Permalink to this definition"></a></dt>
@@ -370,25 +297,13 @@ to make it available by APIEndpoint.api_request and APIEndpoint.api_progress to 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_endpoint.</span></span><span class="sig-name descname"><span class="pre">APIEndpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_methods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_request_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provide_worker_meta_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authentication</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authorization</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authorization_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_input_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_output_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_progress_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_session_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_config_file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_endpoint.</span></span><span class="sig-name descname"><span class="pre">APIEndpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint" title="Permalink to this definition"></a></dt>
 <dd><p>AIME ML API endpoint</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>app</strong> (<a class="reference internal" href="#api_server.api_server.APIServer" title="api_server.api_server.APIServer"><em>APIServer</em></a>) – Instance of APIServer()</p></li>
-<li><p><strong>title</strong> (<em>str</em>) – Endpoint title</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – Endpoint name</p></li>
-<li><p><strong>description</strong> (<em>str</em>) – Endpoint description</p></li>
-<li><p><strong>client_request_limit</strong> (<em>int</em>) – Request limit per client</p></li>
-<li><p><strong>provide_worker_meta_data</strong> (<em>bool</em>) – Whether to send data like worker name to the client</p></li>
-<li><p><strong>http_methods</strong> (<em>str</em>) – Allowed http methods on this endpoint</p></li>
-<li><p><strong>ep_input_param_config</strong> (<em>dict</em>) – Input parameter configuration from endpoint config file</p></li>
-<li><p><strong>ep_output_param_config</strong> (<em>dict</em>) – Output parameter configuration from endpoint config file</p></li>
-<li><p><strong>ep_progress_param_config</strong> (<em>dict</em>) – Progress parameter configuration from endpoint config file</p></li>
-<li><p><strong>ep_session_param_config</strong> (<em>dict</em>) – Session parameter configuration from endpoint config file</p></li>
-<li><p><strong>job_type</strong> (<em>str</em>) – Job type</p></li>
-<li><p><strong>worker_auth_key</strong> (<em>str</em>) – Allowed worker authentication key</p></li>
-<li><p><strong>static_files</strong> (<em>dict</em>) – Static routes</p></li>
+<li><p><strong>config_file</strong> (<em>str</em>) – Endpoint config file path.</p></li>
 </ul>
 </dd>
 </dl>
@@ -474,6 +389,79 @@ initialized in api_request() to get the results.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.get_endpoint_description">
+<span class="sig-name descname"><span class="pre">get_endpoint_description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.get_endpoint_description" title="Permalink to this definition"></a></dt>
+<dd><p>Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple (str, str, str, int, list)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.get_http_methods">
+<span class="sig-name descname"><span class="pre">get_http_methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ep_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.get_http_methods" title="Permalink to this definition"></a></dt>
+<dd><p>Loads http methods defined in given endpoint config file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of http methods like [‘GET’, ‘POST’]</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.get_param_config">
+<span class="sig-name descname"><span class="pre">get_param_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.get_param_config" title="Permalink to this definition"></a></dt>
+<dd><p>Parses endpoint input-, output-, progress-, and session-parameter configuration from
+given endpoint config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Tuple of dictionaries with input-, output-, progress-,</dt><dd><p>and session-parameter configuration</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple (dict, dict, dict, dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.get_worker_params">
+<span class="sig-name descname"><span class="pre">get_worker_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.get_worker_params" title="Permalink to this definition"></a></dt>
+<dd><p>Parses worker parameters like job type and worker authorization key from endpoint config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of job_type and worker_auth_key</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple (str, str)</p>
 </dd>
 </dl>
 </dd></dl>
