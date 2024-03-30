@@ -68,7 +68,7 @@ class BenchmarkApiEndpoint():
             '-ep', '--endpoint_name', type=str, default='llama2_chat', required=False, help='Name of the endpoint'
         )
         parser.add_argument(
-            '-ut', '--unit', type=str, required=False, help='Unit of the generated objects. Default: "tokens if endpoint_name is "llama2_chat" else  "images"'
+            '-ut', '--unit', type=str, required=False, help='Unit of the generated objects. Default: "tokens" if endpoint_name is "llama2_chat" else  "images"'
         )
         parser.add_argument(
             '-t', '--time_to_get_first_batch_jobs', type=int, default=4, required=False, help='Time in seconds after start to get the number of jobs in the first batch'
@@ -439,10 +439,9 @@ class BenchmarkApiEndpoint():
 
 
     async def request_error_callback(self, response):
+        print(response)
         loop = self.get_loop()
         loop.stop()
-        #loop.close()
-        #exit()
 
 def main():
     benchmark_api = BenchmarkApiEndpoint()

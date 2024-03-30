@@ -11,13 +11,11 @@ AIME API Server
    Setup & Start API Server <setup>
    Configure API Server <configuration/configuration>
    Source Documentation <aime_api_server>
+   API Worker Interface <api_worker_interface/index_api_worker_interface>
+   Benchmark <benchmark/index_benchmark>
 
 
-.. toctree::
-   :maxdepth: 4
-   :hidden:
 
-   api_worker_interface/index_api_worker_interface
 
 .. toctree::
    :maxdepth: 6
