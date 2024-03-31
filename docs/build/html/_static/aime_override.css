@@ -1,0 +1,41 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.wy-nav-side {
+    background-color: #2C5370;
+}
+.wy-side-nav-search {
+    background-color: #213744;
+}
+.wy-side-nav-search > a {
+    font-size: 120%;
+    padding: 15px 5px;
+}
+.wy-nav-content {
+    height: 100%;
+    max-width: 100%;
+}
+
+.btn-neutral {
+    background-color: #213744 !important;
+    color: #fff !important;
+    padding: 10px 14px;
+    border-radius: 25px;
+}
+.btn-neutral:visited {
+    color: #fff !important;
+}
+.btn-neutral:hover {
+    background-color: #213744 !important;
+    color: #FFBC44 !important;
+}
+.btn:active {
+    padding: 9px 13px;
+}
+.btn-neutral span.fa.fa-arrow-circle-left,
+.btn-neutral span.fa.fa-arrow-circle-right {
+    margin-left: 5px;
+}

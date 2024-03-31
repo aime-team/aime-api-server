@@ -146,7 +146,7 @@ class APIServer(Sanic):
                 }
         """
         req_json = request.json
-        APIServer.logger.debug(req_json)
+        APIServer.logger.debug(f'Request on /worker_job_request: {shorten_strings(req_json)}')
         queue = APIServer.job_queues.get(req_json.get('job_type'))
         job_cmd = await self.validate_worker_queue(queue, req_json)
         if job_cmd['cmd'] not in ('ok', 'warning'):
@@ -169,7 +169,6 @@ class APIServer(Sanic):
             sanic.response.types.JSONResponse: Response to API worker interface with 'cmd': 'ok' when API server received data.
         """
         result = self.process_job_result(request)
-
         job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(result.get('job_type')), result)
         if job_cmd['cmd'] not in ('ok', 'warning'):
             APIServer.logger.warning(f"Worker {result.get('auth')} tried to send job result for job type {result.get('job_type')}, but following error occured: {job_cmd.get('msg')}")
@@ -188,6 +187,7 @@ class APIServer(Sanic):
     
     def process_job_result(self, request):
         req_json = request.json
+        APIServer.logger.debug(f'Request on /worker_job_result: {shorten_strings(req_json)}')
         job_id = req_json['job_id']
         req_json['total_duration'] = round(time.time() - req_json.get('start_time'), 1)
         req_json['compute_duration'] = round(time.time() - req_json.pop('start_time_compute'), 1)
@@ -228,7 +228,7 @@ class APIServer(Sanic):
                 }]
         """
         req_json = request.json
-        
+        APIServer.logger.debug(f'Request on /worker_job_progress: {shorten_strings(req_json)}')
         if not isinstance(req_json, list): # compatibility fix: api_worker_interface < version 0.70
             req_json = [req_json]
         job_cmd_list = list()

@@ -132,17 +132,21 @@ class APIEndpoint():
         ep_session_param_config = self.config.get('SESSION', {}).get(("VARS"), {})
         self.log_parameter_config('Input', ep_input_param_config)
         self.log_parameter_config('Output', ep_output_param_config)
-        self.log_parameter_config('Progress outputs: ', ep_progress_param_config.get('OUTPUTS'))
+        self.log_parameter_config('Progress output', ep_progress_param_config.get('OUTPUTS', {}), False)
 
         return ep_input_param_config, ep_output_param_config, ep_progress_param_config, ep_session_param_config
 
-    def log_parameter_config(self, param_type, config):
-        APIEndpoint.logger.debug(f'{param_type} parameter config:')
+    def log_parameter_config(self, param_type, config, warning=True):
+        APIEndpoint.logger.info(f'{param_type} parameter config:')
         if config:
             for param_name, param_value in config.items():
-                APIEndpoint.logger.debug(f'{param_name}: {param_value}')
+                APIEndpoint.logger.info(f'{param_name}: {param_value}')
         else:
-            APIEndpoint.logger.debug(f'Unknown')
+            if warning:
+                APIEndpoint.logger.warning('No configuration found')
+            else:
+                APIEndpoint.logger.info('No configuration found')
+
 
     def get_worker_params(self):
         """Parses worker parameters like job type and worker authorization key from endpoint config file.
@@ -198,6 +202,7 @@ class APIEndpoint():
             response = await self.finalize_request(request, job_data.get('job_id'), job_future) 
         else:
             response = {'success': True, 'job_id': job_data.get('job_id'), 'ep_version': self.version}
+        APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
         return sanic_json(response)
 
 
@@ -235,7 +240,7 @@ class APIEndpoint():
         response['job_state'] = job_state.value
         if job_state != JobState.DONE:
             response['progress'] = progress_state
-        APIEndpoint.logger.debug(str(shorten_strings(response)))
+        APIEndpoint.logger.debug(f'Progress response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
         return sanic_json(response)
 
 
@@ -254,7 +259,7 @@ class APIEndpoint():
         
         self.app.registered_client_sessions[client_session_auth_key] = {self.endpoint_name: 0}
 
-        APIEndpoint.logger.debug(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
+        APIEndpoint.logger.info(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
         response = {
             'success': True, 
             'ep_version': self.version, 
@@ -276,7 +281,7 @@ class APIEndpoint():
 
     def handle_validation_errors(self, validation_errors, error_code=400):
         response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
-        APIEndpoint.logger.debug(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
+        APIEndpoint.logger.warning(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
         return sanic_json(response, status=error_code)
 
 
@@ -323,8 +328,6 @@ class APIEndpoint():
         #--- read job outputs
         for ep_output_param_name in self.ep_output_param_config:
             if ep_output_param_name in result:
-                APIEndpoint.logger.debug('job outputs: ')
-                APIEndpoint.logger.debug(f'{ep_output_param_name}: {shorten_strings(result[ep_output_param_name])}')
                 response[ep_output_param_name] = result[ep_output_param_name]
             else:
                 if ep_output_param_name != 'error':
@@ -365,7 +368,7 @@ class APIEndpoint():
         job_data['job_id'] = self.app.job_queues[self.worker_job_type].get_next_job_id()
         job_data['endpoint_name'] = self.endpoint_name
         job_data['start_time'] = start_time
-        APIEndpoint.logger.debug('Job data: ')
+        APIEndpoint.logger.debug(f'Client request on /{self.endpoint_name} with following input parameter: ')
         APIEndpoint.logger.debug(str(shorten_strings(job_data)))
         return job_data
 
@@ -396,8 +399,6 @@ class APIEndpoint():
             if progress_data:
                 for ep_progress_output_param_name in self.ep_progress_param_config.get('OUTPUTS'):
                     if ep_progress_output_param_name in progress_data:
-                        APIEndpoint.logger.debug('progress outputs: ')
-                        APIEndpoint.logger.debug(shorten_strings(progress_data[ep_progress_output_param_name]))
                         progress_data_validated[ep_progress_output_param_name] = progress_data[ep_progress_output_param_name]
             progress_state['progress_data'] = progress_data_validated
         else:
