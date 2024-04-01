@@ -592,6 +592,30 @@ class InputValidationHandler():
         return param_value
 
 
+class CustomFormatter(logging.Formatter):
+
+    GREY = '\033[90m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD_RED = '\[\033[1;31m\]'
+    RESET = '\033[0m'
+    GREY = '\033[90m'
+
+    format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+    FORMATS = {
+        logging.DEBUG: GREY + format + RESET,
+        logging.INFO: format,
+        logging.WARNING: YELLOW + format + RESET,
+        logging.ERROR: RED + format + RESET,
+        logging.CRITICAL: BOLD_RED + format + RESET
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt, datefmt = '%Y-%m-%d %H:%M:%S')
+        return formatter.format(record)
+
+
 def make_ffprobe_command(input_source):
     
     return (

@@ -21,7 +21,7 @@ import asyncio
 from .api_endpoint import APIEndpoint
 from .job_queue import JobQueue, JobState
 from .flags import Flags
-from .utils import StaticRouteHandler, shorten_strings
+from .utils import StaticRouteHandler, shorten_strings, CustomFormatter
 from .__version import __version__
 
 
@@ -567,7 +567,8 @@ class APIServer(Sanic):
 
         file_handler = logging.FileHandler(filename='api_server/log_api_server.log', mode='w')
         file_handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        
+        formatter = CustomFormatter(datefmt = '%m-%m-%S %H:%M:%S')
         file_handler.setFormatter(formatter)
         self.set_logger_level(APIServer.logger)
         APIServer.logger.addHandler(file_handler)
