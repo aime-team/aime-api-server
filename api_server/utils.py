@@ -653,3 +653,4 @@ def copy_js_client_interface_to_frontend_folder():
         frontend_folder = Path('./frontend/static/js/')
         logger.info(f'Subrepository "AIME API Client Interfaces" folder in {js_client_interface_folder.parent.resolve()} is present. Javascript client interface {js_client_interface_filename} is copied from {js_client_interface_folder.resolve()} to {frontend_folder.resolve()}.')
         shutil.copy(js_client_interface_folder / js_client_interface_filename, frontend_folder / js_client_interface_filename)
+        

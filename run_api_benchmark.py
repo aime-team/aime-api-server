@@ -7,9 +7,38 @@ import toml
 import asyncio
 import argparse
 import time
-from tqdm.asyncio import tqdm
+from tqdm import tqdm
 from collections import Counter
 import json
+import math
+import statistics
+
+import sys
+import os
+
+if os.name == 'nt':
+    try:
+        import msvcrt
+        import ctypes
+        HIDE_CURSOR = True
+        class _CursorInfo(ctypes.Structure):
+            _fields_ = [("size", ctypes.c_int),
+                        ("visible", ctypes.c_byte)]
+    except ModuleNotFoundError:
+        HIDE_CURSOR = False
+else:
+    HIDE_CURSOR = True
+
+
+
+HEADER_HEIGHT = 13
+WIDTH_COLUMN_JOB_ID = 10
+
+RED = '\033[91m'
+GREEN = '\033[92m'
+BLUE = '\033[94m'
+YELLOW = '\033[93m'
+RESET = '\033[0m'
 
 class BenchmarkApiEndpoint():
     """Benchmark tool to measure and monitor the performance of GPUs with multiple asynchronous requests on llama2_chat and stable_diffusion_xl_txt2img endpoints.
@@ -25,15 +54,23 @@ class BenchmarkApiEndpoint():
             self.args.login_key
         )
         self.model_api.do_api_login()
+        
         self.params = self.get_default_values_from_config()
         self.semaphore = asyncio.Semaphore(self.args.concurrent_requests)
         self.progress_bar_dict = dict()
-        self.title_bar_list = [tqdm(total=0, bar_format='{desc}', leave=False, position=i, dynamic_ncols=True) for i in range(10)]
+        self.title_bar_list = [tqdm(total=0, bar_format='{desc}', leave=False, position=i, colour='red', dynamic_ncols=True) for i in range(HEADER_HEIGHT)]
         self.num_generated_units = self.args.num_units
+        self.unit, self.unit_scale, self.unit_precision, self.total = self.get_unit()
         self.num_current_running_jobs = 0
-        self.unit = self.get_unit()
+        self.durations_from_server = list()
+        self.mean_duration_from_server = 0
+        self.mean_rate_from_server = 0
+        self.current_rate_dict = dict()
+        
+        self.mean_time_per_request = 0
+        self.mean_rate = 0
         self.num_finished_jobs = 0
-        self.start_time = time.time()
+        self.start_time = None
         self.start_time_second_batch = None
         self.first_batch = True
         self.jobs_first_batch = dict()
@@ -43,6 +80,7 @@ class BenchmarkApiEndpoint():
         self.worker_names = set()
         self.worker_interface_version = None
         self.first_batch_jobs_added = False
+        self.last_progress_dict = dict()
 
 
     def load_flags(self):
@@ -59,7 +97,9 @@ class BenchmarkApiEndpoint():
             '-tr', '--total_requests', type=int, default=4, required=False, help="Total number of requests. Choose a multiple of the worker's batchsize to have a full last batch"
         )
         parser.add_argument(
-            '-cr', '--concurrent_requests', type=int, default=40, required=False, help='Number of concurrent asynchronous requests limited with asyncio.Semaphore()'
+            '-cr', '--concurrent_requests', type=int, default=40, required=False, 
+            help='Number of concurrent asynchronous requests limited with asyncio.Semaphore().' \
+                 'Choose at least twice the global batch size of all workers, to have full batches.'
         )
         parser.add_argument(
             '-cf', '--config_file', type=str, required=False, help='To change address of endpoint config file to get the default values of the job parameters'
@@ -85,6 +125,8 @@ class BenchmarkApiEndpoint():
         
         args = parser.parse_args()
         if not args.config_file:
+            if args.endpoint_name == 'sdxl_txt2img':
+                args.endpoint_name = 'stable_diffusion_xl_txt2img'
             if args.endpoint_name == 'stable_diffusion_xl_txt2img':
                 args.config_file = 'endpoints/stable_diffusion_xl/txt2img/aime_api_endpoint.cfg'
             elif args.endpoint_name == 'llama2_chat':
@@ -96,10 +138,9 @@ class BenchmarkApiEndpoint():
     def run(self):
         """Starting the benchmark.
         """
-
+        self.hide_cursor()
         self.print_start_message()
-        self.update_meta_data_in_title()
-        self.make_table_title()
+        self.update_worker_and_endpoint_data_in_title()
         loop = self.get_loop()
         tasks = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.args.total_requests)]
         loop.run_forever()
@@ -112,14 +153,14 @@ class BenchmarkApiEndpoint():
         Args:
             progress_info (dict): Job progress information containing the job_id and the progress state like number of generated tokens so far or percentage.
             progress_data (dict): The already generated content like tokens or interim images.
-        """        
+        """
+        sys.stdout.flush()
         job_id = progress_info.get('job_id')
         await self.handle_first_batch(progress_info)
         if not self.progress_bar_dict.get(job_id) and progress_info.get('queue_position') == 0:
             self.init_progress_bar(job_id)
         self.update_progress_bar(progress_info)
-        self.num_current_running_jobs = sum([1 for progress_bar in self.progress_bar_dict.values() if progress_bar.n])
-
+        self.update_current_running_jobs()
         self.update_title()
         
 
@@ -131,20 +172,30 @@ class BenchmarkApiEndpoint():
             result (dict): The final job result like a generated text, audio or images.
         """
         if result.get('success'):
-            if result.get('num_generated_tokens'):
-                self.num_generated_units = result.get('num_generated_tokens')
-            self.num_finished_jobs += 1
+            self.remove_progress_bar(result.get('job_id'))
             if self.first_batch: # If result_callback of first batch is called before progress_callback of second batch
                 self.first_batch = False
                 self.start_time_second_batch = time.time()
-                
-            self.process_meta_data(result)
-            self.update_title(True)
-            self.remove_progress_bar(result.get('job_id'))
+            if result.get('num_generated_tokens'):
+                self.num_generated_units = result.get('num_generated_tokens')
+            self.num_finished_jobs += 1
+
+            self.update_mean_rate_and_time_per_request(result)
+            self.update_title(result)
+            
             if self.num_finished_jobs == self.args.total_requests + self.num_jobs_first_batch:
                 self.get_loop().stop()
                 self.print_benchmark_summary_string()
+                self.show_cursor()
                 await self.model_api.close_session()
+        else:
+            print(result)
+            self.show_cursor()
+            self.get_loop().stop()
+            await self.model_api.close_session()
+
+    def update_current_running_jobs(self):
+        self.num_current_running_jobs = sum([1 for progress_bar in self.progress_bar_dict.values() if 0 < progress_bar.n < progress_bar.total])
 
 
     def print_benchmark_summary_string(self):
@@ -152,31 +203,51 @@ class BenchmarkApiEndpoint():
         """
         for title_bar in self.title_bar_list:
             title_bar.close()
-        benchmark_result_string = self.make_benchmark_result_string()
-        print(
-            '\n---------------------------------\n'
-            'Finished'
-            '\n---------------------------------\n\n'
-            'Result:\n'
-            f'Number of jobs in first batch: {self.num_jobs_first_batch}\n'
-            f'Number of detected workers: {len(self.worker_names)}\n'
-            f'Worker names: {", ".join(worker_name for worker_name in self.worker_names)}\n'
-            f'Worker Interface version: {self.worker_interface_version}\n'
-            f'Endpoint version: {self.endpoint_version}\n'
-            f'Model name: {self.model_name}\n'
-            f'{self.args.total_requests} requests with {self.args.concurrent_requests} concurrent requests took {round(time.time() - self.start_time_second_batch)} seconds.\n'
-            f'{benchmark_result_string}'
-        )
 
-    def make_table_title(self):
-        """Make Legend title bar for the progress bars.
-        """        
-        screen_width = self.title_bar_list[8].ncols
-        
-        column_lengend_left_part = 'JOB ID      Progress in percentage'
-        column_lengend_rigth_part = f'| Gen. {self.unit}| Elapsed | Remain | Benchmark'
-        dynamic_space = ' ' * (screen_width - len(column_lengend_left_part + column_lengend_rigth_part))
-        self.title_bar_list[8].set_description_str(column_lengend_left_part + dynamic_space  + column_lengend_rigth_part)
+        summary = [
+            '\n---------------------------------',
+            'Finished',
+            '---------------------------------\n',
+            'Result:',
+            f'Number of jobs in first batch: {self.num_jobs_first_batch}',
+            f'Number of generated {self.unit} per job: {self.num_generated_units}',
+            *self.get_worker_and_endpoint_descriptions(),
+            f'{self.args.total_requests} requests with {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
+            self.make_server_benchmark_string(True),
+            self.make_benchmark_result_string()
+        ]
+        for line in summary:
+            print(line)
+
+
+    def update_table_title(self, current_progress):
+        """Setting the column descriptions and adjusting the position of the table title bar for the progress bar table.
+        """
+        if self.current_rate_dict:
+            rate = [element for element in self.current_rate_dict.values()][0]
+        else:
+            rate = 0
+        screen_width = self.title_bar_list[HEADER_HEIGHT-2].ncols
+
+
+        column_title_job_id = 'JOB ID'
+        column_title_job_id += ' ' * (WIDTH_COLUMN_JOB_ID - len(column_title_job_id))
+        column_title_progress_percentage = ' | Progress in percentage'
+        left_bar = column_title_job_id + column_title_progress_percentage
+
+        column_title_progress_unit = f'| {self.unit}'
+        column_title_progress_unit += ' ' * (
+            len(f'| {(current_progress * self.unit_scale):.{self.unit_precision}f} / {self.num_generated_units:.{self.unit_precision}f}') - len(column_title_progress_unit)
+        )
+        column_title_duration = ' | Elapsed < Remain | '
+        column_title_benchmark = 'Benchmark'
+        column_title_benchmark += ' ' * (len(f' {tqdm.format_sizeof(rate)} {self.unit}/s ') - len(column_title_benchmark))
+        right_bar = column_title_progress_unit + column_title_duration + column_title_benchmark
+
+        dynamic_space = ' ' * (screen_width - len(left_bar + right_bar))
+
+        self.title_bar_list[HEADER_HEIGHT-2].set_description_str(left_bar + dynamic_space + right_bar)
+        self.title_bar_list[HEADER_HEIGHT-1].set_description_str('-'*screen_width)
 
 
     def init_progress_bar(self, job_id):
@@ -184,22 +255,13 @@ class BenchmarkApiEndpoint():
 
         Args:
             job_id (str): Job ID of the related job
-        """        
-        if self.args.endpoint_name == 'llama2_chat':
-            total = self.num_generated_units
-            unit_scale = False
-        else:
-            total = 100
-            unit_scale = self.num_generated_units  / 100
-            precision = 2
-
+        """
         self.progress_bar_dict[job_id] = tqdm(
-            total = total,
+            total = self.total*self.unit_scale,
             unit=' ' + self.unit,
-            unit_scale=unit_scale,
-            desc=f'{job_id:>10}',
+            desc=f'{job_id[:WIDTH_COLUMN_JOB_ID]:<{WIDTH_COLUMN_JOB_ID}}',
             leave=False,
-            bar_format='{desc} {percentage:3.0f}% {bar}| {n:.2f}/{total_fmt} {elapsed} < {remaining} , ' '{rate_noinv_fmt} {postfix}',
+            bar_format=f'{{desc}} | {{percentage:3.0f}}% {{bar}}| {{n:.{self.unit_precision}f}} / {{total:.{self.unit_precision}f}} |   {{elapsed}} < {{remaining}}  | ' '{rate_noinv_fmt} {postfix}',
             dynamic_ncols=True,
             colour='blue'
             )
@@ -212,81 +274,110 @@ class BenchmarkApiEndpoint():
             progress_info (dict): Job progress information containing the job_id and the progress state like number of generated tokens so far or percentage.
         """        
         job_id = progress_info.get('job_id')
-        
-        if (time.time() - self.start_time) <= self.args.time_to_get_first_batch_jobs:
-            if self.first_batch:
-                if self.num_jobs_first_batch < self.num_current_running_jobs:
-                    self.jobs_first_batch = {job_id: progress_bar for job_id, progress_bar in self.progress_bar_dict.items() if progress_bar.n}
-                    self.num_jobs_first_batch = self.num_current_running_jobs# - self.num_finished_jobs
+        if self.start_time:
+            if (time.time() - self.start_time) <= self.args.time_to_get_first_batch_jobs:
+                if self.first_batch:
+                    if self.num_jobs_first_batch < self.num_current_running_jobs:
+                        self.jobs_first_batch = {job_id: progress_bar for job_id, progress_bar in self.progress_bar_dict.items() if progress_bar.n}
+                        self.num_jobs_first_batch = self.num_current_running_jobs# - self.num_finished_jobs
+                else:
+                    self.get_loop().stop()
+                    for progress_bar in self.progress_bar_dict.values():
+                        progress_bar.close()
+                    self.title_bar_list[6].close()
+                    self.title_bar_list[8].close()
+                    print('\n\n\n\n\n\n\nFirst batch finished before --time_to_get_first_batch_jobs. Choose a shorter time via command line argument!')
+                    
+                    #if not self.first_batch_jobs_added:    
+                    #    loop = self.get_loop()
+                    #    _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.num_jobs_first_batch)]
+                    #    self.first_batch_jobs_added = True
             else:
-                self.get_loop().stop()
-                for progress_bar in self.progress_bar_dict.values():
-                    progress_bar.close()
-                self.title_bar_list[6].close()
-                self.title_bar_list[8].close()
-                print('\n\n\n\n\n\n\nFirst batch finished before --time_to_get_first_batch_jobs. Choose a shorter time via command line argument!')
-                
-                #if not self.first_batch_jobs_added:    
-                #    loop = self.get_loop()
-                #    _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.num_jobs_first_batch)]
-                #    self.first_batch_jobs_added = True
-        else:
-            if not self.first_batch_jobs_added:
-                loop = self.get_loop()
-                _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.num_jobs_first_batch)]
-                self.first_batch_jobs_added = True
-            if self.first_batch and progress_info.get('progress') and job_id not in self.jobs_first_batch.keys(): # If progress_callback of second batch is called before result_callback of first batch
-                self.first_batch = False
-                self.start_time_second_batch = time.time()
+                if not self.first_batch_jobs_added:
+                    loop = self.get_loop()
+                    _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.num_jobs_first_batch)]
+                    self.first_batch_jobs_added = True
+                if self.first_batch and progress_info.get('progress') and job_id not in self.jobs_first_batch.keys(): # If progress_callback of second batch is called before result_callback of first batch
+                    self.first_batch = False
+                    self.start_time_second_batch = time.time()
+        elif progress_info.get('queue_position') == 0:
+            self.start_time = time.time()
 
 
-    def update_title(self, job_finished=False):
+    def update_title(self, result=None):
         """Updating the title bars for the header containing information about the benchmark.
-
-        Args:
-            job_finished (bool, optional): Whether progress or final job result was received. Defaults to False.
-        """        
-        if self.first_batch:
-            first_batch_title_line = f'Processing first batch for warmup! Results not taken into account for benchmark!'
+        """
+        title_lines = list()
+        if result:
+            self.update_worker_and_endpoint_data_in_title(result)
+        if not self.start_time:
+            title_lines.append(self.coloured_output('Waiting for available workers...', YELLOW))
+        elif self.first_batch:
+            first_line = self.coloured_output(f'Processing first batch for warmup! Results not taken into account for benchmark!', YELLOW)
             if self.num_jobs_first_batch:
-                first_batch_title_line += f' Jobs in first batch: {self.num_jobs_first_batch}'
-            self.title_bar_list[0].set_description_str(first_batch_title_line)
-        else:
-            self.title_bar_list[0].set_description_str(
-                f'Warmup stage with first batch containing {self.num_jobs_first_batch} jobs finished. ' \
-                    f'Benchmark running for {round(time.time() - self.start_time_second_batch)}s'
+                first_line += self.coloured_output(' Jobs in first batch: ', YELLOW) + self.coloured_output(self.num_jobs_first_batch, GREEN)
+            title_lines.append(first_line)
+            if self.first_batch_jobs_added:
+                title_lines.append(
+                    self.coloured_output(f'{self.args.time_to_get_first_batch_jobs}s have passed and first batch is defined.', YELLOW)
+                )
+            else:
+                title_lines.append('')
+            remaining_jobs = f'{self.coloured_output(self.num_jobs_first_batch, GREEN)} + {self.args.total_requests - self.num_finished_jobs} / {self.args.total_requests}'
+            title_lines.append(
+                f'Remaining jobs: {remaining_jobs} | Current running jobs: {self.coloured_output(self.num_current_running_jobs, GREEN)}'
             )
-            self.title_bar_list[6].set_description_str(
-                f'Remaining jobs: {self.args.total_requests + self.num_jobs_first_batch - self.num_finished_jobs} / {self.args.total_requests}' \
-                f' | Current running jobs: {self.num_current_running_jobs}')
-            if job_finished:
-                self.update_meta_data_in_title()
-                self.title_bar_list[7].set_description_str(self.make_benchmark_result_string())
+        else:
+            title_lines.append(
+                f'Warmup stage with first batch containing {self.num_jobs_first_batch} jobs finished. ' \
+                f'Benchmark running for {tqdm.format_interval(time.time() - self.start_time_second_batch)}'
+            )
+            remaining_jobs = f'{self.num_jobs_first_batch + self.args.total_requests - self.num_finished_jobs} / {self.args.total_requests}'
+            title_lines.append(
+                f'Remaining jobs: {self.coloured_output(remaining_jobs, GREEN)} | Current running jobs: {self.coloured_output(self.num_current_running_jobs, GREEN)}'
+            )
+        
+            title_lines.append(self.make_server_benchmark_string())
+        title_lines.append(self.make_benchmark_result_string())
+        title_lines.append('')
+        for idx, line in enumerate(title_lines, start=6):
+            self.title_bar_list[idx].set_description_str(line)
 
 
-    def update_meta_data_in_title(self):
+    def update_worker_and_endpoint_data_in_title(self, result={}):
         """Updating the title bars with information about the API server and the workers.
-        """        
-        descriptions = [
-            f'Number of detected workers: {len(self.worker_names) if self.worker_names else "Available after first batch..."}',
-            f'Worker names: {", ".join(self.worker_names) if self.worker_names else "Available after first batch..."}',
-            f'Worker Interface version: {self.worker_interface_version if self.worker_interface_version else "Available after first batch..."}',
-            f'Endpoint version: {self.endpoint_version if self.endpoint_version else "Available after first batch..."}',
-            f'Model name: {self.model_name if self.model_name else "Available after first batch..."}'
-        ]
+        """
+        self.endpoint_version = result.get('ep_version')
+        self.model_name = result.get('model_name')
+        if result.get('auth'):
+            self.worker_names.add(result.get('auth'))
+        self.worker_interface_version = result.get('worker_interface_version')
 
-        for line, description in enumerate(descriptions, start=1):
+        descriptions = self.get_worker_and_endpoint_descriptions()
+        for line, description in enumerate(descriptions):
             self.title_bar_list[line].set_description_str(description)
     
+
+    def get_worker_and_endpoint_descriptions(self):
+        unavailable = 'Available after first batch...' if self.first_batch else 'Missing! Maybe provide_worker_meta_data is set to False in endpoint config file'
+        return [
+            f'Number of detected workers: {len(self.worker_names) if self.worker_names else unavailable}',
+            f'Worker names: {", ".join(self.worker_names) if self.worker_names else unavailable}',
+            f'Worker Interface version: {self.worker_interface_version if self.worker_interface_version else unavailable}',
+            f'Endpoint version: {self.endpoint_version if self.endpoint_version else unavailable}',
+            f'Model name: {self.model_name if self.model_name else unavailable}'
+        ]
+
 
     def update_progress_bar(self, progress_info):
         """Updating the related progress bar with the given progress state.
 
         Args:
             progress_info (dict): Job progress information containing the job_id and the progress state like number of generated tokens so far or percentage.
-        """        
+        """
         job_id = progress_info.get('job_id')
         current_progress_bar = self.progress_bar_dict.get(job_id)
+
         if current_progress_bar:
             current_progress = progress_info.get('progress')
             if self.args.endpoint_name == 'llama2_chat':
@@ -294,27 +385,86 @@ class BenchmarkApiEndpoint():
                     current_progress_bar.total = current_progress
                 else:
                     current_progress_bar.total = self.num_generated_units
-                current_progress_bar.n = current_progress
-            else:
-                current_progress_bar.n = current_progress
+            current_progress_bar.n = current_progress*self.unit_scale
+
+            self.get_current_rate(job_id, current_progress)
+            if int(current_progress_bar.pos) == HEADER_HEIGHT:
+                self.update_table_title(current_progress)
             current_progress_bar.refresh(nolock=False)
 
-            current_progress_bar.set_description_str(f'{job_id:<10}')
 
+    def get_current_rate(self, job_id, current_progress):
+        tic = time.time()
+        last_progress, time_last_progress = self.last_progress_dict.get(job_id, (None, None))
+        if last_progress:
+            if ((tic - time_last_progress) > 1):
+                if self.current_rate_dict.get(job_id):
+                    self.current_rate_dict[job_id] = 0.8 * self.current_rate_dict[job_id] + 0.2 * ((current_progress - last_progress) * self.unit_scale / (tic - time_last_progress))
+                else:
+                    self.current_rate_dict[job_id] = (current_progress - last_progress) * self.unit_scale / (tic - time_last_progress) 
+                
+                self.last_progress_dict[job_id] = current_progress, tic
+            else:
+                self.last_progress_dict[job_id] = last_progress, time_last_progress
+        else:
+            self.last_progress_dict[job_id] = current_progress, tic
+        #if (time.time() - progress_bar.start_t) != 0:
+        #    rate = progress_bar.n / (time.time() - progress_bar.start_t)
+        #    self.current_rate_dict[job_id] = rate
+
+
+    def get_current_rate_total(self):
+        return sum(self.current_rate_dict.values())
+
+
+    def update_mean_rate_and_time_per_request(self, result):
+
+        if self.num_finished_jobs > self.num_jobs_first_batch:
+            self.mean_time_per_request = (time.time() - self.start_time_second_batch)/(self.num_finished_jobs - self.num_jobs_first_batch)
+            self.mean_rate = (self.num_finished_jobs - self.num_jobs_first_batch) * self.num_generated_units / (time.time() - self.start_time_second_batch)
+        else:
+            self.mean_time_per_request = (time.time() - self.start_time)/(self.num_finished_jobs)
+            self.mean_rate = self.num_finished_jobs * self.num_generated_units / (time.time() - self.start_time)
+        if result.get('compute_duration'):
+            self.durations_from_server.append(result.get('compute_duration'))
+            self.mean_duration_from_server = statistics.mean(self.durations_from_server)
+            self.mean_rate_from_server = self.num_generated_units / self.mean_duration_from_server
+        if self.num_finished_jobs == self.num_jobs_first_batch:
+            self.durations_from_server.clear()
+        
 
     def make_benchmark_result_string(self):
         """Making string containing mean benchmark results.
 
         Returns:
             str: Result string
-        """        
+        """
+        result_string_list = list()
+        if self.mean_time_per_request:
+            result_string_list.append(
+                'Mean time per request: ' + self.coloured_output(f'{tqdm.format_sizeof(self.mean_time_per_request)}s', GREEN)
+            )
+        if self.mean_rate:
+            result_string_list.append(
+                'Mean rate: ' + self.coloured_output(f'{tqdm.format_sizeof(self.mean_rate)} {self.unit}/s', GREEN)
+            )
+        if not (self.num_finished_jobs - self.num_jobs_first_batch) == self.args.total_requests:
+            current_rate = self.get_current_rate_total()
+            if current_rate:
+                result_string_list.append(
+                    'Current rate: ' + self.coloured_output(f'{tqdm.format_sizeof(current_rate)} {self.unit}/s', GREEN)
+                )
 
-        if self.num_finished_jobs > self.num_jobs_first_batch:
-            duration = time.time() - self.start_time_second_batch
-            benchmark_result_string = \
-                f'Mean time per request: {round(duration/self.num_finished_jobs, 1)}s | ' \
-                f'{round((self.num_finished_jobs - self.num_jobs_first_batch) * self.num_generated_units / duration, 1)} {self.unit}/s'
-            return benchmark_result_string
+        return ' | '.join(result_string_list)
+
+
+    def make_server_benchmark_string(self, final=False):
+        if self.mean_rate_from_server:
+            return 'From ' + self.coloured_output('Server', YELLOW) + \
+                ': Mean duration per job: ' + self.coloured_output(f'{tqdm.format_sizeof(self.mean_duration_from_server)}s', YELLOW) + \
+                ' | Mean rate per worker: ' + self.coloured_output(f'{tqdm.format_sizeof(self.mean_rate_from_server)} {self.unit}/s', YELLOW) + \
+                ' | Mean rate: ' + self.coloured_output(f'{tqdm.format_sizeof(self.mean_rate_from_server * self.num_current_running_jobs)} {self.unit}/s', YELLOW)
+            
 
     def remove_progress_bar(self, job_id):
         """Removing the progress bar of finished jobs with the given job id.
@@ -327,6 +477,8 @@ class BenchmarkApiEndpoint():
             current_position = current_progress_bar.pos
             current_progress_bar.close()
             del self.progress_bar_dict[job_id]
+            del self.current_rate_dict[job_id]
+            del self.last_progress_dict[job_id]
             self.remove_empty_line(current_position)
 
 
@@ -335,10 +487,10 @@ class BenchmarkApiEndpoint():
 
         Args:
             position (int): Position
-        """        
+        """
         for progress_bar in self.progress_bar_dict.values():
-            if progress_bar.pos > position:
-                current_position = progress_bar.pos
+            if int(progress_bar.pos) > int(position):
+                current_position = int(progress_bar.pos)
                 progress_bar.clear(nolock=False)
                 progress_bar.pos = current_position -1
 
@@ -418,10 +570,7 @@ class BenchmarkApiEndpoint():
         Args:
             result (dict): Job result
         """        
-        self.endpoint_version = result.get('ep_version')
-        self.model_name = result.get('model_name')
-        self.worker_names.add(result.get('auth'))
-        self.worker_interface_version = result.get('worker_interface_version')
+
 
 
     def get_unit(self):
@@ -430,22 +579,77 @@ class BenchmarkApiEndpoint():
         Returns:
             str: The unit string of the generated objects
         """
-        if self.args.unit:
-            return self.args.unit
         if self.args.endpoint_name == 'llama2_chat':
-            return 'tokens'
+            return 'tokens', 1, 0, self.num_generated_units       
         else:
-            return 'images'
+            if self.args.unit:
+                unit = self.args.unit
+            else:
+                unit = 'images'
+            if self.args.num_units < 10:
+                unit_precision = 2
+            elif 10 <= self.args.num_units:
+                unit_precision = 1
+            else:
+                unit_precision = 0
+            return unit, self.num_generated_units/100, unit_precision, 100
+
+    def coloured_output(self, string, colour_tag):
+        return colour_tag + str(string) + RESET
 
 
     async def request_error_callback(self, response):
         print(response)
+        self.show_cursor()
         loop = self.get_loop()
         loop.stop()
 
+    
+    def hide_cursor(self):
+        if HIDE_CURSOR:
+            if os.name == 'nt':
+                ci = _CursorInfo()
+                handle = ctypes.windll.kernel32.GetStdHandle(-11)
+                ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
+                ci.visible = False
+                ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
+            elif os.name == 'posix':
+                sys.stdout.write("\033[?25l")
+                sys.stdout.flush()
+
+
+    def show_cursor(self):
+        if HIDE_CURSOR:
+            if os.name == 'nt':
+                ci = _CursorInfo()
+                handle = ctypes.windll.kernel32.GetStdHandle(-11)
+                ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
+                ci.visible = True
+                ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
+            elif os.name == 'posix':
+                sys.stdout.write("\033[?25h")
+                sys.stdout.flush()
+
+
 def main():
-    benchmark_api = BenchmarkApiEndpoint()
-    benchmark_api.run()
+    
+        benchmark_api = BenchmarkApiEndpoint()
+        try:
+            benchmark_api.run()
+        except KeyboardInterrupt:
+            
+            for title_bar in benchmark_api.title_bar_list:
+                title_bar.clear()
+            for progress_bar in benchmark_api.progress_bar_dict.values():
+                progress_bar.clear()
+            benchmark_api.show_cursor()
+            print('\nKeyboardInterrupt')
+            if not benchmark_api.first_batch:
+                benchmark_api.print_benchmark_summary_string()
+
+
+        
+        
 
 
 if __name__ == "__main__":
