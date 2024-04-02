@@ -467,7 +467,7 @@ class ApiTest():
 
         result = asyncio.run(self.run_async_model_api_test(params, callback_async))
         success = validate_result_image(result)
-        assert success, f'Test for async request on model_api with sync callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
+        assert success, f'Test for async request on model_api with async callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
         
         model_api_no_login = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
         with pytest.raises(ConnectionRefusedError) as excinfo:  

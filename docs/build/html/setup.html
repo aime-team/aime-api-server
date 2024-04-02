@@ -53,9 +53,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="configuration/configuration.html">Configure API Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aime_api_server.html">Source Documentation</a></li>
-</ul>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark/index_benchmark.html">Benchmark</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Client Interfaces:</span></p>
 <ul>
@@ -115,27 +114,21 @@
 <section id="start-the-api-server">
 <h2>Start the API server<a class="headerlink" href="#start-the-api-server" title="Permalink to this heading"></a></h2>
 <p>To start the API server run:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>run<span class="w"> </span>api_server.py<span class="w"> </span><span class="o">[</span>-H<span class="w"> </span>HOST<span class="o">]</span><span class="w"> </span><span class="o">[</span>-p<span class="w"> </span>PORT<span class="o">]</span><span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>EP_CONFIG<span class="o">]</span><span class="w"> </span><span class="o">[</span>--debug<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>run_api_server.py<span class="w"> </span><span class="o">[</span>-H<span class="w"> </span>HOST<span class="o">]</span><span class="w"> </span><span class="o">[</span>-p<span class="w"> </span>PORT<span class="o">]</span><span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>EP_CONFIG<span class="o">]</span><span class="w"> </span><span class="o">[</span>--dev<span class="o">]</span>
 </pre></div>
 </div>
 <p>Optional command line parameters:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>-H,<span class="w"> </span>--host<span class="o">]</span>:<span class="w"> </span>Host<span class="w"> </span>address<span class="w"> </span>of<span class="w"> </span>AIME<span class="w"> </span>ML<span class="w"> </span>API<span class="w"> </span>Server.<span class="w"> </span>Default:<span class="w"> </span><span class="s1">&#39;0.0.0.0&#39;</span>
-
-<span class="o">[</span>-p,<span class="w"> </span>--port<span class="o">]</span>:<span class="w"> </span>Port<span class="w"> </span>of<span class="w"> </span>AIME<span class="w"> </span>ML<span class="w"> </span>API<span class="w"> </span>Server.<span class="w"> </span>Default<span class="w"> </span>:<span class="w"> </span><span class="m">7777</span>
-
-<span class="o">[</span>-s,<span class="w"> </span>--server_config<span class="o">]</span>:<span class="w"> </span>Destination<span class="w"> </span>of<span class="w"> </span>server<span class="w"> </span>config<span class="w"> </span>file.<span class="w"> </span>Default:<span class="w"> </span><span class="s1">&#39;model_api_server.cfg&#39;</span>
-
-<span class="o">[</span>-c,<span class="w"> </span>--ep_config<span class="o">]</span>:<span class="w"> </span>Destination<span class="w"> </span>of<span class="w"> </span>endpoint<span class="w"> </span>config<span class="w"> </span>file<span class="w"> </span>or<span class="w"> </span>folder.<span class="w"> </span>Default:<span class="w"> </span><span class="s1">&#39;./endpoints&#39;</span>
-
-<span class="o">[</span>--dev<span class="o">]</span>:<span class="w"> </span>Run<span class="w"> </span>the<span class="w"> </span>server<span class="w"> </span><span class="k">in</span><span class="w"> </span>debug/development<span class="w"> </span>mode
-
-<span class="o">[</span>-wp,<span class="w"> </span>--worker_processes<span class="o">]</span>:<span class="w"> </span>Number<span class="w"> </span>of<span class="w"> </span>api<span class="w"> </span>server<span class="w"> </span>worker<span class="w"> </span>processes.<span class="w"> </span>Default:<span class="w"> </span><span class="m">1</span>
-
-<span class="o">[</span>--hide_logging<span class="o">]</span>:<span class="w"> </span>Hide<span class="w"> </span>logging<span class="w"> </span><span class="k">in</span><span class="w"> </span>console
-
-<span class="o">[</span>--no_sanic_logger<span class="o">]</span>:<span class="w"> </span>Hide<span class="w"> </span>sanic<span class="w"> </span>logger<span class="w"> </span><span class="k">in</span><span class="w"> </span>console
-</pre></div>
-</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[-as,</span> <span class="pre">--api_server]</span></code> <em>: Address of the AIME API Server. Default:</em> <code class="docutils literal notranslate"><span class="pre">http://0.0.0.0:7777</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-H,</span> <span class="pre">--host]</span></code> <em>: Host address of AIME ML API Server. Default:</em> <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-p,</span> <span class="pre">--port]</span></code> <em>: Port of AIME ML API Server. Default:</em> <code class="docutils literal notranslate"><span class="pre">7777</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-s,</span> <span class="pre">--server_config]</span></code> <em>: Destination of server config file. Default:</em> <code class="docutils literal notranslate"><span class="pre">model_api_server.cfg</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-c,</span> <span class="pre">--ep_config]</span></code> <em>: Destination of endpoint config file or folder. Default:</em> <code class="docutils literal notranslate"><span class="pre">./endpoints</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[--dev]</span></code> <em>: Run the server in debug/development mode</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[-wp,</span> <span class="pre">--worker_processes]</span></code> <em>: Number of api server worker processes. Default:</em> <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[--hide_logging]</span></code> <em>: Hide logging in console</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[--no_sanic_logger]</span></code> <em>: Hide sanic logger in console</em></p></li>
+</ul>
 </section>
 </section>
 

@@ -46,9 +46,8 @@
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup &amp; Start API Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration/configuration.html">Configure API Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="aime_api_server.html">Source Documentation</a></li>
-</ul>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark/index_benchmark.html">Benchmark</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Client Interfaces:</span></p>
 <ul>
@@ -86,17 +85,21 @@
 
 <div class="genindex-jumpbox">
  <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
  | <a href="#J"><strong>J</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
@@ -119,6 +122,14 @@
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface">APIWorkerInterface (class in aime_api_worker_interface)</a>
 </li>
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.async_check_server_connection">async_check_server_connection() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint">BenchmarkApiEndpoint (class in run_api_benchmark)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -162,6 +173,8 @@
         <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.do_api_request_async">(in module aime_api_client_interface)</a>
 </li>
       </ul></li>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.do_request_with_semaphore">do_request_with_semaphore() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -194,17 +207,23 @@
 </li>
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_current_job_data">get_current_job_data() (aime_api_worker_interface.APIWorkerInterface method)</a>
 </li>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.get_default_values_from_config">get_default_values_from_config() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_endpoint_descriptions">get_endpoint_descriptions() (api_server.api_server.APIServer method)</a>
 </li>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_http_methods">get_http_methods() (api_server.api_server.APIServer method)</a>
 </li>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_job_batch_parameter">get_job_batch_parameter() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_job_batch_parameter">get_job_batch_parameter() (aime_api_worker_interface.APIWorkerInterface method)</a>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.get_loop">get_loop() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
 </li>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_param_config">get_param_config() (api_server.api_server.APIServer method)</a>
 </li>
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_pnginfo_metadata">get_pnginfo_metadata() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.get_unit">get_unit() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
 </li>
       <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.get_version">get_version() (aime_api_client_interface.ModelAPI static method)</a>
 
@@ -220,11 +239,21 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.has_job_finished">has_job_finished() (aime_api_worker_interface.APIWorkerInterface method)</a>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.handle_first_batch">handle_first_batch() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.has_job_finished">has_job_finished() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.have_all_jobs_finished">have_all_jobs_finished() (aime_api_worker_interface.APIWorkerInterface method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.init_progress_bar">init_progress_bar() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -248,6 +277,10 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.load_flags">load_flags() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="aime_api_server.html#api_server.api_server.APIServer.load_server_configuration">load_server_configuration() (api_server.api_server.APIServer method)</a>
 </li>
   </ul></td>
@@ -256,16 +289,20 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.make_benchmark_result_string">make_benchmark_result_string() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.make_table_title">make_table_title() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
       <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI">ModelAPI (class in aime_api_client_interface)</a>
 </li>
       <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI">ModelAPI() (class)</a>
 </li>
       <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.doAPILogin">ModelAPI.doAPILogin() (ModelAPI method)</a>
 </li>
-      <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.doAPIRequest">ModelAPI.doAPIRequest() (ModelAPI method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.doAPIRequest">ModelAPI.doAPIRequest() (ModelAPI method)</a>
+</li>
       <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.fetchAsync">ModelAPI.fetchAsync() (ModelAPI method)</a>
 </li>
       <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.fetchAuthKey">ModelAPI.fetchAuthKey() (ModelAPI method)</a>
@@ -280,11 +317,35 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.progress_data_received">progress_data_received (aime_api_worker_interface.APIWorkerInterface attribute)</a>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.print_benchmark_summary_string">print_benchmark_summary_string() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.print_start_message">print_start_message() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.process_meta_data">process_meta_data() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.progress_callback">progress_callback() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+      <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.progress_data_received">progress_data_received (aime_api_worker_interface.APIWorkerInterface attribute)</a>
+</li>
       <li><a href="aime_api_server.html#api_server.job_queue.JobQueue.put">put() (api_server.job_queue.JobQueue method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.remove_empty_line">remove_empty_line() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.remove_progress_bar">remove_progress_bar() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.result_callback">result_callback() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.run">run() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -301,6 +362,20 @@
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.send_progress">send_progress() (aime_api_worker_interface.APIWorkerInterface method)</a>
 </li>
       <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.setup_session">setup_session() (aime_api_client_interface.ModelAPI method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.update_meta_data_in_title">update_meta_data_in_title() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.update_progress_bar">update_progress_bar() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
+</li>
+      <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.update_title">update_title() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
 </li>
   </ul></td>
 </tr></table>

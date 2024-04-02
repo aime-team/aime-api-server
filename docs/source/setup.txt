@@ -42,7 +42,7 @@ To start the API server run:
 .. highlight:: shell
 .. code-block:: shell
 
-    python3 run api_server.py [-H HOST] [-p PORT] [-c EP_CONFIG] [--debug]
+    python3 run_api_server.py [-H HOST] [-p PORT] [-c EP_CONFIG] [--debug]
 
 
 Optional command line parameters:
