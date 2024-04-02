@@ -2,7 +2,7 @@
 Title: AIME API Server
 ---
 
-![AIME API Server](/docs/images/aime_api_banner.jpg "AIME API Server")
+![AIME API Server](/docs/images/aime_api_banner.png "AIME API Server")
 
 # AIME API Server - The Scalable Model Inference API Server
 

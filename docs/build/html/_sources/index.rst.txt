@@ -1,7 +1,7 @@
 .. Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
    This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
 
-.. image:: ../images/aime_api_banner.jpg
+.. image:: ../images/aime_api_banner.png
    :width: 800
 
 |
@@ -46,6 +46,7 @@ The central part is the AIME API Server, an efficient asynchronous HTTP/HTTPS we
 * Fast - asynchronous and multi process API server
 * Scalable & Robust- distributed cluster ready architecture
 * Secure - type safe interface and input validation
+* Aggregates API requests to GPU batch jobs for maximum throughput
 * Easy integratable into exisiting Python and Tensorflow projects
 * High performance image and audio input/ouput conversion for common web formats
 * Pythonic - easily extendable in your favourite programming language
