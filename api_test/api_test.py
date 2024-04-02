@@ -320,12 +320,13 @@ class ApiTest():
 
 
     def exit_processes(self):
-
+        self.get_loop().stop()
         self.kill_processes_with_children(self.proc_api_server)
         for proc in self.proc_main_test_workers:
             self.kill_processes_with_children(proc)
         if self.proc_crop_test_worker:
             self.kill_processes_with_children(self.proc_crop_test_worker)
+        
         
 
     def kill_processes_with_children(self, proc):
@@ -446,58 +447,70 @@ class ApiTest():
         result = asyncio.run(do_api_request_async(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, 'aime', CLIENT_LOGIN_KEY, callback.result_callback, callback.progress_callback))
         success = validate_result_image(result)
         assert success, f'Test for async request on model_api simple interface with sync callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
+        report = f'Async request using the simple interface with sync result and progress callbacks.\n'
 
         result = asyncio.run(do_api_request_async(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, 'aime', CLIENT_LOGIN_KEY, callback_async.result_callback, callback_async.progress_callback))
         success = validate_result_image(result)
         assert success, f'Test for async request on model_api simple interface with async callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
+        report += f'Async request using the simple interface with async result and progress callbacks.\n'
 
         result = do_api_request(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, 'aime', CLIENT_LOGIN_KEY, callback.progress_callback)
         success = validate_result_image(result)
         assert success, f'Test for sync request on model_api simple interface with progress callback on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
+        report += f'Sync request using the simple interface with result and progress callbacks.\n'
 
         model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
         model_api.do_api_login()
         result = model_api.do_api_request(params, callback.progress_callback)
         success = validate_result_image(result)
-        assert success, f'Test for sync request on model_api with progress callback on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
+        assert success, f'Test for sync request on ModelAPI class with sync result and progress callback on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
+        report += f'Sync request using the ModelAPI class with sync result and progress callback.\n'
 
         result = asyncio.run(self.run_async_model_api_test(params, callback))
         success = validate_result_image(result)
         assert success, f'Test for async request on model_api with sync callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
+        report += f'Async request using the ModelAPI class with sync result and progress callback.\n'
 
         result = asyncio.run(self.run_async_model_api_test(params, callback_async))
         success = validate_result_image(result)
-        assert success, f'Test for async request on model_api with async callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
-        
+
+        assert success, f'Test for async request using the ModelAPI class with sync result and progress callbacks on main test worker with the endpoint {api_test.endpoint_names[0]}  failed\nResults: {result}'
+        report += f'Async request using the ModelAPI class with async result and progress callback.\n'
+
         model_api_no_login = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
         with pytest.raises(ConnectionRefusedError) as excinfo:  
-            _ = model_api_no_login.do_api_request(params, callback.progress_callback, callback.progress_error_callback)
-            assert excinfo
-        
-        with pytest.raises(ConnectionRefusedError) as excinfo:  
-            _ = asyncio.run(self.run_async_model_api_test_no_login(params, callback_async))
-            assert excinfo
+            result = model_api_no_login.do_api_request(params, callback.progress_callback, callback.progress_error_callback)
+            assert excinfo, f'Test for sync request on model_api with sync callbacks on main test worker with the endpoint {api_test.endpoint_names[0]} with no login didn\'t raise ConnectionRefusedsError\nResults: {result}'
+        report += f'Sync request using the ModelAPI class with no login raised ConnectionRefusedError as supposed.\n'
 
-        result_no_prgress = do_api_request(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, 'aime', CLIENT_LOGIN_KEY)
-        success = validate_result_image(result)
-        
-        
-        model_api_invalid_url = ModelAPI(f'http://wrong_url', self.endpoint_names[0])
+        asyncio.run(self.run_async_model_api_test_no_login(params, callback_async))
+        report += f'Async request using the ModelAPI class with no login raised ConnectionRefusedError as supposed.\n'
 
+        result_no_progress = do_api_request(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], params, 'aime', CLIENT_LOGIN_KEY)
+        success = validate_result_image(result_no_progress)
+        report += f'Sync request using the simple interfacce with no progress.\n'
+        
+        
+        invalid_url = f'http://wrong_url'
+        model_api_invalid_url = ModelAPI(invalid_url, self.endpoint_names[0])
         with pytest.raises(ConnectionError) as excinfo:  
             model_api_invalid_url.do_api_login()
-            assert excinfo
+            assert excinfo, f'Test for sync login request on model_api with invalid url http://wrong_url didn\'t raise ConnectionError\nResults: {result}'
+        report += f'Sync login request using the ModelAPI class on invalid url {invalid_url} raised ConnectionError as supposed.\n'
 
-        with pytest.raises(ConnectionError) as excinfo:  
-            asyncio.run(self.run_async_model_invalid_url_test())
-            assert excinfo
-        
-        return True
+        asyncio.run(self.run_async_model_invalid_url_test())
+        report += f'Async login request using the ModelAPI class on invalid url {invalid_url} raised ConnectionError as supposed.\n'
+
+        return True, report
+
 
     async def run_async_model_invalid_url_test(self):
-        model_api_invalid_url = ModelAPI(f'http://wrong_url', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
-        await model_api_invalid_url.do_api_login_async()
-        await model_api.close_session()
+        with pytest.raises(ConnectionError) as excinfo:  
+            model_api_invalid_url = ModelAPI(f'http://wrong_url', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
+            result = await model_api_invalid_url.do_api_login_async()
+            assert excinfo, f'Test for async login request on model_api with invalid url http://wrong_url didn\'t raise ConnectionError\nResults: {result}'
+        await model_api_invalid_url.close_session()
+
 
     async def run_async_model_api_test(self, params, callback):
         model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
@@ -506,11 +519,13 @@ class ApiTest():
         await model_api.close_session()
         return result
 
+
     async def run_async_model_api_test_no_login(self, params, callback):
-        model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
-        result = await model_api.do_api_request_async(params, callback.result_callback, callback.progress_callback)
+        with pytest.raises(ConnectionRefusedError) as excinfo:  
+            model_api = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0], 'aime', CLIENT_LOGIN_KEY)
+            result = await model_api.do_api_request_async(params, callback.result_callback, callback.progress_callback)
+            assert excinfo
         await model_api.close_session()
-        return result
 
 
 def validate_result_image(result, progress_info=None):
@@ -581,9 +596,9 @@ def main():
         print(f'Test for single async request on test worker with the endpoint {api_test.endpoint_names[0]}  successful')
     if all(api_test.make_request_with_invalid_parameters(parameters) for parameters in invalid_parameters):
         print('Test requests with invalid parameters return statuscode "400" as supposed')
-    success = api_test.run_model_api_test()
+    success, report = api_test.run_model_api_test()
     if success:
-        print(f'Test with python interface model_api.py successful')  
+        print(f'Test with python interface model_api.py successful.\nRunned tests:\n{report}')  
     success, message = api_test.init_main_test_worker_with_invalid_worker_auth_key()
     if success:
         print(f'Test with unauthorized worker key responded with exitcode 1 and the message "{message.strip()}" as supposed')
@@ -688,11 +703,13 @@ def test_make_request_with_invalid_parameters(api_test_instance):
 def test_do_api_request(api_test_instance):
 
     args, _ = load_flags()
-    success = api_test_instance.run_model_api_test()
+    success, report_string = api_test_instance.run_model_api_test()
 
     if success:
-        print(f'Test for on api_client_interface.python.model_api on main test worker with the endpoint {api_test_instance.endpoint_names[0]} successful')
-        report_string = f'Test for on api_client_interface.python.model_api on main test worker with the endpoint {api_test_instance.endpoint_names[0]} successful'
+        report_string = \
+            f'Test for on api_client_interface.python.model_api on main test worker with the endpoint {api_test_instance.endpoint_names[0]} successful.\n' \
+            f'Runned tests:\n{report_string}'
+        print(report_string)
         atexit.register(report, report_string=report_string)
 
 

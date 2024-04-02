@@ -17,18 +17,65 @@ The basic server parameters like its address and the location of the endpoint co
 
 * ``host`` *(str): The IP address of the AIME API Server*
 
-* ``endpoint_configs`` *(str): The location of the endpoint configuration files.*
+* ``endpoint_configs`` *(str): The location of the endpoint configuration files. Default location is* ``"./endpoints"``
 
+Example:
 
-*Example:*
-
+.. highlight:: toml
 .. code-block:: toml
 
     [SERVER]
     port = 0000
     host = "0.0.0.0"
-    endpoint_configs = "./endpoints" # search path or list of endpoint configuration files to load on startup
+    endpoint_configs = "./endpoints"
 
+Sanic Server Parameters
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The sanic server parameters like its address and the location of the endpoint config files are set in the section [SANIC]:
+
+* ``access_log`` *(bool): How long to hold a TCP connection open in seconds. Default =* ``false``
+
+* ``proxies_count`` *(int): The number of proxy servers in front of the app. Default =* ``None``
+
+* ``keep_alive_timeout`` *(int): How long to hold a TCP connection open in seconds. Default =* ``120``
+
+* ``keep_alive`` *(bool):  Disables keep-alive when False. Default =* ``true``
+
+* ``request_buffer_size`` *(int): Request buffer size in bytes before request is paused. Default =* ``65536``
+
+* ``request_max_size`` *(int): How big a request may be in bytes. Default =* ``100000000``
+
+* ``request_max_header_size`` *(int): How big a request header may be in bytes. Default =* ``8192``
+
+* ``request_timeout`` *(int): How long a request can take to arrive in seconds. Default =* ``60``
+
+* ``response_timeout`` *(int): How long a response can take to process in seconds. Default =* ``60``
+
+* ``websocket_max_size`` *(int): Maximum size for incoming messages in bytes. Default =* ``1048576``
+
+* ``websocket_ping_interval`` *(int): A Ping frame is sent every ping_interval seconds. Default =* ``20``
+
+* ``websocket_ping_timeout`` *(int): Connection is closed when Pong is not received after ping_timeout seconds. Default =* ``20``
+
+Example:
+
+.. highlight:: toml
+.. code-block:: toml
+
+    [SANIC]
+    access_log = false
+    proxies_count = 1
+    keep_alive_timeout = 10
+    keep_alive = true
+    request_buffer_size = 65536
+    request_max_size = 100000000
+    request_max_header_size = 8192
+    request_timeout = 60
+    response_timeout = 60
+    websocket_max_size 	= 1048576
+    websocket_ping_interval = 20
+    websocket_ping_timeout = 20
 
 Administrator Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -41,6 +88,7 @@ The section [ADMIN] deals with administrator backend related settings:
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [ADMIN]
@@ -58,6 +106,7 @@ Settings concerning the workers like job_timeout and default auth keys are to be
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [WORKERS]
@@ -79,17 +128,20 @@ Default configuration concerning the clients like its authorization and authenti
 
 * ``default_authorization`` *(str): Default method for the client login authorization*
 
+* ``default_authorization_keys`` *(dict): Authorized user name - key pairs* ``{ "name" = "key" }``
+
   *Available settings:*
 
   * ``"None"`` *(default): The client login request has no restrictions*
   * ``"Key"`` *: The client login request has to contain the name of the user (* ``default_authentication`` *has to be* ``"User"`` *) and the related key listed in* ``default_authorization_keys``
 
-* ``default_provide_worker_meta_data`` *(bool): Whether the client receives meta data about the job from the worker. Default = false*
+* ``default_provide_worker_meta_data`` *(bool): Whether the client receives meta data about the job from the worker. Default =* ``false``
 
-* ``default_client_request_limit`` *(int): The default maximum allowed number of requests per client. 0 = not limited. Default = 0*
+* ``default_client_request_limit`` *(int): The default maximum allowed number of requests per client.* ``0`` *= not limited. Default =* ``0``
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [CLIENTS]
@@ -106,11 +158,12 @@ Attribute restrictions of certain input parameter types can be set in the sectio
  
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [INPUTS]
-    image.format = { allowed = [ 'png', 'jpeg' ] }
-    audio.format = { allowed = [ 'wav', 'mp3', 'ogg', 'webm', 'mp4' ] }
+    image.format = { allowed = [ "png", "jpeg" ] }
+    audio.format = { allowed = [ "wav", "mp3", "ogg", "webm", "mp4" ] }
 
 
 Static Routes
@@ -137,6 +190,7 @@ In the section ``[STATIC]`` the static routes can be redirected to a desired des
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [STATIC]

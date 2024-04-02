@@ -1,6 +1,11 @@
 .. Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
    This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
-   
+
+.. image:: ../images/aime_api_banner.jpg
+   :width: 800
+
+|
+
 AIME API Server
 ===============
 
@@ -8,6 +13,7 @@ AIME API Server
    :maxdepth: 1
    :hidden:
 
+   
    Setup & Start API Server <setup>
    Configure API Server <configuration/configuration>
    Source Documentation <aime_api_server>
@@ -28,7 +34,8 @@ AIME API Server
    More coming soon<client_interfaces/more>
 
 
-With AIME API one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.
+
+With :api_aime_info:`AIME API <>` one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.
 
 Turn a console Python script to a secure and robust web API acting as your interface to the mobile, browser and desktop world.
 
@@ -42,3 +49,6 @@ The central part is the AIME API Server, an efficient asynchronous HTTP/HTTPS we
 * Easy integratable into exisiting Python and Tensorflow projects
 * High performance image and audio input/ouput conversion for common web formats
 * Pythonic - easily extendable in your favourite programming language
+
+.. image:: ../images/aime_api_architecture.png
+   :width: 800

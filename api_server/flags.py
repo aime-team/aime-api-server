@@ -17,11 +17,11 @@ class Flags():
             description='AIME ML API Server', formatter_class=argparse.ArgumentDefaultsHelpFormatter
                                         )
         parser.add_argument(
-            '-H', '--host', type=str, default="0.0.0.0", required=False,
-            help='Host address [default 0.0.0.0]'
+            '-H', '--host', type=str, required=False,
+            help='To use different host address than specified in server config file'
                             )
         parser.add_argument(
-            '-p', '--port', type=int, default=7777, required=False, help='Port number'
+            '-p', '--port', type=int, required=False, help='To use different port number than specified in server config file'
                             )
         parser.add_argument(
             '-s', '--server_config', type=str, required=False,
@@ -29,7 +29,7 @@ class Flags():
                             )
         parser.add_argument(
             '-c', '--ep_config', type=str, required=False,
-            help='Pointer to directory or file form where to load the config of endpoint.cfg files'
+            help='To use different directory or file form where to load the config of endpoint.cfg files than specified in server config file'
                             )
         parser.add_argument(
             '--dev', action='store_true', required=False,
@@ -52,8 +52,7 @@ class Flags():
         return args
 
     def set_default_values(self):
-        if not self.args.ep_config:
-            self.args.ep_config = './endpoints'
+
         if not self.args.server_config:
             self.args.server_config = './aime_api_server.cfg'
 
