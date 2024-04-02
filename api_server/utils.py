@@ -593,25 +593,30 @@ class InputValidationHandler():
 
 
 class CustomFormatter(logging.Formatter):
-
+    LIGHT_GREY = "\033[0;37m"
     GREY = '\033[90m'
     YELLOW = '\033[93m'
     RED = '\033[91m'
     BOLD_RED = '\[\033[1;31m\]'
     RESET = '\033[0m'
-    GREY = '\033[90m'
 
-    format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+
+    desc_format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
     FORMATS = {
-        logging.DEBUG: GREY + format + RESET,
-        logging.INFO: format,
-        logging.WARNING: YELLOW + format + RESET,
-        logging.ERROR: RED + format + RESET,
-        logging.CRITICAL: BOLD_RED + format + RESET
+        logging.DEBUG: LIGHT_GREY + desc_format + RESET,
+        logging.INFO: desc_format,
+        logging.WARNING: YELLOW + desc_format + RESET,
+        logging.ERROR: RED + desc_format + RESET,
+        logging.CRITICAL: BOLD_RED + desc_format + RESET
     }
 
+    def __init__(self, no_colour=False):
+        super().__init__()
+        self.no_colour = no_colour
+
+
     def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
+        log_fmt = self.FORMATS.get(record.levelno) if not self.no_colour else self.desc_format
         formatter = logging.Formatter(log_fmt, datefmt = '%Y-%m-%d %H:%M:%S')
         return formatter.format(record)
 
@@ -709,4 +714,3 @@ def copy_js_client_interface_to_frontend_folder():
         frontend_folder = Path('./frontend/static/js/')
         logger.info(f'Subrepository "AIME API Client Interfaces" folder in {js_client_interface_folder.parent.resolve()} is present. Javascript client interface {js_client_interface_filename} is copied from {js_client_interface_folder.resolve()} to {frontend_folder.resolve()}.')
         shutil.copy(js_client_interface_folder / js_client_interface_filename, frontend_folder / js_client_interface_filename)
-        

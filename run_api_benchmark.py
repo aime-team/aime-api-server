@@ -154,7 +154,6 @@ class BenchmarkApiEndpoint():
             progress_info (dict): Job progress information containing the job_id and the progress state like number of generated tokens so far or percentage.
             progress_data (dict): The already generated content like tokens or interim images.
         """
-        sys.stdout.flush()
         job_id = progress_info.get('job_id')
         await self.handle_first_batch(progress_info)
         if not self.progress_bar_dict.get(job_id) and progress_info.get('queue_position') == 0:
@@ -287,11 +286,6 @@ class BenchmarkApiEndpoint():
                     self.title_bar_list[6].close()
                     self.title_bar_list[8].close()
                     print('\n\n\n\n\n\n\nFirst batch finished before --time_to_get_first_batch_jobs. Choose a shorter time via command line argument!')
-                    
-                    #if not self.first_batch_jobs_added:    
-                    #    loop = self.get_loop()
-                    #    _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.num_jobs_first_batch)]
-                    #    self.first_batch_jobs_added = True
             else:
                 if not self.first_batch_jobs_added:
                     loop = self.get_loop()
