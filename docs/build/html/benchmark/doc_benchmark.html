@@ -7,9 +7,10 @@
   <title>Documentation AIME API Benchmark &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
-      <link rel="stylesheet" type="text/css" href="../_static/../css/aime_override.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/aime_override.css?v=98251488" />
 
   
+    <link rel="shortcut icon" href="../_static/AIME-API_logo.svg"/>
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -34,8 +35,9 @@
 
           
           
-          <a href="../index.html" class="icon icon-home">
-            AIME API Server
+          <a href="../index.html">
+            
+              <img src="../_static/AIME-API_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -59,11 +61,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.progress_callback"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.progress_callback()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.result_callback"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.result_callback()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.print_benchmark_summary_string"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.print_benchmark_summary_string()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.make_table_title"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.make_table_title()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.update_table_title"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.update_table_title()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.init_progress_bar"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.init_progress_bar()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.handle_first_batch"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.handle_first_batch()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.update_title"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.update_title()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.update_meta_data_in_title"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.update_meta_data_in_title()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.update_worker_and_endpoint_data_in_title"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.update_worker_and_endpoint_data_in_title()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.update_progress_bar"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.update_progress_bar()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.make_benchmark_result_string"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.make_benchmark_result_string()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.remove_progress_bar"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.remove_progress_bar()</span></code></a></li>
@@ -174,9 +176,9 @@ about the server and the worker and updates the title.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.make_table_title">
-<span class="sig-name descname"><span class="pre">make_table_title</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.make_table_title" title="Permalink to this definition"></a></dt>
-<dd><p>Make Legend title bar for the progress bars.</p>
+<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_table_title">
+<span class="sig-name descname"><span class="pre">update_table_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_table_title" title="Permalink to this definition"></a></dt>
+<dd><p>Setting the column descriptions and adjusting the position of the table title bar for the progress bar table.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -203,18 +205,13 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_title">
-<span class="sig-name descname"><span class="pre">update_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_finished</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_title" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_title" title="Permalink to this definition"></a></dt>
 <dd><p>Updating the title bars for the header containing information about the benchmark.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>job_finished</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether progress or final job result was received. Defaults to False.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_meta_data_in_title">
-<span class="sig-name descname"><span class="pre">update_meta_data_in_title</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_meta_data_in_title" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_worker_and_endpoint_data_in_title">
+<span class="sig-name descname"><span class="pre">update_worker_and_endpoint_data_in_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_worker_and_endpoint_data_in_title" title="Permalink to this definition"></a></dt>
 <dd><p>Updating the title bars with information about the API server and the workers.</p>
 </dd></dl>
 

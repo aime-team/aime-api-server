@@ -7,9 +7,10 @@
   <title>AIME API Server &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
-      <link rel="stylesheet" type="text/css" href="_static/../css/aime_override.css" />
+      <link rel="stylesheet" type="text/css" href="_static/aime_override.css?v=98251488" />
 
   
+    <link rel="shortcut icon" href="_static/AIME-API_logo.svg"/>
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -33,8 +34,9 @@
 
           
           
-          <a href="#" class="icon icon-home">
-            AIME API Server
+          <a href="#">
+            
+              <img src="_static/AIME-API_logo.svg" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -83,13 +85,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="aime-api-server">
+  <a class="reference internal image-reference" href="_images/aime_api_banner.jpg"><img alt="_images/aime_api_banner.jpg" src="_images/aime_api_banner.jpg" style="width: 800px;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<section id="aime-api-server">
 <h1>AIME API Server<a class="headerlink" href="#aime-api-server" title="Permalink to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
 </div>
-<p>With AIME API one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.</p>
+<p>With <a class="reference external" href="https://api.aime.info/">AIME API</a> one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.</p>
 <p>Turn a console Python script to a secure and robust web API acting as your interface to the mobile, browser and desktop world.</p>
 <p>The central part is the AIME API Server, an efficient asynchronous HTTP/HTTPS web server which can be used stand-alone web server or integrated into Apache, NGINX or similar web servers. It takes the client requests, load balances the requests and distributes them to the API compute workers.</p>
 <p><strong>Features</strong></p>
@@ -101,6 +107,7 @@
 <li><p>High performance image and audio input/ouput conversion for common web formats</p></li>
 <li><p>Pythonic - easily extendable in your favourite programming language</p></li>
 </ul>
+<a class="reference internal image-reference" href="_images/aime_api_architecture.png"><img alt="_images/aime_api_architecture.png" src="_images/aime_api_architecture.png" style="width: 800px;" /></a>
 </section>
 
 

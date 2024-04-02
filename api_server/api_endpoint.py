@@ -11,7 +11,7 @@ import asyncio
 
 import time
 from pathlib import Path
-
+import toml
 
 from .job_queue import JobState
 from .utils import StaticRouteHandler, shorten_strings, generate_auth_key, calculate_estimate_time, InputValidationHandler
@@ -26,73 +26,145 @@ class APIEndpoint():
 
     Args:
         app (APIServer): Instance of APIServer()
-        title (str): Endpoint title
-        name (str): Endpoint name
-        description (str): Endpoint description
-        client_request_limit (int): Request limit per client
-        provide_worker_meta_data (bool): Whether to send data like worker name to the client
-        http_methods (str): Allowed http methods on this endpoint
-        ep_input_param_config (dict): Input parameter configuration from endpoint config file
-        ep_output_param_config (dict): Output parameter configuration from endpoint config file
-        ep_progress_param_config (dict): Progress parameter configuration from endpoint config file
-        ep_session_param_config (dict): Session parameter configuration from endpoint config file
-        job_type (str): Job type
-        worker_auth_key (str): Allowed worker authentication key
-        static_files (dict): Static routes
-              
+        config_file (str): Endpoint config file path.
     """    
     logger = logging.getLogger('API')
-    def __init__(
-        self,
-        app,
-        title,
-        name,
-        description,
-        http_methods,
-        version,
-        client_request_limit,
-        provide_worker_meta_data,
-        authentication,
-        authorization,
-        authorization_keys,     
-        ep_input_param_config,
-        ep_output_param_config,
-        ep_progress_param_config,
-        ep_session_param_config,
-        job_type, worker_auth_key,
-        static_files,
-        ep_config_file_path
-        ):
-        self.title = title
-        self.endpoint_name = name
-        self.description = description
-        self.client_request_limit = client_request_limit
-        self.provide_worker_meta_data = provide_worker_meta_data
-        self.version = version
-        self.authentication = authentication
-        self.authorization = authorization
-        self.authorization_keys = authorization_keys
-        self.ep_input_param_config = ep_input_param_config
+
+    def __init__(self, app, config_file):
+        self.app = app
+        self.config = self.get_config_from_file(config_file)
+        self.title, self.endpoint_name, self.description, self.http_methods, self.version = self.get_endpoint_description()
+        self.client_request_limit, self.provide_worker_meta_data, self.authentication, self.authorization, self.authorization_keys = self.get_clients_config()
+        self.ep_input_param_config, self.ep_output_param_config, self.ep_progress_param_config, self.ep_session_param_config = self.get_param_config()
         self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
         self.ep_input_param_config['wait_for_result'] = { 'type': 'bool'}     # add implicit input 
-        self.ep_output_param_config = ep_output_param_config
-        self.ep_progress_param_config = ep_progress_param_config
-        self.ep_session_param_config = ep_session_param_config
-        self.ep_config_file_path = ep_config_file_path
-        self.worker_job_type = job_type
-        self.worker_auth_key = worker_auth_key
+        self.worker_job_type, self.worker_auth_key = self.get_worker_params()
         self.registered_client_session_auth_keys = dict()
 
-        app.add_route(self.api_request, "/" + self.endpoint_name, methods=http_methods, name=self.endpoint_name)
-        app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=http_methods, name=self.endpoint_name + "$progress")
-        app.add_route(self.client_login, "/" + self.endpoint_name + "/login", methods=http_methods, name=self.endpoint_name + "$login")
-        self.app = app
-        self.add_server_static_routes(static_files)
+        app.add_route(self.api_request, "/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name)
+        app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=self.http_methods, name=self.endpoint_name + "$progress")
+        app.add_route(self.client_login, "/" + self.endpoint_name + "/login", methods=self.http_methods, name=self.endpoint_name + "$login")
+
+        self.add_static_routes(config_file)
+
+       
+    def get_config_from_file(self, config_file):
+        with open(config_file, 'r') as file:
+            return toml.load(file)
 
 
-    def add_server_static_routes(self, static_files):
-        static_route_handler = StaticRouteHandler(Path(self.ep_config_file_path).parent, self.app, self.endpoint_name)
-        static_route_handler.setup_static_routes(static_files)
+    def add_static_routes(self, config_file):
+        static_files_config = self.config.get('STATIC', {})
+        static_route_handler = StaticRouteHandler(Path(config_file).parent, self.app, self.endpoint_name)
+        static_route_handler.setup_static_routes(static_files_config)
+
+
+    def get_endpoint_description(self):
+        """Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.
+
+        Args:
+            config (dict): Config dictionary
+
+        Returns:
+            tuple (str, str, str, int, list): Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.
+        """
+        ep_config = self.config['ENDPOINT']
+        name = ep_config['name']             
+        title = ep_config.get('title', name)  
+        description = ep_config.get('description', title)
+
+        http_methods = self.get_http_methods(ep_config)
+        version = ep_config.get('version')
+        APIEndpoint.logger.info(f'----------- {title} - {name} {http_methods}')
+        return title, name, description, http_methods, version
+
+
+    def get_clients_config(self):
+        clients_config = self.config.get('CLIENTS', {})
+        if not 'client_request_limit' in clients_config:
+            clients_config['client_request_limit'] = self.app.default_client_request_limit
+
+        if not 'provide_worker_meta_data' in clients_config:
+            clients_config['provide_worker_meta_data'] = self.app.default_provide_worker_meta_data
+
+        if not 'authentication' in clients_config:
+            clients_config['authentication'] = self.app.default_authentication
+
+        if not 'authorization' in clients_config:
+            clients_config['authorization'] = self.app.default_authorization
+
+        if not 'authorization_keys' in clients_config:
+            clients_config['authorization_keys'] = self.app.default_authorization_keys
+
+        return clients_config['client_request_limit'], clients_config['provide_worker_meta_data'], clients_config['authentication'], clients_config['authorization'], clients_config['authorization_keys']
+   
+   
+    def get_http_methods(self, ep_config):
+        """Loads http methods defined in given endpoint config file
+
+        Args:
+            config (dict): Config dictionary
+
+        Returns:
+            list: List of http methods like ['GET', 'POST']
+        """
+        http_methods = ep_config.get('methods', ['GET', 'POST'])
+        for http_method in http_methods:
+            if http_method not in ('GET', 'POST'):
+                APIEndpoint.logger.error("unknown HTTP method: " + http_method)
+        return http_methods
+
+
+    def get_param_config(self):
+        """Parses endpoint input-, output-, progress-, and session-parameter configuration from
+        given endpoint config file.
+
+        Args:
+            config (dict): Config dictionary
+
+        Returns:
+            tuple (dict, dict, dict, dict): Tuple of dictionaries with input-, output-, progress-, 
+                and session-parameter configuration
+        """
+        ep_input_param_config = self.config.get('INPUTS', {})
+        ep_output_param_config = self.config.get('OUTPUTS', {})
+        ep_progress_param_config = self.config.get('PROGRESS', {})
+        ep_session_param_config = self.config.get('SESSION', {}).get(("VARS"), {})
+        self.log_parameter_config('Input', ep_input_param_config)
+        self.log_parameter_config('Output', ep_output_param_config)
+        self.log_parameter_config('Progress output', ep_progress_param_config.get('OUTPUTS', {}), False)
+
+        return ep_input_param_config, ep_output_param_config, ep_progress_param_config, ep_session_param_config
+
+    def log_parameter_config(self, param_type, config, warning=True):
+        APIEndpoint.logger.info(f'{param_type} parameter config:')
+        if config:
+            for param_name, param_value in config.items():
+                APIEndpoint.logger.info(f'{param_name}: {param_value}')
+        else:
+            if warning:
+                APIEndpoint.logger.warning('No configuration found')
+            else:
+                APIEndpoint.logger.info('No configuration found')
+
+
+    def get_worker_params(self):
+        """Parses worker parameters like job type and worker authorization key from endpoint config file.
+
+        Args:
+            config (dict): Config dictionary
+
+        Returns:
+            tuple (str, str): Tuple of job_type and worker_auth_key
+        """
+        worker_config = self.config.get('WORKER', {})
+        job_type = worker_config.get('job_type')    
+        if job_type == None:
+            APIEndpoint.logger.error("No job_type for worker configured!")
+        else:
+            APIEndpoint.logger.info("Worker job type: " + job_type)
+        worker_auth_key = worker_config.get('auth_key')
+        return job_type, worker_auth_key   
 
 
     async def api_request(self, request):
@@ -130,6 +202,7 @@ class APIEndpoint():
             response = await self.finalize_request(request, job_data.get('job_id'), job_future) 
         else:
             response = {'success': True, 'job_id': job_data.get('job_id'), 'ep_version': self.version}
+        APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
         return sanic_json(response)
 
 
@@ -167,7 +240,7 @@ class APIEndpoint():
         response['job_state'] = job_state.value
         if job_state != JobState.DONE:
             response['progress'] = progress_state
-        APIEndpoint.logger.debug(str(shorten_strings(response)))
+        APIEndpoint.logger.debug(f'Progress response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
         return sanic_json(response)
 
 
@@ -181,40 +254,12 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client containing the client session authentication key.
         """
-        user = request.args.get('user', None)
-        key = request.args.get('key', None)
-
-        authorization_error = None
-
-        if self.authentication == 'None':
-            pass
-        elif self.authentication == 'User':
-            if self.authorization == 'None':
-                pass
-            elif self.authorization == 'Key':
-                if user in self.authorization_keys:
-                    if key != self.authorization_keys[user]:
-                        authorization_error = 'authorization failed'
-                else:
-                    authorization_error = 'authentication failed'
-            else:
-                authorization_error = 'unknown authorization method'                
-        else:
-            authorization_error = 'unknown authentication method'
-
-        if authorization_error:
-            response = {
-                'success': False,
-                'error': authorization_error,
-            }
-            return sanic_json(response)
-
         client_session_auth_key = generate_auth_key()
         client_version = request.args.get('version','No version given from client')
-
+        
         self.app.registered_client_sessions[client_session_auth_key] = {self.endpoint_name: 0}
 
-        APIEndpoint.logger.debug(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
+        APIEndpoint.logger.info(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
         response = {
             'success': True, 
             'ep_version': self.version, 
@@ -236,7 +281,7 @@ class APIEndpoint():
 
     def handle_validation_errors(self, validation_errors, error_code=400):
         response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
-        APIEndpoint.logger.debug(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
+        APIEndpoint.logger.warning(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
         return sanic_json(response, status=error_code)
 
 
@@ -279,12 +324,10 @@ class APIEndpoint():
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
                 request.ctx.session[ep_session_param_name] = result[ep_session_param_name]
-        APIEndpoint.logger.debug('job outputs: ')
+
         #--- read job outputs
         for ep_output_param_name in self.ep_output_param_config:
             if ep_output_param_name in result:
-                
-                APIEndpoint.logger.debug(f'{ep_output_param_name}: {shorten_strings(result[ep_output_param_name])}')
                 response[ep_output_param_name] = result[ep_output_param_name]
             else:
                 if ep_output_param_name != 'error':
@@ -325,7 +368,7 @@ class APIEndpoint():
         job_data['job_id'] = self.app.job_queues[self.worker_job_type].get_next_job_id()
         job_data['endpoint_name'] = self.endpoint_name
         job_data['start_time'] = start_time
-        APIEndpoint.logger.debug('Job data: ')
+        APIEndpoint.logger.debug(f'Client request on /{self.endpoint_name} with following input parameter: ')
         APIEndpoint.logger.debug(str(shorten_strings(job_data)))
         return job_data
 
@@ -348,17 +391,15 @@ class APIEndpoint():
     def get_and_validate_progress_data(self, job_id):
         progress_state = self.app.progress_states.get(job_id, {})
         queue = self.app.job_queues.get(self.worker_job_type)
-        ep_progress_output_param_config = self.ep_progress_param_config.get('OUTPUTS')
         if progress_state:
+            
             
             progress_data_validated = dict()
             progress_data = progress_state.get('progress_data', None)
             if progress_data:
-                APIEndpoint.logger.debug('progress outputs: ')
-                for ep_progress_param_name in ep_progress_output_param_config:
-                    if ep_progress_param_name in progress_data:
-                        APIEndpoint.logger.debug(f'{ep_progress_param_name}: {shorten_strings(progress_data[ep_progress_param_name])}')
-                        progress_data_validated[ep_progress_param_name] = progress_data[ep_progress_param_name]
+                for ep_progress_output_param_name in self.ep_progress_param_config.get('OUTPUTS'):
+                    if ep_progress_output_param_name in progress_data:
+                        progress_data_validated[ep_progress_output_param_name] = progress_data[ep_progress_output_param_name]
             progress_state['progress_data'] = progress_data_validated
         else:
             progress_state['progress'] = 0

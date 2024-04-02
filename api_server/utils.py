@@ -115,11 +115,22 @@ class StaticRouteHandler:
                 self.setup_scss_route(slug, route)
             else:
                 self.setup_file_route(slug, route)
-            self.log_static_info(slug, compile_type, route.get('path', route.get('file')))
+            self.log_static_info(slug, route)
 
 
-    def log_static_info(self, slug, compile_type, route_path):
-        self.app.logger.info(f'Static: {slug} -> [{compile_type}] {route_path}')
+    def log_static_info(self, slug, route):
+        compile_type = route.get('compile')
+
+        if route.get('compiled_path'):
+            compiled_path = Path(route.get('compiled_path')).resolve()
+        route_path = route.get('path', route.get('file'))
+        if compile_type == 'md':
+            compile_str = f' ({compile_type} files compiled to html in {compiled_path} with css in {Path(route.get("css_file")).resolve()})'
+        elif compile_type == 'scss':
+            compile_str = f' ({compile_type} files compiled to css in {compiled_path})'
+        else:
+            compile_str = ''
+        self.app.logger.info(f'Static: {slug} -> {(self.config_file_path / route_path).resolve()}{compile_str}')
 
 
 
@@ -147,13 +158,16 @@ class InputValidationHandler():
             self.ep_input_param_name = ep_input_param_name
             value = self.validate_required_argument(self.input_args.get(ep_input_param_name))       
             value = self.validate_input_type(value)
-            if isinstance(value, (int, float)):
-                job_data[ep_input_param_name] = self.validate_number(value)
-            elif isinstance(value, str):
-                if self.arg_type == 'string':
-                    job_data[ep_input_param_name] = self.validate_string(value)
-                else:
-                    job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
+            if self.arg_type == 'selection':
+                job_data[ep_input_param_name] = self.validatate_selection_parameter(value)
+            else:
+                if isinstance(value, (int, float)):
+                    job_data[ep_input_param_name] = self.validate_number(value)
+                elif isinstance(value, str):
+                    if self.arg_type == 'string':
+                        job_data[ep_input_param_name] = self.validate_string(value)
+                    else:
+                        job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
         return job_data, self.validation_errors
 
     
@@ -171,9 +185,26 @@ class InputValidationHandler():
                 return self.arg_definition.get('default', None)
         return value
 
+    def validatate_selection_parameter(self, value):
+        if value not in self.arg_definition.get('supported'):
+            if self.arg_definition.get('auto_convert') == True:
+                if self.arg_definition.get('default'):
+                    return self.arg_definition.get('default')
+                elif self.arg_definition.get('supported'):
+                    return self.arg_definition.get('supported')[0]
+            else:
+                self.validation_errors.append(
+                    f'Parameter {self.ep_input_param_name} = {value} not in supported values {self.arg_definition.get("supported")}'
+                    f'\nSet auto_convert = true for {self.ep_input_param_name} in the [INPUT] section of the endpoint config file to avoid this error.\n')
+        else:
+            return value
+
 
     def validate_input_type(self, value):
-        expected_value_type = TYPES_DICT[self.arg_definition.get('type', 'string')]
+        if self.arg_definition.get('type') == 'selection':
+            expected_value_type = type(self.arg_definition.get('default') or self.arg_definition.get('supported')[0])
+        else:
+            expected_value_type = TYPES_DICT[self.arg_definition.get('type', 'string')]
         if value is not None and not isinstance(value, expected_value_type):
             if expected_value_type in (int, float) and isinstance(value, (int, float)):
                 return expected_value_type(value)
@@ -203,6 +234,8 @@ class InputValidationHandler():
                 return max_length
             else:
                 self.validation_errors.append(f'Length of argument {self.ep_input_param_name}={shorten_strings(value)} exceeds the maximum length ({max_length})')
+
+        #self.validate_supported_values(self.ep_input_param_name)
         return value
 
 
@@ -264,7 +297,7 @@ class InputValidationHandler():
             valid_params = dict()
             for param_name, param_value in params.items():
                 param_value = self.validate_supported_values(param_value, param_name)
-                param_value = self.validate_numerical_parameter(param_value, param_name)
+                param_value = self.validate_numerical_attribute(param_value, param_name)
                 valid_params[param_name] = param_value
             return valid_params
 
@@ -480,20 +513,19 @@ class InputValidationHandler():
                 return param_value
 
 
-    def validate_numerical_parameter(self, param_value, param_name):
-        param_value_unchanged = param_value
-        param_value = self.validate_numerical_value(
+    def validate_numerical_attribute(self, param_value, param_name):
+        new_param_value = self.validate_numerical_value(
             param_value,
             f'{self.ep_input_param_name}.{param_name}',
             self.arg_definition.get(param_name)
         )
         
         if self.arg_type == 'audio' or 'image':
-            if param_value_unchanged != param_value:
+            if new_param_value != param_value:
                 self.convert_data = True
                 if param_name in FFMPEG_CMD_DICT:
-                    self.conversion_command += [FFMPEG_CMD_DICT[param_name], str(param_value)]
-        return param_value
+                    self.conversion_command += [FFMPEG_CMD_DICT[param_name], str(new_param_value)]
+        return new_param_value
 
 
     def validate_numerical_value(self, param_value, param_name, definition):
@@ -558,6 +590,30 @@ class InputValidationHandler():
         elif isinstance(param_value, (list, tuple)) and isinstance(align_value, (list, tuple)):
             return [self.convert_to_align_value(element, param_name, element_align_value, min_value, auto_convert) for element, element_align_value in zip(param_value, align_value)]
         return param_value
+
+
+class CustomFormatter(logging.Formatter):
+
+    GREY = '\033[90m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD_RED = '\[\033[1;31m\]'
+    RESET = '\033[0m'
+    GREY = '\033[90m'
+
+    format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+    FORMATS = {
+        logging.DEBUG: GREY + format + RESET,
+        logging.INFO: format,
+        logging.WARNING: YELLOW + format + RESET,
+        logging.ERROR: RED + format + RESET,
+        logging.CRITICAL: BOLD_RED + format + RESET
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt, datefmt = '%Y-%m-%d %H:%M:%S')
+        return formatter.format(record)
 
 
 def make_ffprobe_command(input_source):

@@ -16,19 +16,20 @@ The basic endpoint parameters like its title, name and the http methods are set 
 
 * ``description`` *(str): The full description of the endpoint*
 
-* ``methods`` *(str): The allowed http methods*
+* ``methods`` *(array[str]): The allowed http methods. Available methods:* ``"GET"`` *,* ``"POST"``
 
 * ``version`` *(int): The endpoint version no.*
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [ENDPOINT]
     title = "This is the endpoint title"
     name = "endpoint_name"
     description = "The full description of the endpoint"
-    methods = "GET, POST"
+    methods = [ "GET", "POST" ]
     version = 0
 
 
@@ -45,6 +46,7 @@ The section ``[WORKER]`` deals with worker related parameters.
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [WORKER]
@@ -72,12 +74,15 @@ Configuration concerning the clients like its authorization and authentication. 
   * ``"None"`` *: The client login request has no restrictions*
   * ``"Key"`` *: The client login request has to contain the name of the user (* ``authentication`` *has to be* ``"User"`` *) and the related key listed in* ``authorization_keys``
 
+* ``authorization_keys`` *(dict): Authorized user name - key pairs* ``{ "name" = "key" }``
+
 * ``provide_worker_meta_data`` *(bool): Whether the client receives meta data about the job from the worker.*
 
 * ``client_request_limit`` *(int): The maximum allowed number of requests per client. 0 = not limited*
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [CLIENTS]
@@ -96,7 +101,7 @@ The ``[INPUTS]`` section offers configuration of the following attributes to adj
 
 * ``type`` *(str): The most important attribute. Each input parameter needs at least the specification of its type or the related client request will be rejected by the AIME API Server. 
   Also if the specified type doesn't match the recognized type of the parameter and the attribute* ``auto_convert`` *is not set to* ``true`` *(It's* ``false`` *by default).
-  Available types:* ``"boolean"`` */* ``"bool"`` *,* ``"string"`` */* ``"str"`` *,* ``"integer"`` */* ``"int"`` *,* ``"float"`` *,* ``"image"`` *,* ``"image_list"`` *,* ``"audio"``
+  Available types:* ``"boolean"`` */* ``"bool"`` *,* ``"string"`` */* ``"str"`` *,* ``"integer"`` */* ``"int"`` *,* ``"float"`` *,* ``"selection"`` *,* ``"image"`` *,* ``"image_list"`` *,* ``"audio"``
 
 All parameter types:
 """"""""""""""""""""
@@ -118,6 +123,14 @@ Type ``"string"``:
 
 * ``max_length`` *(int): The maximum allowed length of the string. If* ``auto_convert = true`` *, longer strings will be cut to the* ``max_length`` *value.*
 
+Type ``"selection"``:
+"""""""""""""""""""""
+If there are only certain values supported by the worker, the type ``"selection"`` is the best choice.
+
+* ``supported`` *(array): The array of supported values. If* ``auto_convert = true`` *, different values will be converted to the* ``default`` *value 
+  or the first element of the* ``supported`` *array, if no* ``default`` *value is found.*
+
+
 Types ``"image"``,  ``"image_list"`` and ``"audio"``:
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -126,12 +139,12 @@ Types ``"image"``,  ``"image_list"`` and ``"audio"``:
   * *Available values for the type* ``"audio"`` *:* ``"wav"`` *,* ``"mp3"`` *,* ``"ogg"`` *,* ``"webm"`` *,* ``"mp4"``
   * *Available values for the type* ``"image"`` *or* ``"image_list"`` *:* ``"jpeg"`` *,* ``"jpg"`` *,* ``"png"``
 * ``color_space`` *(str): The color space of images supported by the workers. Available values:* ``"rgb"`` *,* ``"cmyk"`` *,* ``"ycbcr"``
-* ``size`` *(array): The size of images [width, height]*
-* ``sample_rate`` *(int): The sample rate of audio data supported by the workers. Available values:*
-* ``sample_bit_depth`` *(int): The sample bit depth of audio data supported by the workers.*
-* ``audio_bit_rate`` *(int): The audio bit rate in bits/second supported by the workers.*
-* ``channels`` *(int): The number of channels (Mono=1, Stereo=2, etc.) of audio data supported by the workers.*
-* ``duration`` *(int): The duration in seconds of audio data supported by the workers.*
+* ``size`` *(array): The size of images [width, height] in pixel*
+* ``sample_rate`` *(int): The sample rate in Hz of the audio data supported by the workers*
+* ``sample_bit_depth`` *(int): The sample bit depth in bits per sample of audio data supported by the workers*
+* ``audio_bit_rate`` *(int): The audio bit rate in bits/second supported by the workers*
+* ``channels`` *(int): The number of channels (Mono=1, Stereo=2, etc.) of audio data supported by the workers*
+* ``duration`` *(int): The duration in seconds of audio data supported by the workers*
 
 
 Since the attributes of media data need specifications for each attribute seperately, we use nested attributes to do so. That means each attribute above will be configured using the following attributes:
@@ -147,6 +160,7 @@ Since the attributes of media data need specifications for each attribute sepera
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [INPUTS]
@@ -154,12 +168,22 @@ Example:
     float_param = { type = "float", minimum = 0.0, maximum = 10.0, default = 1.0, auto_convert = true }
     string_param = { type = "string", max_length = 200, auto_convert = true }
 
+    selection_string_param.type = "selection"
+    selection_string_param.supported = [ "option_1", "option_2", "option_3" ]
+    selection_string_param.default = "option_2"
+    selection_string_param.auto_convert = true
+
+    selection_int_param.type = "selection"
+    selection_int_param.supported = [ 1, 2, 4, 8, 16 ]
+    selection_int_param.default = 8
+    selection_int_param.auto_convert = true
+
     audio_param.type = "audio"
-    audio_param.format = { supported = [ "mp3", "wav" ], default = "wav", auto_convert = true }
-    audio_param.sample_rate = { supported = [ 16000 ], default = 16000, auto_convert = true }
-    audio_param.sample_bit_depth = { supported = [ 16, 32], default = 16, auto_convert = true }
+    audio_param.format = { supported = [ "mp3", "wav" ], default = "wav", auto_convert = true } # bits per sample
+    audio_param.sample_rate = { supported = [ 16000 ], default = 16000, auto_convert = true } # in Hz
+    audio_param.sample_bit_depth = { supported = [ 16, 32 ], default = 16, auto_convert = true }
     audio_param.audio_bit_rate = { max = 192000, auto_convert = true } # in bits/s
-    audio_param.channels = { supported = [1], default = 1, auto_convert = true }
+    audio_param.channels = { supported = [ 1 ], default = 1, auto_convert = true }
     audio_param.duration = { max = 30, auto_convert = true } # in seconds
 
     image_param.type = "image"
@@ -178,6 +202,7 @@ Similar to the input parameters also the output parameters need to be declared. 
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [OUTPUTS]
@@ -192,6 +217,7 @@ Equivalent to the input and output parameters, the progress parameters need to b
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [PROGRESS]
@@ -226,6 +252,7 @@ In the section ``[STATIC]`` the static routes of your endpoint can be redirected
 
 Example:
 
+.. highlight:: toml
 .. code-block:: toml
 
     [STATIC]
