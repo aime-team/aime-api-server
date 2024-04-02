@@ -6,8 +6,8 @@
 
 |
 
-AIME API Server
-===============
+AIME API Server - The Scalable Model Inference API Server
+=========================================================
 
 .. toctree::
    :maxdepth: 1
