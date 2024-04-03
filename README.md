@@ -84,7 +84,7 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 We recommend creating a virtual environment for local development. Create and activate a virtual environment, like 'venv' with:
 
 ```bash
-python -m venv venv
+python3 -m venv ./venv/bin/activate
 source ./venv/bin/activate
 ```
 
@@ -119,7 +119,7 @@ sudo apt install ffmpeg
 To start the API server run:
 
 ```bash
-python3 run api_server.py [-H HOST] [-p PORT] [-c EP_CONFIG] [--debug]
+python3 run api_server.py [-H HOST] [-p PORT] [-c EP_CONFIG] [--dev]
 ```
 
 The server is booting and loading the example endpoints configurations defined in the "/endpoints" directory.
