@@ -593,21 +593,23 @@ class InputValidationHandler():
 
 
 class CustomFormatter(logging.Formatter):
-    LIGHT_GREY = "\033[0;37m"
-    GREY = '\033[90m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD_RED = '\[\033[1;31m\]'
+    BACKGROUND_AIME_DARK_BLUE = '\033[48;2;35;55;68m'
+    AIME_LIGHT_BLUE ='\033[38;2;0;194;218m'
+    AIME_RED = '\033[38;2;239;104;104m'
+    AIME_BOLD_RED = '\033[1m\033[38;2;239;104;104m'
+    AIME_YELLOW = '\033[38;2;255;188;68m'
+    AIME_LIGHT_GREEN = '\033[38;2;197;229;199m'
     RESET = '\033[0m'
 
+        
 
     desc_format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
     FORMATS = {
-        logging.DEBUG: LIGHT_GREY + desc_format + RESET,
-        logging.INFO: desc_format,
-        logging.WARNING: YELLOW + desc_format + RESET,
-        logging.ERROR: RED + desc_format + RESET,
-        logging.CRITICAL: BOLD_RED + desc_format + RESET
+        logging.DEBUG: AIME_LIGHT_BLUE + desc_format + RESET,
+        logging.INFO: AIME_LIGHT_GREEN + desc_format + RESET,
+        logging.WARNING: AIME_YELLOW + desc_format + RESET,
+        logging.ERROR: AIME_RED + desc_format + RESET,
+        logging.CRITICAL: AIME_BOLD_RED + desc_format + RESET
     }
 
     def __init__(self, no_colour=False):

@@ -62,7 +62,7 @@ class APIServer(Sanic):
         APIServer.args = flags.args
         APIServer.host, APIServer.port = APIServer.get_host_and_port()
         self.configure_logger()
-        super().__init__(api_name, configure_logging=not APIServer.args.no_sanic_logger)      
+        super().__init__(api_name, configure_logging=False)      
         self.init(APIServer.args)
 
 
@@ -520,7 +520,7 @@ class APIServer(Sanic):
 
 
     def create_job_queues(self, app, loop):
-        APIServer.logger.info("--- creating job queues")
+        APIServer.logger.info('--- creating job queues')
         for endpoint in APIServer.endpoints.values():
             job_type = endpoint.worker_job_type
             if not job_type in APIServer.job_queues:
@@ -579,14 +579,18 @@ class APIServer(Sanic):
             stream_handler.setFormatter(formatter)
             APIServer.logger.addHandler(stream_handler)
 
-        sanic_loggers = ('sanic.access', 'sanic.root', 'sanic.error')
+        sanic_loggers = ('sanic.access', 'sanic.root', 'sanic.error') # sanic.access is disabled by default, but can be enabled by setting access_log = true in aime_api_server.cfg 
+        sanic_formatter = CustomFormatter(True)
+        sanic_file_handler = logging.FileHandler(filename='api_server/log_api_server.log', mode='w')
+        sanic_file_handler.setFormatter(sanic_formatter)
+        sanic_stream_handler = logging.StreamHandler()
+        sanic_stream_handler.setFormatter(sanic_formatter)
         for logger_name in sanic_loggers:
             logger = logging.getLogger(logger_name)
-            self.set_logger_level(logger)  # Bugged logger sanic.access: "INFO" messages only appear in "DEBUG" (args.dev = True) mode
-            # But since these INFO messages are redundant and spamming the terminal, thats the desired behaviour
-            logger.addHandler(file_handler) # not working for sanic loggers
+            self.set_logger_level(logger) 
+            logger.addHandler(sanic_file_handler)
             if not APIServer.args.hide_logging:
-                logger.addHandler(stream_handler)
+                logger.addHandler(sanic_stream_handler)
 
 
     def set_logger_level(self, logger):

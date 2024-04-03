@@ -43,10 +43,6 @@ class Flags():
             help='Hide logging in console'
                             )
         parser.add_argument(
-            '--no_sanic_logger', action='store_true', required=False,
-            help='Hide logging in console'
-                            )
-        parser.add_argument(
             '--no_colour', action='store_true', required=False,
             help='No colours in logger'
                             )
