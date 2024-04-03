@@ -52,7 +52,7 @@ napoleon_google_docstring = True
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['../css']
 html_css_files = ['aime_override.css']
-html_logo = '../images/AIME-API_logo.svg'
+html_logo = '../images/AIME-API_logo_claim.svg'
 html_favicon = '../images/AIME-API_logo.svg'
 html_theme_options = {
     'logo_only': True,

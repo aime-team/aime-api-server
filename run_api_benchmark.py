@@ -56,6 +56,7 @@ class BenchmarkApiEndpoint():
         self.model_api.do_api_login()
         
         self.params = self.get_default_values_from_config()
+        self.loop = asyncio.new_event_loop()
         self.semaphore = asyncio.Semaphore(self.args.concurrent_requests)
         self.progress_bar_dict = dict()
         self.title_bar_list = [tqdm(total=0, bar_format='{desc}', leave=False, position=i, colour='red', dynamic_ncols=True) for i in range(HEADER_HEIGHT)]
@@ -141,9 +142,8 @@ class BenchmarkApiEndpoint():
         self.hide_cursor()
         self.print_start_message()
         self.update_worker_and_endpoint_data_in_title()
-        loop = self.get_loop()
-        tasks = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.args.total_requests)]
-        loop.run_forever()
+        _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=self.loop) for _ in range(self.args.total_requests)]
+        self.loop.run_forever()
 
 
     async def progress_callback(self, progress_info, progress_data):
@@ -154,7 +154,8 @@ class BenchmarkApiEndpoint():
             progress_info (dict): Job progress information containing the job_id and the progress state like number of generated tokens so far or percentage.
             progress_data (dict): The already generated content like tokens or interim images.
         """
-        sys.stdout.flush()
+
+
         job_id = progress_info.get('job_id')
         await self.handle_first_batch(progress_info)
         if not self.progress_bar_dict.get(job_id) and progress_info.get('queue_position') == 0:
@@ -184,14 +185,14 @@ class BenchmarkApiEndpoint():
             self.update_title(result)
             
             if self.num_finished_jobs == self.args.total_requests + self.num_jobs_first_batch:
-                self.get_loop().stop()
                 self.print_benchmark_summary_string()
                 self.show_cursor()
                 await self.model_api.close_session()
+                self.loop.stop()
         else:
             print(result)
             self.show_cursor()
-            self.get_loop().stop()
+            self.loop.stop()
             await self.model_api.close_session()
 
     def update_current_running_jobs(self):
@@ -281,21 +282,15 @@ class BenchmarkApiEndpoint():
                         self.jobs_first_batch = {job_id: progress_bar for job_id, progress_bar in self.progress_bar_dict.items() if progress_bar.n}
                         self.num_jobs_first_batch = self.num_current_running_jobs# - self.num_finished_jobs
                 else:
-                    self.get_loop().stop()
+                    self.loop.stop()
                     for progress_bar in self.progress_bar_dict.values():
                         progress_bar.close()
                     self.title_bar_list[6].close()
                     self.title_bar_list[8].close()
                     print('\n\n\n\n\n\n\nFirst batch finished before --time_to_get_first_batch_jobs. Choose a shorter time via command line argument!')
-                    
-                    #if not self.first_batch_jobs_added:    
-                    #    loop = self.get_loop()
-                    #    _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.num_jobs_first_batch)]
-                    #    self.first_batch_jobs_added = True
             else:
                 if not self.first_batch_jobs_added:
-                    loop = self.get_loop()
-                    _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=loop) for _ in range(self.num_jobs_first_batch)]
+                    _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=self.loop) for _ in range(self.num_jobs_first_batch)]
                     self.first_batch_jobs_added = True
                 if self.first_batch and progress_info.get('progress') and job_id not in self.jobs_first_batch.keys(): # If progress_callback of second batch is called before result_callback of first batch
                     self.first_batch = False
@@ -505,9 +500,13 @@ class BenchmarkApiEndpoint():
             f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s\n'
             f'Job parameters:'
         )
+
         for key, value in self.params.items():
             print(f'{key}: {value}')
-        print()
+        if sys.version_info <= (3, 10):
+            print(self.coloured_output(f'WARNING! You are running python version {sys.version}, which is below 3.10. Limiting the concurrent requests with --concurrent_requests only works with version > 3.10', YELLOW))
+        else:
+            print()
 
 
     def get_default_values_from_config(self):
@@ -541,6 +540,9 @@ class BenchmarkApiEndpoint():
     async def do_request_with_semaphore(self):
         """Limiting the concurrent requests using asyncio.Semaphore().
         """
+        if sys.version_info <= (3, 10):
+            self.semaphore = asyncio.Semaphore(self.args.total_requests)
+            
         async with self.semaphore:
             await self.model_api.do_api_request_async(
                 self.params,
@@ -594,6 +596,7 @@ class BenchmarkApiEndpoint():
                 unit_precision = 0
             return unit, self.num_generated_units/100, unit_precision, 100
 
+
     def coloured_output(self, string, colour_tag):
         return colour_tag + str(string) + RESET
 
@@ -601,8 +604,7 @@ class BenchmarkApiEndpoint():
     async def request_error_callback(self, response):
         print(response)
         self.show_cursor()
-        loop = self.get_loop()
-        loop.stop()
+        self.loop.stop()
 
     
     def hide_cursor(self):

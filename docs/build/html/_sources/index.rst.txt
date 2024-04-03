@@ -1,6 +1,7 @@
 .. Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
    This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
 
+<<<<<<< HEAD
 .. image:: ../images/aime_api_banner.png
    :width: 800
 
@@ -8,6 +9,10 @@
 
 AIME API Server
 ===============
+=======
+AIME API Server - The Scalable Model Inference API Server
+=========================================================
+>>>>>>> 1eb400872895ccf2f8548709c0ae1ceda28d92a7
 
 .. toctree::
    :maxdepth: 1

@@ -13,6 +13,10 @@ html, body {
 .wy-side-nav-search > a {
     font-size: 120%;
     padding: 15px 5px;
+    margin-bottom: 0;
+}
+.wy-side-nav-search input[type="text"] {
+    margin-bottom: 0.8em;
 }
 .wy-nav-content {
     height: 100%;
