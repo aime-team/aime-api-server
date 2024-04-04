@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="./">
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -17,14 +17,14 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=486e5634"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=6a14807c"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configuration files documentation" href="configuration/configuration.html" />
-    <link rel="prev" title="AIME API Server" href="index.html" /> 
+    <link rel="prev" title="AIME API Server - The Scalable Model Inference API Server" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -91,11 +91,11 @@
            <div itemprop="articleBody">
              
   <section id="setup-aime-api-server">
-<h1>Setup AIME API Server<a class="headerlink" href="#setup-aime-api-server" title="Link to this heading"></a></h1>
+<h1>Setup AIME API Server<a class="headerlink" href="#setup-aime-api-server" title="Permalink to this heading"></a></h1>
 <section id="setup-the-environment">
-<h2>Setup the environment<a class="headerlink" href="#setup-the-environment" title="Link to this heading"></a></h2>
+<h2>Setup the environment<a class="headerlink" href="#setup-the-environment" title="Permalink to this heading"></a></h2>
 <p>We recommend creating a virtual environment for local development. Create and activate a virtual environment, like ‘venv’ with:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
 <span class="nb">source</span><span class="w"> </span>./venv/bin/activate
 </pre></div>
 </div>
@@ -114,7 +114,7 @@
 </div>
 </section>
 <section id="start-the-api-server">
-<h2>Start the API server<a class="headerlink" href="#start-the-api-server" title="Link to this heading"></a></h2>
+<h2>Start the API server<a class="headerlink" href="#start-the-api-server" title="Permalink to this heading"></a></h2>
 <p>To start the API server run:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>run_api_server.py<span class="w"> </span><span class="o">[</span>-H<span class="w"> </span>HOST<span class="o">]</span><span class="w"> </span><span class="o">[</span>-p<span class="w"> </span>PORT<span class="o">]</span><span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>EP_CONFIG<span class="o">]</span><span class="w"> </span><span class="o">[</span>--dev<span class="o">]</span>
 </pre></div>
@@ -129,7 +129,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">[--dev]</span></code> <em>: Run the server in debug/development mode</em></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">[-wp,</span> <span class="pre">--worker_processes]</span></code> <em>: Number of api server worker processes. Default:</em> <code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">[--hide_logging]</span></code> <em>: Hide logging in console</em></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">[--no_sanic_logger]</span></code> <em>: Hide sanic logger in console</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[--no_colour]</span></code> <em>: No level colours in logger</em></p></li>
 </ul>
 </section>
 </section>
@@ -138,7 +138,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="AIME API Server" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="AIME API Server - The Scalable Model Inference API Server" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="configuration/configuration.html" class="btn btn-neutral float-right" title="Configuration files documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

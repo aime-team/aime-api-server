@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="../">
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -17,9 +17,9 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=486e5634"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=6a14807c"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -101,11 +101,11 @@
            <div itemprop="articleBody">
              
   <section id="server-configuration">
-<h1>Server configuration<a class="headerlink" href="#server-configuration" title="Link to this heading"></a></h1>
-<p>The server configuration file model_api_server.cfg is used to set server related parameters and can be found in the root directory of this repository.
+<h1>Server configuration<a class="headerlink" href="#server-configuration" title="Permalink to this heading"></a></h1>
+<p>The server configuration file model_api_server.cfg is used to set server related parameters and can be found in the root directory of the aime-api-server repository.
 Is it divided to certain sections explained in detail below.</p>
 <section id="basic-server-parameters">
-<h2>Basic Server Parameters<a class="headerlink" href="#basic-server-parameters" title="Link to this heading"></a></h2>
+<h2>Basic Server Parameters<a class="headerlink" href="#basic-server-parameters" title="Permalink to this heading"></a></h2>
 <p>The basic server parameters like its address and the location of the endpoint config files are set in the section [SERVER]:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">port</span></code> <em>(int): The port of the AIME API Server</em></p></li>
@@ -121,7 +121,7 @@ Is it divided to certain sections explained in detail below.</p>
 </div>
 </section>
 <section id="sanic-server-parameters">
-<h2>Sanic Server Parameters<a class="headerlink" href="#sanic-server-parameters" title="Link to this heading"></a></h2>
+<h2>Sanic Server Parameters<a class="headerlink" href="#sanic-server-parameters" title="Permalink to this heading"></a></h2>
 <p>The sanic server parameters like its address and the location of the endpoint config files are set in the section [SANIC]:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">access_log</span></code> <em>(bool): How long to hold a TCP connection open in seconds. Default =</em> <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
@@ -155,7 +155,7 @@ Is it divided to certain sections explained in detail below.</p>
 </div>
 </section>
 <section id="administrator-parameters">
-<h2>Administrator Parameters<a class="headerlink" href="#administrator-parameters" title="Link to this heading"></a></h2>
+<h2>Administrator Parameters<a class="headerlink" href="#administrator-parameters" title="Permalink to this heading"></a></h2>
 <p>The section [ADMIN] deals with administrator backend related settings:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">user</span></code> <em>(str): The name of the administrator</em></p></li>
@@ -169,7 +169,7 @@ Is it divided to certain sections explained in detail below.</p>
 </div>
 </section>
 <section id="worker-parameters">
-<h2>Worker Parameters<a class="headerlink" href="#worker-parameters" title="Link to this heading"></a></h2>
+<h2>Worker Parameters<a class="headerlink" href="#worker-parameters" title="Permalink to this heading"></a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">default_job_timeout</span></code> <em>(int): Default timeout in seconds after the worker will receive the response “no_job”, if no job was offered</em></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">default_auth_key</span></code> <em>(str): The default worker authorization key is used if the endpoint configuration file doesn’t contain the authorization key</em></p></li>
@@ -183,7 +183,7 @@ Is it divided to certain sections explained in detail below.</p>
 </div>
 </section>
 <section id="client-parameters">
-<h2>Client Parameters<a class="headerlink" href="#client-parameters" title="Link to this heading"></a></h2>
+<h2>Client Parameters<a class="headerlink" href="#client-parameters" title="Permalink to this heading"></a></h2>
 <p>Default configuration concerning the clients like its authorization and authentication, if not specified in the endpoint configuration file. To have different behaviour in specific endpoints</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">default_authentication</span></code> <em>(str): Default method for the client login authentication</em></p>
@@ -215,7 +215,7 @@ Is it divided to certain sections explained in detail below.</p>
 </div>
 </section>
 <section id="input-parameters">
-<h2>Input Parameters<a class="headerlink" href="#input-parameters" title="Link to this heading"></a></h2>
+<h2>Input Parameters<a class="headerlink" href="#input-parameters" title="Permalink to this heading"></a></h2>
 <p>Attribute restrictions of certain input parameter types can be set in the section <code class="docutils literal notranslate"><span class="pre">[INPUTS]</span></code>. Be aware that all input parameters of that type having attributes with values not being allowed here will be rejected no matter of the supported values in the endpoint configuration file!</p>
 <p>Example:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[INPUTS]</span>
@@ -225,7 +225,7 @@ Is it divided to certain sections explained in detail below.</p>
 </div>
 </section>
 <section id="static-routes">
-<h2>Static Routes<a class="headerlink" href="#static-routes" title="Link to this heading"></a></h2>
+<h2>Static Routes<a class="headerlink" href="#static-routes" title="Permalink to this heading"></a></h2>
 <p>In the section <code class="docutils literal notranslate"><span class="pre">[STATIC]</span></code> the static routes can be redirected to a desired destination. All destinations here are relative to the location of the configuration file.</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> <em>(str): To redirect a single file</em></p></li>

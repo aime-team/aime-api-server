@@ -5,7 +5,7 @@ Server configuration
 ~~~~~~~~~~~~~~~~~~~~
 
 
-The server configuration file model_api_server.cfg is used to set server related parameters and can be found in the root directory of this repository.
+The server configuration file model_api_server.cfg is used to set server related parameters and can be found in the root directory of the aime-api-server repository.
 Is it divided to certain sections explained in detail below.
 
 Basic Server Parameters

@@ -13,7 +13,7 @@ We recommend creating a virtual environment for local development. Create and ac
 .. highlight:: shell
 .. code-block:: shell
 
-    python -m venv venv
+    python3 -m venv venv
     source ./venv/bin/activate
 
 Download or clone the api server:
@@ -69,5 +69,5 @@ Optional command line parameters:
 
 * ``[--hide_logging]`` *: Hide logging in console*
 
-* ``[--no_sanic_logger]`` *: Hide sanic logger in console*
+* ``[--no_colour]`` *: No level colours in logger*
 
