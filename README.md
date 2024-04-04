@@ -84,7 +84,7 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 We recommend creating a virtual environment for local development. Create and activate a virtual environment, like 'venv' with:
 
 ```bash
-python3 -m venv ./venv/bin/activate
+python3 -m venv venv
 source ./venv/bin/activate
 ```
 
