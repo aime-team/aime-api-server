@@ -193,6 +193,6 @@ We are currently working on sample interfaces for: iOS, Android, Java, PHP, Ruby
 
 For more information about the AIME read our [blog article](https://www.aime.info/blog/en/aime-api-server/) about [AIME API](https://api.aime.info/)
 
-The AIME API is free of charge for AIME customers. Details can be found in the [LICENSE](https://github.com/aime-team/aime-api-server/LICENSE) file. We look forward to hearing from you regarding collaboration or licensing on other devices: hello@aime.info.
+The AIME API is free of charge for AIME customers. Details can be found in the [LICENSE](https://github.com/aime-team/aime-api-server/blob/main/LICENSE) file. We look forward to hearing from you regarding collaboration or licensing on other devices: hello@aime.info.
 
 Or consult the [AIME API documentation](https://api.aime.info/docs/index.html).
