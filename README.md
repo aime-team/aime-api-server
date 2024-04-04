@@ -48,31 +48,31 @@ To illustrate the usage and capabilities of AIME API we currently run following 
 
 ### LLaMa2 Chat
 
-[![AIME LLaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_banner.png "AIME LLaMa2 Chat Demo")](https://api.aime.info/#llama2-chat)
+[![AIME LLaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_banner.png "AIME LLaMa2 Chat Demo")](https://api.aime.info/llama2-chat/)
 
 Chat with 'Dave', our LLaMa2 based chat-bot.
 
-* AIME Demo Server: [LLama2 Chat](https://api.aime.info/#llama2-chat)
+* AIME Demo Server: [LLama2 Chat](https://api.aime.info/llama2-chat/)
 * Your Local Server: [LLama2 Chat](/llama2-chat/)
 * Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
 
 ### Stable Diffusion XL
 
-[![AIME Stable Diffusion XL Demo](/docs/images/aime_api_demo-sdxl_banner.png "AIME Stable Diffusion XL Demo")](https://api.aime.info/#sdxl-txt2img)
+[![AIME Stable Diffusion XL Demo](/docs/images/aime_api_demo-sdxl_banner.png "AIME Stable Diffusion XL Demo")](https://api.aime.info/sdxl-txt2img/)
 
 Create photo realistic images from text prompts.
 
-* AIME Demo Server: [Stable Diffusion XL](https://api.aime.info/#sdxl-txt2img)
+* AIME Demo Server: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/)
 * Your Local Server: [Stable Diffusion XL](/sdxl-txt2img/)
 * Source: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl)
 
 ### Seamless Communication
 
-[![AIME Seamless Communication Demo](/docs/images/aime_api_demo-seamless-translate_banner.png "AIME Seamless Communication Demo")](https://api.aime.info/#sc-m4tv2)
+[![AIME Seamless Communication Demo](/docs/images/aime_api_demo-seamless-translate_banner.png "AIME Seamless Communication Demo")](https://api.aime.info/sc-m4tv2/)
 
 Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, Text-to-Speech and Speech-to-Speech! 
 
-* AIME Demo Server: [Seamless Communication](https://api.aime.info/#sc-m4tv2)
+* AIME Demo Server: [Seamless Communication](https://api.aime.info/sc-m4tv2/)
 * Your local Server: [Seamless Communication](/sc-m4tv2/)
 * Source: [https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication)
 
