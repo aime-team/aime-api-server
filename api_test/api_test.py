@@ -90,7 +90,6 @@ class ApiTest():
             str(self.args.worker_processes),
             '--dev',
             '--hide_logging',
-            '--no_sanic_logger'
         ]
 
         return subprocess.Popen(command, stdout=subprocess.PIPE)

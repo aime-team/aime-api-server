@@ -280,13 +280,14 @@ class BenchmarkApiEndpoint():
                 if self.first_batch:
                     if self.num_jobs_first_batch < self.num_current_running_jobs:
                         self.jobs_first_batch = {job_id: progress_bar for job_id, progress_bar in self.progress_bar_dict.items() if progress_bar.n}
-                        self.num_jobs_first_batch = self.num_current_running_jobs# - self.num_finished_jobs
+                        self.num_jobs_first_batch = self.num_current_running_jobs
                 else:
-                    self.loop.stop()
+                    
                     for progress_bar in self.progress_bar_dict.values():
                         progress_bar.close()
                     self.title_bar_list[6].close()
                     self.title_bar_list[8].close()
+                    self.loop.stop()
                     print('\n\n\n\n\n\n\nFirst batch finished before --time_to_get_first_batch_jobs. Choose a shorter time via command line argument!')
             else:
                 if not self.first_batch_jobs_added:
@@ -403,9 +404,6 @@ class BenchmarkApiEndpoint():
                 self.last_progress_dict[job_id] = last_progress, time_last_progress
         else:
             self.last_progress_dict[job_id] = current_progress, tic
-        #if (time.time() - progress_bar.start_t) != 0:
-        #    rate = progress_bar.n / (time.time() - progress_bar.start_t)
-        #    self.current_rate_dict[job_id] = rate
 
 
     def get_current_rate_total(self):
@@ -564,15 +562,6 @@ class BenchmarkApiEndpoint():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
         return loop
-
-
-    def process_meta_data(self, result):
-        """Parsing the job result for information about the API server and the workers.
-
-        Args:
-            result (dict): Job result
-        """        
-
 
 
     def get_unit(self):

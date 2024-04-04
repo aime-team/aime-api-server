@@ -56,7 +56,6 @@ class APIServer(Sanic):
 
         Args:
             api_name (str): Name of API server
-            args (argparse.Namespace): Command line arguments parsed with argparse
         """
         flags = Flags()
         APIServer.args = flags.args
