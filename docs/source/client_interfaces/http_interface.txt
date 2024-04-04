@@ -1,7 +1,7 @@
 
 
 
-Example parameter for login request on route /get_client_session_auth_key
+Example parameter for login request on route /login
 
 .. highlight:: python
 .. code-block:: python
@@ -11,7 +11,7 @@ Example parameter for login request on route /get_client_session_auth_key
         'version': 'Client interface version'
     }
 
-Example response json on route /get_client_session_auth_key
+Example response json on route /login
 
 .. highlight:: python
 .. code-block:: python
@@ -28,7 +28,7 @@ Example parameter for http request on route /endpoint
 
     params = {
         'prompt': 'prompt',
-        'client_session_auth_key': 'obtained auth key from /get_client_session_auth_key',
+        'client_session_auth_key': 'obtained auth key from /login',
         'wait_for_result': False
     }
 
@@ -69,7 +69,7 @@ Example parameter for http request on route /endpoint/progress
 .. code-block:: python
 
     params = {
-        'client_session_auth_key': 'obtained auth key from /get_client_session_auth_key', 
+        'client_session_auth_key': 'obtained auth key from /login', 
         'job_id': 'job id obtained from /endpoint'
     }
 
