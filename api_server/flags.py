@@ -44,7 +44,7 @@ class Flags():
                             )
         parser.add_argument(
             '--no_colour', action='store_true', required=False,
-            help='No colours in logger'
+            help='No level colours in logger'
                             )
                             
                             

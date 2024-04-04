@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" data-content_root="../../">
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -17,9 +17,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=486e5634"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=6a14807c"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -104,10 +104,10 @@
            <div itemprop="articleBody">
              
   <section id="documentation-aime-api-javascript-client-interface">
-<h1>Documentation AIME API JavaScript Client Interface<a class="headerlink" href="#documentation-aime-api-javascript-client-interface" title="Link to this heading"></a></h1>
+<h1>Documentation AIME API JavaScript Client Interface<a class="headerlink" href="#documentation-aime-api-javascript-client-interface" title="Permalink to this heading"></a></h1>
 <dl class="js class">
 <dt class="sig sig-object js" id="ModelAPI">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">ModelAPI</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpointName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultProgressIntervall=300</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">ModelAPI</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpointName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultProgressIntervall=300</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI" title="Permalink to this definition"></a></dt>
 <dd><p>Class for communication with the AIME Model API.</p>
 <p>Constructor of the class.</p>
 <dl class="field-list simple">
@@ -122,7 +122,7 @@
 </dl>
 <dl class="js function">
 <dt class="sig sig-object js" id="ModelAPI.doAPILogin">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doAPILogin</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resultCallback=null</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user=&quot;null&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key=null</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.doAPILogin" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doAPILogin</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resultCallback=null</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user=&quot;null&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key=null</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.doAPILogin" title="Permalink to this definition"></a></dt>
 <dd><p>Method for API login.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments<span class="colon">:</span></dt>
@@ -137,7 +137,7 @@
 
 <dl class="js function">
 <dt class="sig sig-object js" id="ModelAPI.doAPIRequest">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doAPIRequest</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resultCallback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressCallback=null</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressStream=false</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.doAPIRequest" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doAPIRequest</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resultCallback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressCallback=null</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressStream=false</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.doAPIRequest" title="Permalink to this definition"></a></dt>
 <dd><p>Method for API requests with options for progress updates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments<span class="colon">:</span></dt>
@@ -153,7 +153,7 @@
 
 <dl class="js function">
 <dt class="sig sig-object js" id="ModelAPI.fetchAsync">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">fetchAsync</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doPost=true</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.fetchAsync" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">fetchAsync</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doPost=true</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.fetchAsync" title="Permalink to this definition"></a></dt>
 <dd><p>Method for asynchronous HTTP requests (GET and POST).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments<span class="colon">:</span></dt>
@@ -171,7 +171,7 @@
 
 <dl class="js function">
 <dt class="sig sig-object js" id="ModelAPI.fetchAuthKey">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">fetchAuthKey</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpointName</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.fetchAuthKey" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">fetchAuthKey</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpointName</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.fetchAuthKey" title="Permalink to this definition"></a></dt>
 <dd><p>Method for retrieving the authentication key.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments<span class="colon">:</span></dt>
@@ -187,7 +187,7 @@
 
 <dl class="js function">
 <dt class="sig sig-object js" id="ModelAPI.pollProgress">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">pollProgress</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resultCallback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressCallback</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.pollProgress" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">pollProgress</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resultCallback</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressCallback</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.pollProgress" title="Permalink to this definition"></a></dt>
 <dd><p>Method for polling progress updates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments<span class="colon">:</span></dt>
@@ -203,7 +203,7 @@
 
 <dl class="js function">
 <dt class="sig sig-object js" id="ModelAPI.setupProgressStream">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">setupProgressStream</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jobID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressCallback</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.setupProgressStream" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">setupProgressStream</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jobID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressCallback</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.setupProgressStream" title="Permalink to this definition"></a></dt>
 <dd><p>Method to set up a progress stream.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments<span class="colon">:</span></dt>
