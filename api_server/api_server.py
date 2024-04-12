@@ -43,6 +43,7 @@ class APIServer(Sanic):
     registered_client_sessions = {} # key: client_session_auth_key
     args = None
     static_routes = {}
+    worker_config = {}
     input_type_config = {}
     default_authentification = "None"
     default_authorization = "None"
@@ -315,6 +316,7 @@ class APIServer(Sanic):
             self.args.ep_config = server_config.get('SERVER').get('endpoint_configs', './endpoints')
         APIServer.input_type_config = server_config.get('INPUTS', {})
         APIServer.static_routes = server_config.get('STATIC', {})
+        APIServer.worker_config = server_config.get('WORKERS', {})
 
 
     def set_server_clients_config(self, server_config):

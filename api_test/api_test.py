@@ -500,7 +500,25 @@ class ApiTest():
         asyncio.run(self.run_async_model_invalid_url_test())
         report += f'Async login request using the ModelAPI class on invalid url {invalid_url} raised ConnectionError as supposed.\n'
 
+        
+        with pytest.raises(ConnectionError) as excinfo:
+            model_api_wrong_key = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0])
+            result = model_api_wrong_key.do_api_login('aime', 'wrong key')
+            assert excinfo, f'Test for sync login request on model_api with invalid key \'wrong key\' didn\'t raise ConnectionError\nResults: {result}'
+        report += f'Sync login request using the ModelAPI class with invalid key \'wrong key\' raised ConnectionError as supposed.\n'
+
+        asyncio.run(self.run_async_login_with_invalid_key_test())
+        report += f'Async login request using the ModelAPI class with invalid key \'wrong key\' raised ConnectionError as supposed.\n'
+        
         return True, report
+
+
+    async def run_async_login_with_invalid_key_test(self):
+        with pytest.raises(ConnectionError) as excinfo:  
+            model_api_wrong_key = ModelAPI(f'http://{self.args.host}:{self.args.port}', self.endpoint_names[0])
+            result = await model_api_wrong_key.do_api_login_async('aime', 'wrong key')
+            assert excinfo, f'Test for async login request on model_api with invalid key \'wrong key\'  didn\'t raise ConnectionError\nResults: {result}'
+        await model_api_wrong_key.close_session() 
 
 
     async def run_async_model_invalid_url_test(self):

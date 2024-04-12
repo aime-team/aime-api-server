@@ -95,7 +95,6 @@ class APIEndpoint():
 
         if not 'authorization_keys' in clients_config:
             clients_config['authorization_keys'] = self.app.default_authorization_keys
-
         return clients_config['client_request_limit'], clients_config['provide_worker_meta_data'], clients_config['authentication'], clients_config['authorization'], clients_config['authorization_keys']
    
    
@@ -163,7 +162,7 @@ class APIEndpoint():
             APIEndpoint.logger.error("No job_type for worker configured!")
         else:
             APIEndpoint.logger.info("Worker job type: " + job_type)
-        worker_auth_key = worker_config.get('auth_key')
+        worker_auth_key = worker_config.get('auth_key', self.app.worker_config.get('default_auth_key'))
         return job_type, worker_auth_key   
 
 
@@ -247,23 +246,52 @@ class APIEndpoint():
     async def client_login(self, request):
         """Route for client interface to login to the API Server while receiving a client session 
         authentication key.
-
         Args:
             request (sanic.request.types.Request): Request from client.
-
         Returns:
             sanic.response.types.JSONResponse: Response to client containing the client session authentication key.
         """
+        user = request.args.get('user', None)
+        key = request.args.get('key', None)
+
+        authorization_error = None
+
+        if self.authentication == 'None':
+            pass
+        elif self.authentication == 'User':
+            if self.authorization == 'None':
+                pass
+            elif self.authorization == 'Key':
+                if user in self.authorization_keys:
+                    if key != self.authorization_keys[user]:
+                        authorization_error = 'authorization failed'
+                else:
+                    authorization_error = 'authentication failed'
+            else:
+                authorization_error = 'unknown authorization method'                
+        else:
+            authorization_error = 'unknown authentication method'
+
+        if authorization_error:
+            response = {
+                'success': False,
+                'error': authorization_error,
+            }
+            return sanic_json(response)
+
         client_session_auth_key = generate_auth_key()
         client_version = request.args.get('version','No version given from client')
-        
+
         self.app.registered_client_sessions[client_session_auth_key] = {self.endpoint_name: 0}
 
-        APIEndpoint.logger.info(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
+        APIEndpoint.logger.debug(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
         response = {
             'success': True, 
             'ep_version': self.version, 
-            'client_session_auth_key': client_session_auth_key
+            'client_session_auth_key': client_session_auth_key,
+            'user': user,
+            'key': key
+
         }
         return sanic_json(response)
 
@@ -391,9 +419,7 @@ class APIEndpoint():
     def get_and_validate_progress_data(self, job_id):
         progress_state = self.app.progress_states.get(job_id, {})
         queue = self.app.job_queues.get(self.worker_job_type)
-        if progress_state:
-            
-            
+        if progress_state:          
             progress_data_validated = dict()
             progress_data = progress_state.get('progress_data', None)
             if progress_data:
