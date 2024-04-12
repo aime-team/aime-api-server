@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -17,9 +17,9 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=6a14807c"></script>
+        <script src="../_static/documentation_options.js?v=486e5634"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -73,8 +73,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.print_start_message"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.print_start_message()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.get_default_values_from_config"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.get_default_values_from_config()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.do_request_with_semaphore"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.do_request_with_semaphore()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.get_loop"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.get_loop()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.process_meta_data"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.process_meta_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.get_unit"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.get_unit()</span></code></a></li>
 </ul>
 </li>
@@ -117,14 +115,14 @@
            <div itemprop="articleBody">
              
   <section id="documentation-aime-api-benchmark">
-<h1>Documentation AIME API Benchmark<a class="headerlink" href="#documentation-aime-api-benchmark" title="Permalink to this heading"></a></h1>
+<h1>Documentation AIME API Benchmark<a class="headerlink" href="#documentation-aime-api-benchmark" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">run_api_benchmark.</span></span><span class="sig-name descname"><span class="pre">BenchmarkApiEndpoint</span></span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">run_api_benchmark.</span></span><span class="sig-name descname"><span class="pre">BenchmarkApiEndpoint</span></span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint" title="Link to this definition"></a></dt>
 <dd><p>Benchmark tool to measure and monitor the performance of GPUs with multiple asynchronous requests on llama2_chat and stable_diffusion_xl_txt2img endpoints.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.load_flags">
-<span class="sig-name descname"><span class="pre">load_flags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.load_flags" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">load_flags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.load_flags" title="Link to this definition"></a></dt>
 <dd><p>Parsing the command line arguments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -138,13 +136,13 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.run" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.run" title="Link to this definition"></a></dt>
 <dd><p>Starting the benchmark.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.progress_callback">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">progress_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.progress_callback" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">progress_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.progress_callback" title="Link to this definition"></a></dt>
 <dd><p>Called when job progress is received from the API Server. Initializes or updates the job related progress bar,
 updates the title and measures the number of current running jobs.</p>
 <dl class="field-list simple">
@@ -159,7 +157,7 @@ updates the title and measures the number of current running jobs.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.result_callback">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">result_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.result_callback" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">result_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.result_callback" title="Link to this definition"></a></dt>
 <dd><p>Called when the final job result is received. Removes the job related progress bar, processes information
 about the server and the worker and updates the title.</p>
 <dl class="field-list simple">
@@ -171,19 +169,19 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.print_benchmark_summary_string">
-<span class="sig-name descname"><span class="pre">print_benchmark_summary_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.print_benchmark_summary_string" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">print_benchmark_summary_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.print_benchmark_summary_string" title="Link to this definition"></a></dt>
 <dd><p>Printing the benchmark summary and the results.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_table_title">
-<span class="sig-name descname"><span class="pre">update_table_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_table_title" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_table_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_table_title" title="Link to this definition"></a></dt>
 <dd><p>Setting the column descriptions and adjusting the position of the table title bar for the progress bar table.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.init_progress_bar">
-<span class="sig-name descname"><span class="pre">init_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.init_progress_bar" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.init_progress_bar" title="Link to this definition"></a></dt>
 <dd><p>Initializing the progress bar of the job with the given job ID.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -194,7 +192,7 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.handle_first_batch">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle_first_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.handle_first_batch" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle_first_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.handle_first_batch" title="Link to this definition"></a></dt>
 <dd><p>Detecting the jobs of the first batch to exclude them from the benchmark results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -205,19 +203,19 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_title">
-<span class="sig-name descname"><span class="pre">update_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_title" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_title" title="Link to this definition"></a></dt>
 <dd><p>Updating the title bars for the header containing information about the benchmark.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_worker_and_endpoint_data_in_title">
-<span class="sig-name descname"><span class="pre">update_worker_and_endpoint_data_in_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_worker_and_endpoint_data_in_title" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_worker_and_endpoint_data_in_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_worker_and_endpoint_data_in_title" title="Link to this definition"></a></dt>
 <dd><p>Updating the title bars with information about the API server and the workers.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_progress_bar">
-<span class="sig-name descname"><span class="pre">update_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_progress_bar" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_progress_bar" title="Link to this definition"></a></dt>
 <dd><p>Updating the related progress bar with the given progress state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -228,7 +226,7 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.make_benchmark_result_string">
-<span class="sig-name descname"><span class="pre">make_benchmark_result_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.make_benchmark_result_string" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">make_benchmark_result_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.make_benchmark_result_string" title="Link to this definition"></a></dt>
 <dd><p>Making string containing mean benchmark results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -242,7 +240,7 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.remove_progress_bar">
-<span class="sig-name descname"><span class="pre">remove_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.remove_progress_bar" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">remove_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.remove_progress_bar" title="Link to this definition"></a></dt>
 <dd><p>Removing the progress bar of finished jobs with the given job id.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -253,7 +251,7 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.remove_empty_line">
-<span class="sig-name descname"><span class="pre">remove_empty_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.remove_empty_line" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">remove_empty_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.remove_empty_line" title="Link to this definition"></a></dt>
 <dd><p>Shifting all progress bars below the given position up by one position to remove empty lines of finished jobs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -264,13 +262,13 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.print_start_message">
-<span class="sig-name descname"><span class="pre">print_start_message</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.print_start_message" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">print_start_message</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.print_start_message" title="Link to this definition"></a></dt>
 <dd><p>Printing benchmark parameters at the start.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.get_default_values_from_config">
-<span class="sig-name descname"><span class="pre">get_default_values_from_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.get_default_values_from_config" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_default_values_from_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.get_default_values_from_config" title="Link to this definition"></a></dt>
 <dd><p>Parsing the default job parameters from the related endpoint config file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -284,38 +282,13 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.do_request_with_semaphore">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">do_request_with_semaphore</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.do_request_with_semaphore" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">do_request_with_semaphore</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.do_request_with_semaphore" title="Link to this definition"></a></dt>
 <dd><p>Limiting the concurrent requests using asyncio.Semaphore().</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.get_loop">
-<span class="sig-name descname"><span class="pre">get_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.get_loop" title="Permalink to this definition"></a></dt>
-<dd><p>Getting either the running loop or create a new one if there is none.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The event loop handling asynchronous processes.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>asyncio.unix_events._UnixSelectorEventLoop</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.process_meta_data">
-<span class="sig-name descname"><span class="pre">process_meta_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.process_meta_data" title="Permalink to this definition"></a></dt>
-<dd><p>Parsing the job result for information about the API server and the workers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>result</strong> (<em>dict</em>) – Job result</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.get_unit">
-<span class="sig-name descname"><span class="pre">get_unit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.get_unit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_unit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.get_unit" title="Link to this definition"></a></dt>
 <dd><p>Getting the unit of the generated objects like ‘tokens’ for llama2_chat and ‘images’ image generators.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
