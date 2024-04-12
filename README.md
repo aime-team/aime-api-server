@@ -4,7 +4,7 @@ Title: AIME API Server
 
 ![AIME API Server](/docs/images/aime_api_banner.png "AIME API Server")
 
-# AIME API Server - The Scalable Model Inference API Server
+# AIME API Server - The Scalable AI Model Inference API Server
 
 With AIME API one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.
 
