@@ -3,9 +3,9 @@
 // This software may be used and distributed according to the terms of the MIT LICENSE
 
 const API_USER = 'aime'
-const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
+const API_KEY = '3a17e2a5b70603cb1a3294b4a1df67da'
 
-modelAPI = new ModelAPI('llama2_chat', API_USER, API_KEY);
+modelAPI = new ModelAPI('llama3_chat', API_USER, API_KEY);
 
 var inputContext = 'A dialog, where User interacts with an helpful, kind, obedient, honest and very reasonable assistant called Dave.\n';
 let readyToSendRequest = true;
