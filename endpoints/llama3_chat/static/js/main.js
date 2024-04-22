@@ -7,7 +7,7 @@ const API_KEY = '3a17e2a5b70603cb1a3294b4a1df67da'
 
 modelAPI = new ModelAPI('llama3_chat', API_USER, API_KEY);
 
-var inputContext = 'A dialog, where User interacts with an helpful, kind, obedient, honest and very reasonable assistant called Dave.\n';
+var inputContext = 'A dialog, where User interacts with an helpful, kind, obedient, honest and very reasonable assistant called Steve.\n';
 let readyToSendRequest = true;
 let chatboxContentEl;
 let infoBox;
@@ -162,7 +162,7 @@ function onButtonClick() {
         infoBox.textContent = 'Request sent.\nWaiting for response...';
 
         currentContext = getChatboxContext();
-        currentContext += 'User: ' + chatInput.value + '\nDave:';
+        currentContext += 'User: ' + chatInput.value + '\nSteve:';
         console.log('currentContext:'+ currentContext);
 
         onSendAPIRequest();
@@ -186,7 +186,7 @@ function onButtonClick() {
             <div class="flex items-start gap-2.5">
                 <div class="flex flex-col gap-1 w-full max-w-[320px]">
                     <div class="flex items-center justify-between rtl:justify-end space-x-2">
-                        <span class="text-sm font-semibold text-white">${isResponse ? 'User: ' : 'Dave: '}</span>
+                        <span class="text-sm font-semibold text-white">${isResponse ? 'User: ' : 'Steve: '}</span>
                         <span class="overlook text-xs font-normal text-gray-500 text-gray-400 ml-auto">${localISOTime.match(/\d\d:\d\d/)}</span>
                     </div>
                     <div class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-600 rounded-xl ${isResponse ? 'rounded-br-none' : 'rounded-tl-none'}">
@@ -331,7 +331,7 @@ docReady(function() {
   infoBox = document.getElementById('info_box');
 
   document.getElementById('input-context').textContent = inputContext;
-  addChatboxBubble('Hello, Dave.', '', true);
+  addChatboxBubble('Hello, Steve.', '', true);
   addChatboxBubble('How can I assist you today?', '');
 
   const tabButtons = document.querySelectorAll('.tab-button');
