@@ -7,7 +7,7 @@ const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
 
 modelAPI = new ModelAPI('llama2_chat', API_USER, API_KEY);
 
-var inputContext = 'A dialog, where User interacts with an helpful, kind, obedient, honest and very reasonable assistant called Dave.\n';
+var inputContext = 'A dialog, where User interacts with a helpful, kind, obedient, honest and very reasonable assistant called Dave.\n';
 let readyToSendRequest = true;
 let chatboxContentEl;
 let infoBox;
