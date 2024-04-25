@@ -119,9 +119,12 @@ class BenchmarkApiEndpoint():
         if not args.config_file:
             if args.endpoint_name == 'sdxl_txt2img':
                 args.endpoint_name = 'stable_diffusion_xl_txt2img'
-            if args.endpoint_name == 'stable_diffusion_xl_txt2img':
+            elif args.endpoint_name == 'stable_diffusion_xl_txt2img':
                 args.config_file = 'endpoints/stable_diffusion_xl/txt2img/aime_api_endpoint.cfg'
             elif args.endpoint_name == 'llama2_chat':
+                args.num_units = 480
+                args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
+            elif args.endpoint_name == 'llama3_chat':
                 args.num_units = 480
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
         return args
@@ -420,7 +423,7 @@ class BenchmarkApiEndpoint():
         Returns:
             str: The unit string of the generated objects
         """
-        if args.endpoint_name == 'llama2_chat':
+        if args.endpoint_name in ['llama2_chat', 'llama3_chat']:
             return 'tokens', 1, 0    
         else:
             if args.unit:
@@ -549,7 +552,7 @@ class ProgressBarHandler():
         if current_progress_bar:
             self.positions.update(self.current_jobs)
             current_progress = progress_info.get('progress')
-            if self.args.endpoint_name == 'llama2_chat':
+            if self.args.endpoint_name in ['llama2_chat', 'llama3_chat']:
                 if self.num_generated_units < current_progress:
                     current_progress_bar.total = current_progress
                 else:
