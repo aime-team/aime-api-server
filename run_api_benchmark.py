@@ -125,7 +125,7 @@ class BenchmarkApiEndpoint():
                 args.num_units = 480
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
             elif args.endpoint_name == 'llama3_chat':
-                args.num_units = 480
+                args.num_units = 1024
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
         return args
 
