@@ -46,11 +46,21 @@ Clients, like web browsers, smartphones, desktop apps can easily integrating mod
 
 To illustrate the usage and capabilities of AIME API we currently run following GenAI (generative AI) demo api services:
 
-### LLaMa2 Chat
+### LlaMa3 Chat
 
-[![AIME LLaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_banner.png "AIME LLaMa2 Chat Demo")](https://api.aime.info/llama2-chat/)
+[![AIME LlaMa3 Chat Demo](/docs/images/aime_api_demo-llm3-chat_banner.png "AIME LlaMa3 Chat Demo")](https://api.aime.info/llama3-chat/)
 
-Chat with 'Dave', our LLaMa2 based chat-bot.
+Chat with 'Steve', our LlaMa 3 based chat-bot.
+
+* AIME Demo Server: [LLama3 Chat](https://api.aime.info/llama3-chat/)
+* Your Local Server: [LLama3 Chat](/llama3-chat/)
+* Source: [https://github.com/aime-labs/llama3_chat](https://github.com/aime-labs/llama3_chat)
+
+### LlaMa2 Chat
+
+[![AIME LlaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_banner.png "AIME LlaMa2 Chat Demo")](https://api.aime.info/llama2-chat/)
+
+Chat with 'Dave', our LlaMa2 based chat-bot.
 
 * AIME Demo Server: [LLama2 Chat](https://api.aime.info/llama2-chat/)
 * Your Local Server: [LLama2 Chat](/llama2-chat/)
@@ -135,7 +145,7 @@ You can easily turn your existing Pytorch and Tensorflow script into an API comp
 
 Following example workers implementations are available as open source, which easily can be be adapted to similair use cases:
 
-### How to run a LLaMa2 Chat Worker (Large Language Model Chat)
+### How to run a LlaMa2 Chat Worker (Large Language Model Chat)
 
 [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
 
@@ -153,7 +163,7 @@ Following example workers implementations are available as open source, which ea
 
 ### Javascript
 
-Simple single call example for an AIME API Server request on endpoint LLaMa 2 with Javascript:
+Simple single call example for an AIME API Server request on endpoint LlaMa 2 with Javascript:
 
 ```html
 
@@ -173,7 +183,7 @@ doAPIRequest('llama2_chat', params, onResultCallback);
 
 ### Python
 
-Simple synchronous single call example for an AIME API Server request on endpoint LLaMa 2 with Python:
+Simple synchronous single call example for an AIME API Server request on endpoint LlaMa 2 with Python:
 
 ```python
 

@@ -5,9 +5,9 @@
 const API_USER = 'aime'
 const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
 
-modelAPI = new ModelAPI('llama2_chat', API_USER, API_KEY);
+modelAPI = new ModelAPI('llama3_chat', API_USER, API_KEY);
 
-var inputContext = 'A dialog, where User interacts with a helpful, kind, obedient, honest and very reasonable assistant called Dave.\n';
+var inputContext = 'A dialog, where User interacts with a helpful, kind, obedient, honest and very reasonable assistant called Steve.\n';
 let readyToSendRequest = true;
 let chatboxContentEl;
 let infoBox;
@@ -43,21 +43,21 @@ function onProgressCallback(progressInfo, progressData) {
 };
 
 function onResultCallback(data) {
-    if (data.error) {
-        if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-            modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
-                infoBox.textContent = 'Login Error: ' + error + '\n';
-                enableSendButton();
-            });
-        }
-        else {
-            infoBox.textContent = 'Error: ' + data.error + '\n';
-            enableSendButton();
-        }
-    }
+  if (data.error) {
+      if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
+          modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
+            infoBox.textContent = 'Login Error: ' + error + '\n';
+            enableSendButton();                                 
+          });
+      }
+      else {
+          infoBox.textContent = 'Error: ' + data.error + '\n';
+          enableSendButton();
+      }
+  }
 	else {
-
-        enableSendButton();
+    enableSendButton();
+        
 		if (data.total_duration) { 			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n'; }
 		if (data.compute_duration) { 		infoBox.textContent += 'Compute duration: ' + data.compute_duration + 's' + '\n'; }
 		if (data.num_generated_tokens) { 	infoBox.textContent += 'Generated tokens: ' + data.num_generated_tokens + '\n'; }
@@ -162,7 +162,7 @@ function onButtonClick() {
         infoBox.textContent = 'Request sent.\nWaiting for response...';
 
         currentContext = getChatboxContext();
-        currentContext += 'User: ' + chatInput.value + '\nDave:';
+        currentContext += 'User: ' + chatInput.value + '\nSteve:';
         console.log('currentContext:'+ currentContext);
 
         onSendAPIRequest();
@@ -175,7 +175,7 @@ function onButtonClick() {
     }
  }
 
-function addChatboxBubble(chatText, infoDetails, isResponse = false) {
+ function addChatboxBubble(chatText, infoDetails, isResponse = false) {
     var chatBubbleEl = document.createElement('div');
     chatBubbleEl.className = 'flex items-start gap-2.5 mb-5';
 
@@ -186,7 +186,7 @@ function addChatboxBubble(chatText, infoDetails, isResponse = false) {
             <div class="flex items-start gap-2.5">
                 <div class="flex flex-col gap-1 w-full max-w-[320px]">
                     <div class="flex items-center justify-between rtl:justify-end space-x-2">
-                        <span class="text-sm font-semibold text-white">${isResponse ? 'User: ' : 'Dave: '}</span>
+                        <span class="text-sm font-semibold text-white">${isResponse ? 'User: ' : 'Steve: '}</span>
                         <span class="overlook text-xs font-normal text-gray-500 text-gray-400 ml-auto">${localISOTime.match(/\d\d:\d\d/)}</span>
                     </div>
                     <div class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-600 rounded-xl ${isResponse ? 'rounded-br-none' : 'rounded-tl-none'}">
@@ -208,9 +208,9 @@ function addChatboxBubble(chatText, infoDetails, isResponse = false) {
     });
 
     chatboxContentEl.append(chatBubbleEl);
-}
+ }
 
-function addResponseBubble() {
+ function addResponseBubble() {
     addChatboxBubble('...', 'Waiting for response...');
     var latestBubble = document.getElementsByClassName('latest-bubble-text');
     if (latestBubble.length > 0) {
@@ -224,7 +224,7 @@ function addResponseBubble() {
     }
  }
 
-function refreshResponseBubble(responseText, responseInfo) {
+ function refreshResponseBubble(responseText, responseInfo) {
     if(responseText && responseText != '') {
         var latestBubbleText = document.getElementsByClassName('latest-bubble-text');
         if (latestBubbleText.length > 0) {
@@ -239,7 +239,7 @@ function refreshResponseBubble(responseText, responseInfo) {
     }
 }
 
-function getChatboxContext() {
+ function getChatboxContext() {
     const chatboxContent = document.getElementById('chatbox');
     const getTextFromElement = (element) => {
         let text = '';
@@ -260,7 +260,7 @@ function getChatboxContext() {
     }
     const resultText = getTextFromElement(chatboxContent).replace(/\\n\s*|\n\s*/g, '\n');
     return resultText;
-}
+ }
 
 function handleKeyPress(event) {
     if (event.keyCode === 13) {
@@ -279,90 +279,90 @@ function docReady(fn) {
 
 
 docReady(function() {
-    // Styling with Tailwind CSS
-    tailwind.config = {
-        'theme': {
-            'screens': {
-                'xs': '475px',
-                'sm': '640',
-                'md': '768px',
-                'lg': '1024px',
-                'xl': '1280px',
-                '2xl': '1536px'
-            },
-            'extend': {
-                'colors': {
-                    'aime_blue': '#4FBFD7',
-                    'aime_darkblue': '#263743',
-                    'aime_orange': '#F6BE5C',
-                    'aime_green': '#CBE4C9',
-                    'aime_lightgreen': '#f2f6f2'
+  // Styling with Tailwind CSS
+  tailwind.config = {
+      'theme': {
+          'screens': {
+              'xs': '475px',
+              'sm': '640',
+              'md': '768px',
+              'lg': '1024px',
+              'xl': '1280px',
+              '2xl': '1536px'
+          },
+          'extend': {
+              'colors': {
+                  'aime_blue': '#4FBFD7',
+                  'aime_darkblue': '#263743',
+                  'aime_orange': '#F6BE5C',
+                  'aime_green': '#CBE4C9',
+                  'aime_lightgreen': '#f2f6f2'
+              },
+              'gradientColorStopPositions': {
+                  33: '33%',
                 },
-                'gradientColorStopPositions': {
-                    33: '33%',
-                    },
-                'keyframes': {
-                    'blink': {
-                    '0%, 100%': { 'opacity': 0.8 },
-                    '50%': { 'opacity': 0.3 },
-                    },
-                    'blinkDelay-1': {
-                        '0%, 100%': { 'opacity': 0.8 },
-                        '50%': { 'opacity': 0.3 },
-                    },
-                    'blinkDelay-2': {
-                        '0%, 100%': { 'opacity': 0.8 },
-                        '50%': { 'opacity': 0.3 },
-                    },
-                },
-                'animation': {
-                    'blink': 'blink 1s infinite ease-in-out',
-                    'blinkDelay-1': 'blinkDelay-1 1s infinite ease-in-out 0.3333s',
-                    'blinkDelay-2': 'blinkDelay-2 1s infinite ease-in-out 0.6666s',
-                },
-            }
-        }
-    };
-    hljs.highlightAll();
+              'keyframes': {
+                  'blink': {
+                  '0%, 100%': { 'opacity': 0.8 },
+                  '50%': { 'opacity': 0.3 },
+                  },
+                  'blinkDelay-1': {
+                      '0%, 100%': { 'opacity': 0.8 },
+                      '50%': { 'opacity': 0.3 },
+                  },
+                  'blinkDelay-2': {
+                      '0%, 100%': { 'opacity': 0.8 },
+                      '50%': { 'opacity': 0.3 },
+                  },
+              },
+              'animation': {
+                  'blink': 'blink 1s infinite ease-in-out',
+                  'blinkDelay-1': 'blinkDelay-1 1s infinite ease-in-out 0.3333s',
+                  'blinkDelay-2': 'blinkDelay-2 1s infinite ease-in-out 0.6666s',
+              },
+          }
+      }
+  };
+  hljs.highlightAll();
 
-        refreshRangeInputLayout();
+	refreshRangeInputLayout();
 
-    chatboxContentEl = document.getElementById('chatbox-content');
-    infoBox = document.getElementById('info_box');
+  chatboxContentEl = document.getElementById('chatbox-content');
+  infoBox = document.getElementById('info_box');
 
-    document.getElementById('input-context').textContent = inputContext;
-    addChatboxBubble('Hello, Dave.', '', true);
-    addChatboxBubble('How can I assist you today?', '');
+  document.getElementById('input-context').textContent = inputContext;
+  addChatboxBubble('Hello, Steve.', '', true);
+  addChatboxBubble('How can I assist you today?', '');
 
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const tabName = button.getAttribute('data-tab');
-            const tabGroup = button.getAttribute('data-tab-group');
-            
+  tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+          const tabName = button.getAttribute('data-tab');
+          const tabGroup = button.getAttribute('data-tab-group');
+          
 
-            tabButtons.forEach(tabButton => {
-                if (tabButton.getAttribute('data-tab-group') === tabGroup) {
-                    tabButton.classList.remove('active');
-                }
-            });
-            tabContents.forEach(tabContent => {
-                if (tabContent.getAttribute('data-tab-group') === tabGroup) {
-                    tabContent.classList.add('hidden');
-                }
-            });
+          tabButtons.forEach(tabButton => {
+              if (tabButton.getAttribute('data-tab-group') === tabGroup) {
+                  tabButton.classList.remove('active');
+              }
+          });
+          tabContents.forEach(tabContent => {
+              if (tabContent.getAttribute('data-tab-group') === tabGroup) {
+                  tabContent.classList.add('hidden');
+              }
+          });
 
-            button.classList.add('active');            
-            document.getElementById(tabName).classList.remove('hidden');
-        });
-    });
-        
-        modelAPI.doAPILogin(function (data) {
-            console.log('Key: ' + modelAPI.clientSessionAuthKey)
-        },
-        function (error) {
-            infoBox.textContent = 'Login Error: ' + error + '\n';
-    });
+          button.classList.add('active');            
+          document.getElementById(tabName).classList.remove('hidden');
+      });
+  });
+	
+	modelAPI.doAPILogin(function (data) {
+		console.log('Key: ' + modelAPI.clientSessionAuthKey)
+	},
+	function (error) {
+		infoBox.textContent = 'Login Error: ' + error + '\n';
+  });
 });
