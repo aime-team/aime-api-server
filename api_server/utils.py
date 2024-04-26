@@ -67,7 +67,8 @@ TYPES_DICT = {
     'bool': bool,
     'boolean': bool,
     'image': str, 
-    'audio': str
+    'audio': str,
+    'json': list
     }
 
 
@@ -168,6 +169,8 @@ class InputValidationHandler():
                         job_data[ep_input_param_name] = self.validate_string(value)
                     else:
                         job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
+                elif isinstance(value, list):
+                    job_data[ep_input_param_name] = value
         return job_data, self.validation_errors
 
     
@@ -215,6 +218,7 @@ class InputValidationHandler():
                     self.validation_errors.append(f'Could not convert {self.ep_input_param_name}={shorten_strings(value)} from {type(value)} to {expected_value_type}')
             else:
                 self.validation_errors.append(f'Invalid argument type {self.ep_input_param_name}={shorten_strings(value)}. Expected: {expected_value_type} but got {type(value)}')
+
         else:
             return value
 
