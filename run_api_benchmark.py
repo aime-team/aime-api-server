@@ -395,7 +395,7 @@ class BenchmarkApiEndpoint():
             if params.get('top_k'):
                 params['top_k'] = 1
                 params['top_p'] = 1
-                params['text'] = 'Once upon a time'
+                params['text'] = 'Tell a long story: Once upon a time'
             if params.get('num_samples'):
                 params['num_samples'] = self.args.num_units
             return params
