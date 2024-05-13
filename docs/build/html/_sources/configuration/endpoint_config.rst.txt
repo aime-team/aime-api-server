@@ -123,6 +123,31 @@ Type ``"string"``:
 
 * ``max_length`` *(int): The maximum allowed length of the string. If* ``auto_convert = true`` *, longer strings will be cut to the* ``max_length`` *value.*
 
+Type ``"json"``:
+""""""""""""""""
+
+For more complex input data like chat contexts there is the input type ``"json"``, allowing to transmit an array of json objects. 
+
+* *Example data:* 
+
+    .. highlight:: python
+    .. code-block:: python
+
+        json_param = [
+            {
+                "role": "system",
+                "content": "System prompt"
+            },
+            {
+                "role": "user", 
+                "content": "User question"
+            },
+            {
+                "role": "assistant", 
+                "content": "Assistant answer"
+            }
+        ]
+
 Type ``"selection"``:
 """""""""""""""""""""
 If there are only certain values supported by the worker, the type ``"selection"`` is the best choice.
@@ -131,7 +156,7 @@ If there are only certain values supported by the worker, the type ``"selection"
   or the first element of the* ``supported`` *array, if no* ``default`` *value is found.*
 
 
-Types ``"image"``,  ``"image_list"`` and ``"audio"``:
+Types ``"image"``, ``"image_list"`` and ``"audio"``:
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
 * ``format`` *(str): The format supported by the workers* 
@@ -167,6 +192,7 @@ Example:
     integer_param = { type = "integer", min = 0, max = 10, default = 1, auto_convert = true }
     float_param = { type = "float", minimum = 0.0, maximum = 10.0, default = 1.0, auto_convert = true }
     string_param = { type = "string", max_length = 200, auto_convert = true }
+    json_param = { type = "json", default = [] }
 
     selection_string_param.type = "selection"
     selection_string_param.supported = [ "option_1", "option_2", "option_3" ]

@@ -18,7 +18,7 @@
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../_static/documentation_options.js?v=486e5634"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -61,15 +61,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.progress_callback"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.progress_callback()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.result_callback"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.result_callback()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.print_benchmark_summary_string"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.print_benchmark_summary_string()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.update_table_title"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.update_table_title()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.init_progress_bar"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.init_progress_bar()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.handle_first_batch"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.handle_first_batch()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.update_title"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.update_title()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.update_worker_and_endpoint_data_in_title"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.update_worker_and_endpoint_data_in_title()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.update_progress_bar"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.update_progress_bar()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.make_benchmark_result_string"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.make_benchmark_result_string()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.remove_progress_bar"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.remove_progress_bar()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.remove_empty_line"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.remove_empty_line()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.print_start_message"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.print_start_message()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.get_default_values_from_config"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.get_default_values_from_config()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#run_api_benchmark.BenchmarkApiEndpoint.do_request_with_semaphore"><code class="docutils literal notranslate"><span class="pre">BenchmarkApiEndpoint.do_request_with_semaphore()</span></code></a></li>
@@ -174,23 +169,6 @@ about the server and the worker and updates the title.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_table_title">
-<span class="sig-name descname"><span class="pre">update_table_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_table_title" title="Link to this definition"></a></dt>
-<dd><p>Setting the column descriptions and adjusting the position of the table title bar for the progress bar table.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.init_progress_bar">
-<span class="sig-name descname"><span class="pre">init_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.init_progress_bar" title="Link to this definition"></a></dt>
-<dd><p>Initializing the progress bar of the job with the given job ID.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>job_id</strong> (<em>str</em>) – Job ID of the related job</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.handle_first_batch">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle_first_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.handle_first_batch" title="Link to this definition"></a></dt>
 <dd><p>Detecting the jobs of the first batch to exclude them from the benchmark results.</p>
@@ -214,17 +192,6 @@ about the server and the worker and updates the title.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_progress_bar">
-<span class="sig-name descname"><span class="pre">update_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress_info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_progress_bar" title="Link to this definition"></a></dt>
-<dd><p>Updating the related progress bar with the given progress state.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>progress_info</strong> (<em>dict</em>) – Job progress information containing the job_id and the progress state like number of generated tokens so far or percentage.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.make_benchmark_result_string">
 <span class="sig-name descname"><span class="pre">make_benchmark_result_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.make_benchmark_result_string" title="Link to this definition"></a></dt>
 <dd><p>Making string containing mean benchmark results.</p>
@@ -234,28 +201,6 @@ about the server and the worker and updates the title.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.remove_progress_bar">
-<span class="sig-name descname"><span class="pre">remove_progress_bar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.remove_progress_bar" title="Link to this definition"></a></dt>
-<dd><p>Removing the progress bar of finished jobs with the given job id.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>job_id</strong> (<em>str</em>) – Job ID of the related job</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.remove_empty_line">
-<span class="sig-name descname"><span class="pre">remove_empty_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.remove_empty_line" title="Link to this definition"></a></dt>
-<dd><p>Shifting all progress bars below the given position up by one position to remove empty lines of finished jobs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>position</strong> (<em>int</em>) – Position</p>
 </dd>
 </dl>
 </dd></dl>
@@ -288,7 +233,7 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.get_unit">
-<span class="sig-name descname"><span class="pre">get_unit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.get_unit" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.get_unit" title="Link to this definition"></a></dt>
 <dd><p>Getting the unit of the generated objects like ‘tokens’ for llama2_chat and ‘images’ image generators.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>

@@ -18,7 +18,7 @@
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../_static/documentation_options.js?v=486e5634"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -59,8 +59,9 @@
 <li class="toctree-l4"><a class="reference internal" href="#all-parameter-types">All parameter types:</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#types-integer-and-float">Types <code class="docutils literal notranslate"><span class="pre">&quot;integer&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>:</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#type-string">Type <code class="docutils literal notranslate"><span class="pre">&quot;string&quot;</span></code>:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#type-json">Type <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code>:</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#type-selection">Type <code class="docutils literal notranslate"><span class="pre">&quot;selection&quot;</span></code>:</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#types-image-image-list-and-audio">Types <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>,  <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#types-image-image-list-and-audio">Types <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#output-parameters">Output Parameters</a></li>
@@ -209,6 +210,32 @@ Available types:</em> <code class="docutils literal notranslate"><span class="pr
 <li><p><code class="docutils literal notranslate"><span class="pre">max_length</span></code> <em>(int): The maximum allowed length of the string. If</em> <code class="docutils literal notranslate"><span class="pre">auto_convert</span> <span class="pre">=</span> <span class="pre">true</span></code> <em>, longer strings will be cut to the</em> <code class="docutils literal notranslate"><span class="pre">max_length</span></code> <em>value.</em></p></li>
 </ul>
 </section>
+<section id="type-json">
+<h3>Type <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code>:<a class="headerlink" href="#type-json" title="Link to this heading"></a></h3>
+<p>For more complex input data like chat contexts there is the input type <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code>, allowing to transmit an array of json objects.</p>
+<ul>
+<li><p><em>Example data:</em></p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">json_param</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;System prompt&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;User question&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Assistant answer&quot;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+</section>
 <section id="type-selection">
 <h3>Type <code class="docutils literal notranslate"><span class="pre">&quot;selection&quot;</span></code>:<a class="headerlink" href="#type-selection" title="Link to this heading"></a></h3>
 <p>If there are only certain values supported by the worker, the type <code class="docutils literal notranslate"><span class="pre">&quot;selection&quot;</span></code> is the best choice.</p>
@@ -218,7 +245,7 @@ or the first element of the</em> <code class="docutils literal notranslate"><spa
 </ul>
 </section>
 <section id="types-image-image-list-and-audio">
-<h3>Types <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>,  <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:<a class="headerlink" href="#types-image-image-list-and-audio" title="Link to this heading"></a></h3>
+<h3>Types <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;image_list&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;audio&quot;</span></code>:<a class="headerlink" href="#types-image-image-list-and-audio" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">format</span></code> <em>(str): The format supported by the workers</em></p>
 <ul>
@@ -249,6 +276,7 @@ or the first element of the</em> <code class="docutils literal notranslate"><spa
 <span class="n">integer_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">min</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
 <span class="n">float_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;float&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">minimum</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">maximum</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">10.0</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
 <span class="n">string_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">max_length</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="n">auto_convert</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+<span class="n">json_param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;json&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">default</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">}</span>
 
 <span class="n">selection_string_param</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;selection&quot;</span>
 <span class="n">selection_string_param</span><span class="p">.</span><span class="n">supported</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">&quot;option_1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;option_2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;option_3&quot;</span><span class="w"> </span><span class="p">]</span>
