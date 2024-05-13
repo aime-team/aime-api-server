@@ -170,7 +170,7 @@ class InputValidationHandler():
                     else:
                         job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
                 elif isinstance(value, list):
-                    job_data[ep_input_param_name] = value
+                    job_data[ep_input_param_name] = self.validate_json(value)
         return job_data, self.validation_errors
 
     
@@ -241,6 +241,14 @@ class InputValidationHandler():
 
         #self.validate_supported_values(self.ep_input_param_name)
         return value
+
+    def validate_json(self, value):
+        try:
+            for element in value:
+                json.dumps(element)
+            return value
+        except (TypeError, OverflowError):
+            self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} is not json serializable')
 
 
     async def validate_media_base64_string(self, media_base64):
