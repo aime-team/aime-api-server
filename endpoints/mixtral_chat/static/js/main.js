@@ -141,7 +141,7 @@ const CHAT_TEMPLATES = {
 
 function onSendAPIRequest() {
 	params = new Object();
-	params.chat_context = currentChatContext.slice();
+	params.chat_context = currentChatContext;
     params.prompt_input = document.getElementById('chat_input').value
 	params.top_k = parseInt(document.getElementById('top_k_range').value);
 	params.top_p = parseFloat(document.getElementById('top_p_range').value);
@@ -209,10 +209,6 @@ function onResultCallback(data) {
 
         infoBox.style.height = 'auto';
         infoBox.style.height = infoBox.scrollHeight + 'px';
-        currentChatContext.push({
-            "role": "assistant",
-            "content": data.text
-        });
         refreshResponseBubble(data.text, `Duration: ${data.total_duration} | Tokens: ${data.num_generated_tokens} | Tokens per second: ${tokensPerSec.toFixed(1)}`)
         
         // TODO: Make content prettier with HTML -> mini-markup, e.g. recognize listings, formatting (<strong>, italic) etc.?
@@ -302,10 +298,6 @@ function onButtonClick() {
         addChatboxBubble(chatInput.value, `TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`);
         addResponseBubble();
         chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
-        currentChatContext.push({
-            "role": "user",
-            "content": chatInput.value
-        });
         chatInput.value = '';
     }
  }
@@ -377,26 +369,37 @@ function refreshResponseBubble(responseText, responseInfo) {
 }
 
 function updateChatContextFromBubbles() {
+
     currentChatContext = [
-        {
-            "role": "system",
-            "content": document.getElementById('system-prompt').textContent
-        }
+        JSON.stringify(
+            {
+                "role": "system",
+                "content": document.getElementById('system-prompt').textContent
+            }
+        )
     ];
     const chatBubbles = document.querySelectorAll('.eol-node');
     chatBubbles.forEach(bubble => {
         if (bubble.classList.contains('user-bubble')) {
             
-                currentChatContext.push({
-                    "role": "user",
-                    "content": bubble.textContent
-                });
+                currentChatContext.push(
+                    JSON.stringify(
+                        {
+                            "role": "user",
+                            "content": bubble.textContent
+                        }
+                    )
+                );
         }
         if (bubble.classList.contains('assistant-bubble')) {
-                currentChatContext.push({
-                    "role": "assistant",
-                    "content": bubble.textContent
-                });
+                currentChatContext.push(
+                    JSON.stringify(
+                        {
+                            "role": "assistant",
+                            "content": bubble.textContent
+                        }
+                    )
+                );
         }
     
     });
@@ -444,10 +447,9 @@ function applyChatContextToBubbles(chatContext) {
 }
 
 
-
 function switchTemplate() {
     updateChatContextFromBubbles();
-    chatContextPerSession[currentTemplate] = currentChatContext.slice();
+    chatContextPerSession[currentTemplate] = currentChatContext;
     
     if (chatContextPerSession[document.getElementById("template-selection").value]) {
         applyChatContextToBubbles(chatContextPerSession[document.getElementById("template-selection").value]);

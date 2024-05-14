@@ -170,7 +170,7 @@ class InputValidationHandler():
                     else:
                         job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
                 elif isinstance(value, list):
-                    job_data[ep_input_param_name] = self.validate_json(value)
+                    job_data[ep_input_param_name] = self.validate_and_convert_json(value)
         return job_data, self.validation_errors
 
     
@@ -197,7 +197,7 @@ class InputValidationHandler():
                     return self.arg_definition.get('supported')[0]
             else:
                 self.validation_errors.append(
-                    f'Parameter {self.ep_input_param_name} = {value} not in supported values {self.arg_definition.get("supported")}'
+                    f'Parameter {self.ep_input_param_name} = {value} not in supported values {self.arg_definition.get("supported")}!'
                     f'\nSet auto_convert = true for {self.ep_input_param_name} in the [INPUT] section of the endpoint config file to avoid this error.\n')
         else:
             return value
@@ -215,9 +215,9 @@ class InputValidationHandler():
                 try:
                     return expected_value_type(value)
                 except (ValueError, TypeError):
-                    self.validation_errors.append(f'Could not convert {self.ep_input_param_name}={shorten_strings(value)} from {type(value)} to {expected_value_type}')
+                    self.validation_errors.append(f'Could not convert {self.ep_input_param_name}={shorten_strings(value)} from {type(value)} to {expected_value_type}!')
             else:
-                self.validation_errors.append(f'Invalid argument type {self.ep_input_param_name}={shorten_strings(value)}. Expected: {expected_value_type} but got {type(value)}')
+                self.validation_errors.append(f'Invalid argument type {self.ep_input_param_name}={shorten_strings(value)}. Expected: {expected_value_type} but got {type(value)}!')
 
         else:
             return value
@@ -237,18 +237,17 @@ class InputValidationHandler():
             if self.arg_definition.get('auto_convert'):
                 return max_length
             else:
-                self.validation_errors.append(f'Length of argument {self.ep_input_param_name}={shorten_strings(value)} exceeds the maximum length ({max_length})')
+                self.validation_errors.append(f'Length of argument {self.ep_input_param_name}={shorten_strings(value)} exceeds the maximum length ({max_length})!')
 
         #self.validate_supported_values(self.ep_input_param_name)
         return value
 
-    def validate_json(self, value):
+    def validate_and_convert_json(self, value):
+        
         try:
-            for element in value:
-                json.dumps(element)
-            return value
-        except (TypeError, OverflowError):
-            self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} is not json serializable')
+            return [json.loads(element) for element in value]
+        except (TypeError, json.decoder.JSONDecodeError):
+            self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} contains invalid json object!')
 
 
     async def validate_media_base64_string(self, media_base64):
