@@ -322,7 +322,7 @@ function addChatboxBubble(chatText, infoDetails, isResponse = false, editable=fa
                 <div class="flex flex-col gap-1 w-full max-w-[320px]">
                     <div class="flex items-center justify-between rtl:justify-end space-x-2">
                         <span class="text-sm font-semibold text-white">
-                        ${isResponse ? '<img src="mixtral-chat/static/mixtral_icon.png" style="width: 20px; height: 20px;">' : '<img src="mixtral-chat/static/user_icon.png" style="width: 20px; height: 20px;">'}
+                        ${isResponse ? '<img src="/mixtral-chat/static/mixtral_icon.png" style="width: 20px; height: 20px;">' : '<img src="/mixtral-chat/static/user_icon.png" style="width: 20px; height: 20px;">'}
                         </span>
                         <span class="overlook text-xs font-normal text-gray-500 text-gray-400 ml-auto">${localISOTime.match(/\d\d:\d\d/)}</span>
                     </div>
