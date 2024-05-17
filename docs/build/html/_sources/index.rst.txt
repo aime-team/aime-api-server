@@ -16,8 +16,6 @@ AIME API Server - The Scalable Model Inference API Server
    Benchmark <benchmark/index_benchmark>
 
 
-
-
 .. toctree::
    :maxdepth: 6
    :caption: Client Interfaces:
@@ -28,7 +26,9 @@ AIME API Server - The Scalable Model Inference API Server
    JavaScript <client_interfaces/js_api_client_interface/index_js_api_client_interface>
    More coming soon<client_interfaces/more>
 
+.. toctree::
 
+   api.aime.info <https://api.aime.info>
 
 With :api_aime_info:`AIME API <>` one deploys deep learning models (Pytorch, Tensorflow) through a job queue as scalable API endpoint capable of serving millions of model inference requests.
 

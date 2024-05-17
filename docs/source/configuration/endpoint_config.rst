@@ -126,7 +126,7 @@ Type ``"string"``:
 Type ``"json"``:
 """"""""""""""""
 
-For more complex input data like chat contexts there is the input type ``"json"``, allowing to transmit an array of json like objects. 
+For more complex input data like chat contexts there is the input type ``"json"``, allowing to transmit an array of objects. The input data has to be in a valid json format.
 
 * *Example data:* 
 
