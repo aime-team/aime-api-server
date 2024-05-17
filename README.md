@@ -177,7 +177,7 @@ params = new Object({
 	text : 'Your text prompt' 
 });
 
-doAPIRequest('llama2_chat', params, onResultCallback);
+doAPIRequest('llama2_chat', params, onResultCallback, 'user_name', 'user_key');
 </script>
 ```
 
@@ -191,7 +191,7 @@ aime_api_client_interface import do_api_request
 
 params = {'text': 'Your text prompt'}
 
-result = do_api_request('https://api.aime.info', 'llama2_chat', params)
+result = do_api_request('https://api.aime.info', 'llama2_chat', params, 'user_name', 'user_key')
 print(result.get('text')) # print generated text to console
 ```
 

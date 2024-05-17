@@ -68,7 +68,7 @@ TYPES_DICT = {
     'boolean': bool,
     'image': str, 
     'audio': str,
-    'json': list
+    'json': str
     }
 
 
@@ -167,10 +167,11 @@ class InputValidationHandler():
                 elif isinstance(value, str):
                     if self.arg_type == 'string':
                         job_data[ep_input_param_name] = self.validate_string(value)
+                    elif self.arg_type == 'json':
+                        job_data[ep_input_param_name] = self.validate_and_convert_json(value)
                     else:
                         job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
-                elif isinstance(value, list):
-                    job_data[ep_input_param_name] = self.validate_and_convert_json(value)
+                    
         return job_data, self.validation_errors
 
     
@@ -245,9 +246,9 @@ class InputValidationHandler():
     def validate_and_convert_json(self, value):
         
         try:
-            return [json.loads(element) for element in value]
+            return json.loads(value)
         except (TypeError, json.decoder.JSONDecodeError):
-            self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} contains invalid json object!')
+            self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} has invalid json format!')
 
 
     async def validate_media_base64_string(self, media_base64):

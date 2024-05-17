@@ -166,7 +166,7 @@
     <span class="n">process_progress_info</span><span class="p">(</span><span class="n">progress_info</span><span class="p">)</span>
     <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
 
-<span class="n">model_api</span> <span class="o">=</span> <span class="n">ModelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">)</span>
+<span class="n">model_api</span> <span class="o">=</span> <span class="n">ModelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="s1">&#39;user_name&#39;</span><span class="p">,</span> <span class="s1">&#39;user_key&#39;</span><span class="p">)</span>
 <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_login</span><span class="p">()</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
 <span class="n">result_2</span> <span class="o">=</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
@@ -188,7 +188,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">error_description</span><span class="p">)</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">model_api</span> <span class="o">=</span> <span class="n">modelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">)</span>
+    <span class="n">model_api</span> <span class="o">=</span> <span class="n">modelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="s1">&#39;user_name&#39;</span><span class="p">,</span> <span class="s1">&#39;user_key&#39;</span><span class="p">)</span>
     <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_login</span><span class="p">()</span>
     <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
     <span class="n">result2</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
@@ -213,7 +213,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">error_description</span><span class="p">)</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">model_api</span> <span class="o">=</span> <span class="n">modelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">)</span>
+    <span class="n">model_api</span> <span class="o">=</span> <span class="n">modelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="s1">&#39;user_name&#39;</span><span class="p">,</span> <span class="s1">&#39;user_key&#39;</span><span class="p">)</span>
     <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_login</span><span class="p">()</span>
     <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
     <span class="n">result2</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_request</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">)</span>
@@ -230,6 +230,8 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>user</strong> (<em>str</em>) – The name of the user</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – The user related key</p></li>
 <li><p><strong>result_callback</strong> (<em>callable</em><em> or </em><em>coroutine</em>) – Callback function or coroutine with the obtained client_session_auth_key as argument.
 Accepts synchronous functions and asynchrouns couroutines. Defaults to None.</p></li>
 <li><p><strong>error_callback</strong> (<em>callable</em><em> or </em><em>coroutine</em>) – Accepts synchronous functions and asynchrouns couroutines. Prevents ConnectionError. Defaults to None.</p></li>
@@ -253,14 +255,20 @@ Accepts synchronous functions and asynchrouns couroutines. Defaults to None.</p>
 <span class="sig-name descname"><span class="pre">do_api_login</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.do_api_login" title="Link to this definition"></a></dt>
 <dd><p>Client login to API server and obtain an authentication key.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ConnectionError</strong> – If there is a connection issue with the API server.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user</strong> (<em>str</em>) – The name of the user</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – The user related key</p></li>
+</ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Client session authentication key</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ConnectionError</strong> – If there is a connection issue with the API server.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Client session authentication key</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -451,9 +459,11 @@ progress errors with successful initial request. Prevents ConnectionErrors durin
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>api_server</strong> (<em>str</em>) – The address of the API server.</p></li>
-<li><p><strong>endpoint_name</strong> (<em>str</em>) – The name of the API endpoint.</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Parameters for the API request.</p></li>
+<li><p><strong>api_server</strong> (<em>str</em>) – The address of the API server</p></li>
+<li><p><strong>endpoint_name</strong> (<em>str</em>) – The name of the API endpoint</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Parameters for the API request</p></li>
+<li><p><strong>user</strong> (<em>str</em>) – The name of the user</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – The user related key</p></li>
 <li><p><strong>result_callback</strong> (<em>callback</em><em>, </em><em>optional</em>) – Callback function with argument result (dict) to handle the API request result. Defaults to None.</p></li>
 <li><p><strong>progress_callback</strong> (<em>callback</em><em>, </em><em>optional</em>) – Callback function with arguments progress_info (dict). Defaults to None.
 and progress_data (dict) for tracking progress. Defaults to None.</p></li>
@@ -487,7 +497,7 @@ progress errors with successful initial request. Accepts synchronous functions a
     <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
 
 
-<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">},</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">},</span> <span class="s1">&#39;user_name&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Example usage with asynchronous callbacks:</p>
@@ -501,7 +511,7 @@ progress errors with successful initial request. Accepts synchronous functions a
     <span class="k">await</span> <span class="n">process_progress_data</span><span class="p">(</span><span class="n">progress_data</span><span class="p">)</span>
 
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">},</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">},</span> <span class="s1">&#39;user_name&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">,</span> <span class="n">result_callback</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Example progress result dictionary at start:</p>
@@ -569,6 +579,8 @@ progress errors with successful initial request. Accepts synchronous functions a
 <li><p><strong>api_server</strong> (<em>str</em>) – Address of API server</p></li>
 <li><p><strong>endpoint_name</strong> (<em>str</em>) – Name of endpoint</p></li>
 <li><p><strong>params</strong> (<em>dict</em>) – Dictionary with api request parameters</p></li>
+<li><p><strong>user</strong> (<em>str</em>) – The name of the user</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – The user related key</p></li>
 <li><p><strong>progress_callback</strong> (<em>callback</em><em>, </em><em>optional</em>) – Callback function with arguments progress_info (dict)
 and progress_data (dict) for tracking progress. Defaults to None.</p></li>
 <li><p><strong>progress_error_callback</strong> (<em>callback</em><em>, </em><em>optional</em>) – Callback function with argument error_description (str)
@@ -597,7 +609,7 @@ called if request was successfull but progress got errors. Defaults to None.</p>
 <span class="k">def</span> <span class="nf">progress_error_callback</span><span class="p">(</span><span class="n">error_description</span><span class="p">):</span>
     <span class="k">pass</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">},</span> <span class="n">progress_callback</span><span class="p">,</span> <span class="n">progress_error_callback</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">do_api_request</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Chat question&#39;</span><span class="p">},</span> <span class="s1">&#39;user_name&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">,</span> <span class="n">progress_callback</span><span class="p">,</span> <span class="n">progress_error_callback</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example progress result dictionary at start:</p>

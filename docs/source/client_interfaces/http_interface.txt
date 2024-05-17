@@ -7,6 +7,8 @@ Example parameter for login request on route /login
 .. code-block:: python
 
     params = {
+        'user': 'user_name',
+        'key': 'user_key',
         'endpoint_name': 'llama2_chat', 
         'version': 'Client interface version'
     }

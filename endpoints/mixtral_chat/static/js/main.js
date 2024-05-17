@@ -371,37 +371,30 @@ function refreshResponseBubble(responseText, responseInfo) {
 function updateChatContextFromBubbles() {
 
     currentChatContext = [
-        JSON.stringify(
-            {
-                "role": "system",
-                "content": document.getElementById('system-prompt').textContent
-            }
-        )
+        {
+            "role": "system",
+            "content": document.getElementById('system-prompt').textContent
+        }
     ];
     const chatBubbles = document.querySelectorAll('.eol-node');
     chatBubbles.forEach(bubble => {
         if (bubble.classList.contains('user-bubble')) {
             
-                currentChatContext.push(
-                    JSON.stringify(
-                        {
-                            "role": "user",
-                            "content": bubble.textContent
-                        }
-                    )
-                );
+            currentChatContext.push(
+                    {
+                        "role": "user",
+                        "content": bubble.textContent
+                    }
+            );
         }
         if (bubble.classList.contains('assistant-bubble')) {
-                currentChatContext.push(
-                    JSON.stringify(
-                        {
-                            "role": "assistant",
-                            "content": bubble.textContent
-                        }
-                    )
-                );
+            currentChatContext.push(
+                {
+                    "role": "assistant",
+                    "content": bubble.textContent
+                }
+            )
         }
-    
     });
 }
 
