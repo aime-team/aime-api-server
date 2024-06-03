@@ -115,6 +115,9 @@ class BenchmarkApiEndpoint():
         parser.add_argument(
             '-nu', '--num_units', default=1, type=int, required=False, help='Number of units to generate. Images for stable_diffusion_xl_txt2img'
         )
+        parser.add_argument(
+            '-cff', '--context_from_file', type=str, required=False, help="Load context from text file"
+        )
         args = parser.parse_args()
         if not args.config_file:
             if args.endpoint_name == 'sdxl_txt2img':
@@ -126,6 +129,9 @@ class BenchmarkApiEndpoint():
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
             elif args.endpoint_name == 'llama3_chat':
                 args.num_units = 1024
+                args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
+            else:
+                args.num_units = 500
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
         return args
 
@@ -389,15 +395,27 @@ class BenchmarkApiEndpoint():
             ep_inputs = config.get('INPUTS', {})
             params = dict()
             for ep_input in ep_inputs:
-                params[ep_input] = ep_inputs[ep_input].get('default')
+                if ep_inputs[ep_input].get('required') is not False:
+                    params[ep_input] = ep_inputs[ep_input].get('default')
             if params.get('seed'):
                 params['seed'] = 1
             if params.get('top_k'):
                 params['top_k'] = 1
                 params['top_p'] = 1
-                params['text'] = 'Tell a long story: Once upon a time'
             if params.get('num_samples'):
                 params['num_samples'] = self.args.num_units
+            if params.get('text'):
+                if self.args.context_from_file:
+                    with open(self.args.context_from_file, 'r', encoding='latin-1') as file:
+                        params['text'] = file.read()
+                else:
+                    params['text'] = 'Tell a long story: Once upon a time'
+            if params.get('prompt_input') is not None:
+                if self.args.context_from_file:
+                    with open(self.args.context_from_file, 'r', encoding='latin-1') as file:
+                        params['prompt_input'] = file.read() 
+                else:
+                    params['prompt_input'] = 'Tell a long story: Once upon a time'
             return params
 
         except FileNotFoundError:
@@ -423,7 +441,7 @@ class BenchmarkApiEndpoint():
         Returns:
             str: The unit string of the generated objects
         """
-        if args.endpoint_name in ['llama2_chat', 'llama3_chat']:
+        if args.endpoint_name in ['llama2_chat', 'llama3_chat', 'mixtral_chat']:
             return 'tokens', 1, 0    
         else:
             if args.unit:
@@ -552,7 +570,7 @@ class ProgressBarHandler():
         if current_progress_bar:
             self.positions.update(self.current_jobs)
             current_progress = progress_info.get('progress')
-            if self.args.endpoint_name in ['llama2_chat', 'llama3_chat']:
+            if self.args.endpoint_name in ['llama2_chat', 'llama3_chat', 'mixtral_chat']:
                 if self.num_generated_units < current_progress:
                     current_progress_bar.total = current_progress
                 else:

@@ -244,11 +244,11 @@ class InputValidationHandler():
         return value
 
     def validate_and_convert_json(self, value):
-        
-        try:
-            return json.loads(value)
-        except (TypeError, json.decoder.JSONDecodeError):
-            self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} has invalid json format!')
+        if value:
+            try:
+                return json.loads(value)
+            except (TypeError, json.decoder.JSONDecodeError):
+                self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} has invalid json format!')
 
 
     async def validate_media_base64_string(self, media_base64):
