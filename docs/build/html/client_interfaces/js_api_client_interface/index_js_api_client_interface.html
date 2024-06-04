@@ -103,7 +103,21 @@
 <p>For cross-site scripting security reasons and to fulfil the same-origin policy of web browsers, it is easiest to host a copy of the file on the web server the HTML files are served from.</p>
 </div></blockquote>
 <p><strong>Examples</strong></p>
-<p>[TODO] Include Javascript examples</p>
+<p>Simple single call example:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;/js/model_api.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="kd">function</span><span class="w"> </span><span class="nx">onResultCallback</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">text</span><span class="p">)</span><span class="w"> </span><span class="c1">// print generated text to console</span>
+<span class="p">}</span>
+
+<span class="nx">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Object</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">text</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Your text prompt&#39;</span>
+<span class="p">});</span>
+
+<span class="nx">doAPIRequest</span><span class="p">(</span><span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">params</span><span class="p">,</span><span class="w"> </span><span class="nx">onResultCallback</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;user_name&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;user_key&#39;</span><span class="p">);</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</pre></div>
+</div>
 <div class="toctree-wrapper compound">
 </div>
 <div class="admonition note">
