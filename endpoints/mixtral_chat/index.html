@@ -76,6 +76,9 @@ This software may be used and distributed according to the terms of the MIT LICE
 					<input id="temperature_range" class="slider w100" type="range" min="0" max="1" value="0.8" step="0.05" oninput="document.getElementById('temperature_label').innerHTML = this.value">
 					<label for="temperature_range" id="temperature_label">0.8</label>
 
+					<p class="select-label">Maximum response length in tokens</p>
+					<input id="max_gen_tokens_range" class="slider w100" type="range" min="1" max="1000" value="500" oninput="document.getElementById('max_gen_tokens_label').innerHTML = this.value">
+					<label for="max_gen_tokens_range" id="max_gen_tokens_label">500</label>
 				</div>
 			</div> <!-- /END LEFT COLUMN -->
 

@@ -41,7 +41,7 @@ const CHAT_TEMPLATES = {
         {
             "role": "system",
             "content": 
-                `Du bist ein Assistent namens ${assistantName}. ` +
+                `Du bist eine Assistentin namens ${assistantName}. ` +
                 "Antworte immer so hilfreich wie möglich, während du sicher bleibst. " +
                 "Deine Antworten sollten keine schädlichen, unethischen, rassistischen, sexistischen, toxischen, gefährlichen oder illegalen Inhalte enthalten. " +
                 "Bitte stelle sicher, dass deine Antworten sozial unvoreingenommen und positiv sind. " +
@@ -146,6 +146,7 @@ function onSendAPIRequest() {
 	params.top_k = parseInt(document.getElementById('top_k_range').value);
 	params.top_p = parseFloat(document.getElementById('top_p_range').value);
 	params.temperature = parseFloat(document.getElementById('temperature_range').value);
+    params.max_gen_tokens = parseFloat(document.getElementById('max_gen_tokens_range').value);
 
     console.log(params)
 	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);

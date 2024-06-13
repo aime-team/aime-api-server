@@ -124,15 +124,16 @@ class BenchmarkApiEndpoint():
                 args.endpoint_name = 'stable_diffusion_xl_txt2img'
             elif args.endpoint_name == 'stable_diffusion_xl_txt2img':
                 args.config_file = 'endpoints/stable_diffusion_xl/txt2img/aime_api_endpoint.cfg'
-            elif args.endpoint_name == 'llama2_chat':
-                args.num_units = 480
+            elif args.endpoint_name == 'llama2_chat' and args.num_units == 1:
+                args.num_units = args.max_gen_len
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
-            elif args.endpoint_name == 'llama3_chat':
+            elif args.endpoint_name == 'llama3_chat'  and args.num_units == 1:
                 args.num_units = 1024
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
             else:
-                args.num_units = 500
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
+                if args.num_units == 1:
+                    args.num_units = 500
         return args
 
     
@@ -404,6 +405,8 @@ class BenchmarkApiEndpoint():
                 params['top_p'] = 1
             if params.get('num_samples'):
                 params['num_samples'] = self.args.num_units
+            if params.get('max_gen_tokens'):
+                params['max_gen_tokens'] = self.args.num_units
             if params.get('text'):
                 if self.args.context_from_file:
                     with open(self.args.context_from_file, 'r', encoding='latin-1') as file:
@@ -415,7 +418,8 @@ class BenchmarkApiEndpoint():
                     with open(self.args.context_from_file, 'r', encoding='latin-1') as file:
                         params['prompt_input'] = file.read() 
                 else:
-                    params['prompt_input'] = 'Tell a long story: Once upon a time'
+                    params['prompt_input'] = 'Tell a very long story with at least 500 words: Once upon a time'
+
             return params
 
         except FileNotFoundError:

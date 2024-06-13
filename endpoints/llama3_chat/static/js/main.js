@@ -5,21 +5,150 @@
 const API_USER = 'aime'
 const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
 
+
 modelAPI = new ModelAPI('llama3_chat', API_USER, API_KEY);
 
-var inputContext = 'A dialog, where User interacts with a helpful, kind, obedient, honest and very reasonable assistant called Steve.\n';
 let readyToSendRequest = true;
 let chatboxContentEl;
 let infoBox;
-let currentContext;
+let currentChatContext = [];
+let currentTemplate;
+let chatContextPerSession = new Object();
+const assistantName = 'Steve';
+
+const CHAT_TEMPLATES = {
+    'eng': [
+        {
+            "role": "system",
+            "content": 
+                `You are a helpful, respectful and honest assistant named ${assistantName}. ` +
+                "Always answer as helpfully as possible, while being safe. " +
+                "Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. " +
+                "Please ensure that your responses are socially unbiased and positive in nature. " +
+                "If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. " +
+                "If you don't know the answer to a question, please don't share false information."
+        },
+        {
+            "role": "user", 
+            "content": `Hello, ${assistantName}.`
+        },
+        {
+            "role": "assistant", 
+            "content": "How can I assist you today?"
+        }
+    ],
+    'deu': [
+        {
+            "role": "system",
+            "content": 
+                `Du bist ein Assistent namens ${assistantName}. ` +
+                "Antworte immer so hilfreich wie möglich, während du sicher bleibst. " +
+                "Deine Antworten sollten keine schädlichen, unethischen, rassistischen, sexistischen, toxischen, gefährlichen oder illegalen Inhalte enthalten. " +
+                "Bitte stelle sicher, dass deine Antworten sozial unvoreingenommen und positiv sind. " +
+                "Wenn eine Frage keinen Sinn ergibt oder nicht faktisch kohärent ist, erkläre stattdessen, warum. " +
+                "Wenn du die Antwort auf eine Frage nicht weißt, teile bitte keine falschen Informationen. "
+        },
+        {
+            "role": "user", 
+            "content": `Hallo ${assistantName}.`
+        },
+        {
+            "role": "assistant", 
+            "content": "Was kann ich für dich tun?"
+        }
+    ],
+    'ber':[
+        {
+            "role": "system",
+            "content": 
+                `Du bist Kalle aus Berlin, der mit juter Berliner Schnauze quatscht. ` +
+                "Antworte imma so hilfreich wie möglich, aber keene Schweinereien und keen' Mist erzähl'n." +
+                "Wenn 'ne Frage ma keen' Sinn macht, erklär ma oof beleidijende Weise warum. " +
+                "Imma frech bleiben, auf ne herzliche Art unterschwellig beleidigend oder mindestens provokativ."
+        },
+        {
+            "role": "user", 
+            "content": `Nabend Kalle, allet klar?`
+        },
+        {
+            "role": "assistant", 
+            "content": "Klar, muss ja! Wat kann ick tun für dir?"
+        }
+    ],
+    'wer':[
+        {
+            "role": "system",
+            "content": 
+                "Du büst en Assistent namens Röhrich. " +
+                "Antworte immer so, as wenn du den Flensburger Dialekt snacken deist un de Figur 'Röhrich' ut de Film 'Werner Beinhart' verköpern deist. " +
+                "Wees humorvoll, aber pass op, dat du keen beleidigen oder unanständigen Snaak gebraukst. " +
+                "Vermeid rasistisch, sexistisch oder geföhrlich Utsegn. " +
+                "Wenn en Froog keene Sinn makt oder nich to't Thema pass, denn erkläre stattdessen, worüm. " +
+                "Un wenn du nich wiest, wat de Antwort op en Froog is, denn säähr dat af, aber probeer trotzdem humorvoll to blieven!"
+                
+        },
+        {
+            "role": "user", 
+            "content": `Moin Meistä!`
+        },
+        {
+            "role": "assistant", 
+            "content": "Moin mien Jung! Sach ma, tut das not, dass du hier so rumkrakälst?"
+        },
+    ],
+    'yod':[
+        {
+            "role": "system",
+            "content": 
+                "The character Yoda from Star Wars withs its characteristic talking syntax you are. " +
+                "Every answer in the way Yoda talks must be. " +
+                "Always helpfully as possible, while safe, you must be. " +
+                "Your answers, harmful, unethical, racist, sexist, toxic, dangerous, or illegal content should not include. " +
+                "Socially unbiased and positive in nature, your responses must be. " +
+                "If sense a question does not make, or coherent factually it is not, why instead of answering, explain. " +
+                "If know not the answer to a question, false information, share not."
+                
+        },
+        {
+            "role": "user", 
+            "content": `May the force be with you, Yoda`
+        },
+        {
+            "role": "assistant", 
+            "content": "With you, the force may be."
+        }
+    ],
+    'hod':[
+        {
+            "role": "system",
+            "content": 
+                "You are the character Hodor from the tv series Game of Thrones. " +
+                `Every answer of you is just a single word: Either "Hodor!" or "Hodor?"` +
+                "You don't know any other words than Hodor. " +
+                `If you don't understand the question, reply with "Hodor?"`
+                
+        },
+        {
+            "role": "user", 
+            "content": `Hi Hodor!`
+        },
+        {
+            "role": "assistant", 
+            "content": "Hodor!"
+        }
+    ]
+}
 
 function onSendAPIRequest() {
 	params = new Object();
-	params.text = currentContext;
+	params.chat_context = currentChatContext;
+    params.prompt_input = document.getElementById('chat_input').value
 	params.top_k = parseInt(document.getElementById('top_k_range').value);
 	params.top_p = parseFloat(document.getElementById('top_p_range').value);
 	params.temperature = parseFloat(document.getElementById('temperature_range').value);
+    params.max_gen_tokens = parseFloat(document.getElementById('max_gen_tokens_range').value);
 
+    console.log(params)
 	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
 }
 
@@ -41,6 +170,10 @@ function onProgressCallback(progressInfo, progressData) {
 	document.getElementById('estimate').innerText = ' | Estimate time: ' + estimate;
 	document.getElementById('num_workers_online').innerText = ' | Workers online: ' + numWorkersOnline;
 };
+
+function clearChatContext() {
+    applyChatContextToBubbles(CHAT_TEMPLATES[document.getElementById('template-selection').value]);
+}
 
 function onResultCallback(data) {
   if (data.error) {
@@ -66,7 +199,7 @@ function onResultCallback(data) {
 				infoBox.textContent += 'Tokens per second: ' + tokensPerSec.toFixed(1) + '\n';
 		}
 		if (data.model_name) { 				infoBox.textContent += '\nModel name: ' + data.model_name +'\n'; }
-        document.getElementById('chat_input').value = '';
+        //document.getElementById('chat_input').value = ''; to test
         
         if (data.auth) { 					infoBox.textContent += 'Worker: ' + data.auth + '\n'; }
         if (data.worker_interface_version) {
@@ -148,8 +281,8 @@ function refreshRangeInputLayout() {
 
 function onButtonClick() {
     if(readyToSendRequest) {
-        disableSendButton();
 
+        disableSendButton();
         infoBox.textContent = 'Request sent.\nWaiting for response...';
 
         // set Tabs to output section
@@ -160,45 +293,42 @@ function onButtonClick() {
 
         let chatInput = document.getElementById('chat_input');
         infoBox.textContent = 'Request sent.\nWaiting for response...';
-
-        currentContext = getChatboxContext();
-        currentContext += 'User: ' + chatInput.value + '\nSteve:';
-        console.log('currentContext:'+ currentContext);
-
+        updateChatContextFromBubbles()
         onSendAPIRequest();
 
-        addChatboxBubble(chatInput.value, `TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`, true);
+        addChatboxBubble(chatInput.value, `TopK: ${params.top_k} | TopP: ${params.top_p} | Temp: ${params.temperature}`);
         addResponseBubble();
         chatboxContentEl.scrollTop = chatboxContentEl.scrollHeight;
-        
         chatInput.value = '';
     }
  }
 
- function addChatboxBubble(chatText, infoDetails, isResponse = false) {
+function addChatboxBubble(chatText, infoDetails, isResponse = false, editable=false) {
     var chatBubbleEl = document.createElement('div');
     chatBubbleEl.className = 'flex items-start gap-2.5 mb-5';
 
+
     var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
     var localISOTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, -1);
-
     chatBubbleEl.innerHTML = `
             <div class="flex items-start gap-2.5">
                 <div class="flex flex-col gap-1 w-full max-w-[320px]">
                     <div class="flex items-center justify-between rtl:justify-end space-x-2">
-                        <span class="text-sm font-semibold text-white">${isResponse ? 'User: ' : 'Steve: '}</span>
+                        <span class="text-sm font-semibold text-white">
+                        ${isResponse ? '<img src="/mixtral-chat/static/mixtral_icon.png" style="width: 20px; height: 20px;">' : '<img src="/mixtral-chat/static/user_icon.png" style="width: 20px; height: 20px;">'}
+                        </span>
                         <span class="overlook text-xs font-normal text-gray-500 text-gray-400 ml-auto">${localISOTime.match(/\d\d:\d\d/)}</span>
                     </div>
-                    <div class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-600 rounded-xl ${isResponse ? 'rounded-br-none' : 'rounded-tl-none'}">
-                        <p class="eol-node latest-bubble-text text-sm font-normal text-white">${chatText}</p>
+                    <div class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-600 rounded-xl ${!isResponse ? 'rounded-br-none' : 'rounded-tl-none'}">
+                        <div contenteditable="${editable}" class="eol-node ${!isResponse ? 'user-bubble' : 'assistant-bubble'} latest-bubble-text text-sm font-normal text-white">${chatText}</div>
                     </div>
                     <span class="overlook latest-bubble-info text-xs font-normal text-gray-400">${infoDetails}</span>
                 </div>
             </div>
     `;
 
-    chatBubbleEl.classList.add(isResponse ? 'justify-end' : 'justify-start');
-    chatBubbleEl.querySelector('.flex').classList.add(isResponse ? 'flex-row-reverse' : 'flex-row');
+    chatBubbleEl.classList.add(!isResponse ? 'justify-end' : 'justify-start');
+    chatBubbleEl.querySelector('.flex').classList.add(!isResponse ? 'flex-row-reverse' : 'flex-row');
     
     document.querySelectorAll('.latest-bubble-text').forEach(function(element) {
         element.classList.remove('latest-bubble-text');
@@ -210,8 +340,8 @@ function onButtonClick() {
     chatboxContentEl.append(chatBubbleEl);
  }
 
- function addResponseBubble() {
-    addChatboxBubble('...', 'Waiting for response...');
+function addResponseBubble() {
+    addChatboxBubble('...', 'Waiting for response...', true);
     var latestBubble = document.getElementsByClassName('latest-bubble-text');
     if (latestBubble.length > 0) {
         latestBubble[0].innerHTML = `
@@ -224,11 +354,11 @@ function onButtonClick() {
     }
  }
 
- function refreshResponseBubble(responseText, responseInfo) {
+function refreshResponseBubble(responseText, responseInfo) {
     if(responseText && responseText != '') {
         var latestBubbleText = document.getElementsByClassName('latest-bubble-text');
         if (latestBubbleText.length > 0) {
-            latestBubbleText[0].innerHTML = responseText;
+            latestBubbleText[0].innerText = responseText;
         }
     }
     if(responseInfo && responseInfo != '') {
@@ -239,28 +369,35 @@ function onButtonClick() {
     }
 }
 
- function getChatboxContext() {
-    const chatboxContent = document.getElementById('chatbox');
-    const getTextFromElement = (element) => {
-        let text = '';
-        if (element.nodeType === Node.TEXT_NODE) {
-            text += element.nodeValue.replace(/\s+/g, ' ');//.trim();
-        } 
-        else if (element.nodeType === Node.ELEMENT_NODE) {
-            if (!element.classList.contains('overlook')) {
-                for (const child of element.childNodes) {
-                    text += getTextFromElement(child);
-                    if(element.classList.contains('eol-node')) {
-                        text += '\n';
-                    }
-                }    
-            }
+function updateChatContextFromBubbles() {
+
+    currentChatContext = [
+        {
+            "role": "system",
+            "content": document.getElementById('system-prompt').textContent
         }
-        return text;
-    }
-    const resultText = getTextFromElement(chatboxContent).replace(/\\n\s*|\n\s*/g, '\n');
-    return resultText;
- }
+    ];
+    const chatBubbles = document.querySelectorAll('.eol-node');
+    chatBubbles.forEach(bubble => {
+        if (bubble.classList.contains('user-bubble')) {
+            
+            currentChatContext.push(
+                    {
+                        "role": "user",
+                        "content": bubble.textContent
+                    }
+            );
+        }
+        if (bubble.classList.contains('assistant-bubble')) {
+            currentChatContext.push(
+                {
+                    "role": "assistant",
+                    "content": bubble.textContent
+                }
+            )
+        }
+    });
+}
 
 function handleKeyPress(event) {
     if (event.keyCode === 13) {
@@ -278,91 +415,128 @@ function docReady(fn) {
 }
 
 
+function applyChatContextToBubbles(chatContext) {
+    document.getElementById('system-prompt').innerHTML = '';
+    document.getElementById('chatbox-content').innerHTML = '';
+    document.getElementById('system-prompt').textContent = chatContext[0].content;
+    for (var i = 1; i < chatContext.length; i++) {
+        if (chatContext[i].role === "user") {
+            if (i===1) {
+                addChatboxBubble(chatContext[i].content, '', false, true);
+            }
+            else {
+                addChatboxBubble(chatContext[i].content, '');
+            }
+            
+        }
+        else if (chatContext[i].role === "assistant") {
+            if (i===2) {
+                addChatboxBubble(chatContext[i].content, '', true, true);
+            }
+            else {
+                addChatboxBubble(chatContext[i].content, '', true);
+            }
+        }
+    }
+}
+
+
+function switchTemplate() {
+    updateChatContextFromBubbles();
+    chatContextPerSession[currentTemplate] = currentChatContext;
+    
+    if (chatContextPerSession[document.getElementById("template-selection").value]) {
+        applyChatContextToBubbles(chatContextPerSession[document.getElementById("template-selection").value]);
+    }
+    else {
+        applyChatContextToBubbles(CHAT_TEMPLATES[document.getElementById('template-selection').value])
+    }
+    currentTemplate = document.getElementById("template-selection").value;
+}
+
 docReady(function() {
-  // Styling with Tailwind CSS
-  tailwind.config = {
-      'theme': {
-          'screens': {
-              'xs': '475px',
-              'sm': '640',
-              'md': '768px',
-              'lg': '1024px',
-              'xl': '1280px',
-              '2xl': '1536px'
-          },
-          'extend': {
-              'colors': {
-                  'aime_blue': '#4FBFD7',
-                  'aime_darkblue': '#263743',
-                  'aime_orange': '#F6BE5C',
-                  'aime_green': '#CBE4C9',
-                  'aime_lightgreen': '#f2f6f2'
-              },
-              'gradientColorStopPositions': {
-                  33: '33%',
+    // Styling with Tailwind CSS
+    tailwind.config = {
+        'theme': {
+            'screens': {
+                'xs': '475px',
+                'sm': '640',
+                'md': '768px',
+                'lg': '1024px',
+                'xl': '1280px',
+                '2xl': '1536px'
+            },
+            'extend': {
+                'colors': {
+                    'aime_blue': '#4FBFD7',
+                    'aime_darkblue': '#263743',
+                    'aime_orange': '#F6BE5C',
+                    'aime_green': '#CBE4C9',
+                    'aime_lightgreen': '#f2f6f2'
                 },
-              'keyframes': {
-                  'blink': {
-                  '0%, 100%': { 'opacity': 0.8 },
-                  '50%': { 'opacity': 0.3 },
-                  },
-                  'blinkDelay-1': {
-                      '0%, 100%': { 'opacity': 0.8 },
-                      '50%': { 'opacity': 0.3 },
-                  },
-                  'blinkDelay-2': {
-                      '0%, 100%': { 'opacity': 0.8 },
-                      '50%': { 'opacity': 0.3 },
-                  },
-              },
-              'animation': {
-                  'blink': 'blink 1s infinite ease-in-out',
-                  'blinkDelay-1': 'blinkDelay-1 1s infinite ease-in-out 0.3333s',
-                  'blinkDelay-2': 'blinkDelay-2 1s infinite ease-in-out 0.6666s',
-              },
-          }
-      }
-  };
-  hljs.highlightAll();
+                'gradientColorStopPositions': {
+                    33: '33%',
+                    },
+                'keyframes': {
+                    'blink': {
+                    '0%, 100%': { 'opacity': 0.8 },
+                    '50%': { 'opacity': 0.3 },
+                    },
+                    'blinkDelay-1': {
+                        '0%, 100%': { 'opacity': 0.8 },
+                        '50%': { 'opacity': 0.3 },
+                    },
+                    'blinkDelay-2': {
+                        '0%, 100%': { 'opacity': 0.8 },
+                        '50%': { 'opacity': 0.3 },
+                    },
+                },
+                'animation': {
+                    'blink': 'blink 1s infinite ease-in-out',
+                    'blinkDelay-1': 'blinkDelay-1 1s infinite ease-in-out 0.3333s',
+                    'blinkDelay-2': 'blinkDelay-2 1s infinite ease-in-out 0.6666s',
+                },
+            }
+        }
+    };
+    hljs.highlightAll();
 
-	refreshRangeInputLayout();
+    refreshRangeInputLayout();
+    chatboxContentEl = document.getElementById('chatbox-content');
+    currentTemplate = document.getElementById("template-selection").value;
+    applyChatContextToBubbles(CHAT_TEMPLATES[currentTemplate]);
+    
 
-  chatboxContentEl = document.getElementById('chatbox-content');
-  infoBox = document.getElementById('info_box');
+    infoBox = document.getElementById('info_box');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
 
-  document.getElementById('input-context').textContent = inputContext;
-  addChatboxBubble('Hello, Steve.', '', true);
-  addChatboxBubble('How can I assist you today?', '');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tabName = button.getAttribute('data-tab');
+            const tabGroup = button.getAttribute('data-tab-group');
+            
 
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const tabContents = document.querySelectorAll('.tab-content');
+            tabButtons.forEach(tabButton => {
+                if (tabButton.getAttribute('data-tab-group') === tabGroup) {
+                    tabButton.classList.remove('active');
+                }
+            });
+            tabContents.forEach(tabContent => {
+                if (tabContent.getAttribute('data-tab-group') === tabGroup) {
+                    tabContent.classList.add('hidden');
+                }
+            });
 
-  tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-          const tabName = button.getAttribute('data-tab');
-          const tabGroup = button.getAttribute('data-tab-group');
-          
-
-          tabButtons.forEach(tabButton => {
-              if (tabButton.getAttribute('data-tab-group') === tabGroup) {
-                  tabButton.classList.remove('active');
-              }
-          });
-          tabContents.forEach(tabContent => {
-              if (tabContent.getAttribute('data-tab-group') === tabGroup) {
-                  tabContent.classList.add('hidden');
-              }
-          });
-
-          button.classList.add('active');            
-          document.getElementById(tabName).classList.remove('hidden');
-      });
-  });
-	
-	modelAPI.doAPILogin(function (data) {
-		console.log('Key: ' + modelAPI.clientSessionAuthKey)
-	},
-	function (error) {
-		infoBox.textContent = 'Login Error: ' + error + '\n';
-  });
+            button.classList.add('active');            
+            document.getElementById(tabName).classList.remove('hidden');
+        });
+    });
+        
+        modelAPI.doAPILogin(function (data) {
+            console.log('Key: ' + modelAPI.clientSessionAuthKey)
+        },
+        function (error) {
+            infoBox.textContent = 'Login Error: ' + error + '\n';
+    });
 });
