@@ -12,6 +12,19 @@ h3, h5 {
   font-weight: 700;
 }
 
+#system-prompt:focus {
+    outline: 2px solid #4FBFD7;
+    background-color: #f0f8ff;
+    padding: 3px;
+}
+[contenteditable="true"]:hover {
+    background-color: rgba(217, 245, 255,0.5);
+  }
+#system-prompt:focus {
+    outline: 2px solid #4A90E2; /* Visueller Hinweis bei Fokus */
+    background-color: #f0f8ff; /* Leichter Hintergrundwechsel bei Fokus */
+}
+
 .form-input, 
 .form-textarea, 
 .form-select, 
