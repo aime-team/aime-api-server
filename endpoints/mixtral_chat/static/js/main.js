@@ -526,19 +526,6 @@ docReady(function() {
     chatboxContentEl = document.getElementById('chatbox-content');
     currentTemplate = document.getElementById("template-selection").value;
     applyChatContextToBubbles(CHAT_TEMPLATES[currentTemplate]);
-    
-    // const systemPrompt = document.querySelector('#system-prompt[contenteditable="true"]');
-    // systemPrompt.addEventListener('keydown', (evt) => {
-    //     if (evt.which === 13) {
-    //         evt.preventDefault();
-    //     }
-    // });
-    // systemPrompt.addEventListener('input', () => {
-    //     const regex = /[<>\\/=`\[\]{}@#$%^&|~]/g;
-    //     if (regex.test(systemPrompt.textContent)) {
-    //         systemPrompt.textContent = systemPrompt.textContent.replace(regex, '');
-    //     }
-    // });
 
     infoBox = document.getElementById('info_box');
     const tabButtons = document.querySelectorAll('.tab-button');
