@@ -155,9 +155,9 @@ You can easily turn your existing Pytorch and Tensorflow script into an API comp
 
 Following example workers implementations are available as open source, which easily can be be adapted to similair use cases:
 
-### How to run a LlaMa2 Chat Worker (Large Language Model Chat)
+### How to run a Llama3 Chat Worker (Large Language Model Chat)
 
-[https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
+[https://github.com/aime-labs/llama3_chat](https://github.com/aime-labs/llama3_chat)
 
 
 ### How to run a Stable Diffusion Worker (Image Generation)
