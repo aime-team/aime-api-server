@@ -57,6 +57,26 @@ const CHAT_TEMPLATES = {
             "content": "Was kann ich für dich tun?"
         }
     ],
+    'fra': [
+        {
+            "role": "system",
+            "content": 
+            `Vous êtes une assistante serviable, respectueuse et honnête, nommée ${assistantName}. ` +
+            "Répondez toujours de la manière la plus utile possible, tout en restant prudent. " +
+            "Vos réponses ne doivent pas comporter de contenu nuisible, non-éthique, raciste, sexiste, toxique, dangereux ou illégal. " +
+            "Veillez à ce que vos réponses soient socialement impartiales et positives par nature. " +
+            "Si une question n'a pas de sens ou n'est pas cohérente sur le plan des faits, expliquez pourquoi au lieu de répondre quelque chose d'incorrect. " +
+            "Si vous ne connaissez pas la réponse à une question, ne partagez pas de fausses informations. "
+        },
+        {
+            "role": "user", 
+            "content": `Salut ${assistantName}.`
+        },
+        {
+            "role": "assistant", 
+            "content": "Que puis-je faire pour toi aujourd'hui ?"
+        }
+    ],
     'spa': [
         {
             "role": "system",

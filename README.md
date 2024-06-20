@@ -46,25 +46,25 @@ Clients, like web browsers, smartphones, desktop apps can easily integrating mod
 
 To illustrate the usage and capabilities of AIME API we currently run following GenAI (generative AI) demo api services:
 
-### LlaMa3 Chat
+### Llama3 Instruct Chat
 
 [![AIME LlaMa3 Chat Demo](/docs/images/aime_api_demo-llm3-chat_banner.png "AIME LlaMa3 Chat Demo")](https://api.aime.info/llama3-chat/)
 
-Chat with 'Steve', our LlaMa 3 based chat-bot.
+Chat with 'Steve', our LlaMa 3 based instruct chat-bot.
 
 * AIME Demo Server: [LLama3 Chat](https://api.aime.info/llama3-chat/)
 * Your Local Server: [LLama3 Chat](/llama3-chat/)
 * Source: [https://github.com/aime-labs/llama3_chat](https://github.com/aime-labs/llama3_chat)
 
-### LlaMa2 Chat
+### Mixtral 8x7B / 8x22B Instruct Chat
 
-[![AIME LlaMa2 Chat Demo](/docs/images/aime_api_demo-llm-chat_banner.png "AIME LlaMa2 Chat Demo")](https://api.aime.info/llama2-chat/)
+[![AIME Mixtral Chat Demo](/docs/images/aime_api_demo-mixtral-chat_banner.png "AIME Mixtral Instruct Chat Demo")](https://api.aime.info/mixtral-chat/)
 
-Chat with 'Dave', our LlaMa2 based chat-bot.
+Chat with 'Chloe', our Mixtral 8x7B or 8X22B based instruct chat-bot.
 
-* AIME Demo Server: [LLama2 Chat](https://api.aime.info/llama2-chat/)
-* Your Local Server: [LLama2 Chat](/llama2-chat/)
-* Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
+* AIME Demo Server: [Mixtral Chat](https://api.aime.info/mixtral-chat/)
+* Your Local Server: [Mixtral Chat](/mixtral-chat/)
+* Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/mixtral_chat)
 
 ### Stable Diffusion XL
 
@@ -85,6 +85,16 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 * AIME Demo Server: [Seamless Communication](https://api.aime.info/sc-m4tv2/)
 * Your local Server: [Seamless Communication](/sc-m4tv2/)
 * Source: [https://github.com/aime-labs/seamless_communication](https://github.com/aime-labs/seamless_communication)
+
+
+### Implementation for following model endpoints are also available
+
+#### Llama2 Chat
+
+Chat with 'Dave', the Llama2 based chat-bot. 
+
+* Local Endpoint: [LLama2 Chat](/llama2-chat/)
+* Worker Implementation: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
 
 
 ## How to setup and start the AIME API Server
