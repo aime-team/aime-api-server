@@ -467,6 +467,7 @@ class InputValidationHandler():
 
     def get_image_parameters(self, image_binary):
         image_params = {MediaParams.FORMAT: None, MediaParams.COLOR_SPACE: None, MediaParams.SIZE: None}
+        
         if image_binary:
             try:
                 with io.BytesIO(image_binary) as buffer:
@@ -475,10 +476,11 @@ class InputValidationHandler():
                     
                     self.convert_data = True
                     self.image = image.copy()
-                    self.image.format = image.format                
+                    self.image.format = image.format        
                     return image_params
             except UnidentifiedImageError as error:
                 self.validation_erros.append(error)
+        
         return image_params
 
 

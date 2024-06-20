@@ -5,9 +5,10 @@
 const API_USER = 'aime'
 const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
 
-const modelAPI = new ModelAPI('stable_diffusion_xl_txt2img', API_USER, API_KEY);
+const modelAPI = new ModelAPI('stable_diffusion_3', API_USER, API_KEY);
 
 let infoBox = document.getElementById('info_box');
+var inputBase64String = ''
 
 function onSendAPIRequest() {
     params = new Object({
@@ -16,31 +17,13 @@ function onSendAPIRequest() {
         seed:                   parseInt(document.getElementById('seed_range').value),
         height:                 parseInt(document.getElementById('height_range').value),
         width:                  parseInt(document.getElementById('width_range').value),
-        base_steps:             parseInt(document.getElementById('steps_base_range').value),
-        refine_steps:           parseInt(document.getElementById('steps_refine_range').value),
-        scale:                  parseFloat(document.getElementById('scale_range').value),
-        aesthetic_score:        parseFloat(document.getElementById('aesthetic_score_range').value),
-        negative_aesthetic_score: parseFloat(document.getElementById('negative_aesthetic_score_range').value),
-        img2img_strength:       parseFloat(document.getElementById('img2img_strength_range').value),
-        orig_width:             parseInt(document.getElementById('orig_width_range').value),
-        orig_height:            parseInt(document.getElementById('orig_height_range').value),
-        crop_coords_top:        parseInt(document.getElementById('crop_coords_top_range').value),
-        crop_coords_left:       parseInt(document.getElementById('crop_coords_left_range').value),
-        sigma_min:              parseFloat(document.getElementById('sigma_min_range').value),
-        sigma_max:              parseFloat(document.getElementById('sigma_max_range').value),
-        rho:                    parseFloat(document.getElementById('rho_range').value),
-        s_churn:                parseFloat(document.getElementById('s_churn_range').value),
-        s_tmin:                 parseFloat(document.getElementById('s_tmin_range').value),
-        s_tmax:                 parseFloat(document.getElementById('s_tmax_range').value),
-        s_noise:                parseFloat(document.getElementById('s_noise_range').value),
-        eta:                    parseFloat(document.getElementById('eta_range').value),
-        order:                  parseInt(document.getElementById('order_range').value),
-        base_sampler:           document.getElementById('base_sampler').value,
-        refine_sampler:         document.getElementById('refine_sampler').value,
-        base_discretization:    document.getElementById('base_discretization').value,
-        refine_discretization:  document.getElementById('refine_discretization').value
+        steps:                  parseInt(document.getElementById('steps_range').value),
+        cfg_scale:              parseFloat(document.getElementById('cfg_scale_range').value),
+        denoise:              parseFloat(document.getElementById('denoise_range').value),
     });
-
+    if (inputBase64String) {
+        params.image = inputBase64String;
+    }
     let prompt_input = document.getElementById('prompt_input').value
     // set default prompts if empty
     // if (prompt_input === '') {
@@ -62,9 +45,9 @@ function onResultCallback(data) {
     if (data.error) {
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
           modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
-            infoBox.textContent = 'Login Error2: ' + error + '\n';
+            infoBox.textContent = 'Login Error: ' + error + '\n';
             enableSendButton();                     
-            removeSpinner(); 
+            removeSpinner();
           });
         }
         else {
@@ -237,6 +220,84 @@ function initializeImageContainer() {
 //     }, 3000);
 // }
 
+function initializeDropZone() {
+    var dropzone = document.createElement('div');
+    dropzone.className = 'w100 rounded dropzone flex flex-col items-center justify-center p-7 bg-gray-100 border-2 border-dashed';
+    dropzone.id = 'dropzone-content';
+    dropzone.title = "Klick here to select file to be uploaded...";
+    dropzone.innerHTML = `
+        <div id="dropzone-preview" class="flex flex-col justify-center items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-grey mb-3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+            
+            <p class="text-grey text-base font-bold">Drop image file here.</p>
+            <p class="text-grey text-sm font-semibold">(png, jpg or jpeg)</p>
+        </div>
+        <div id="dropzone-label" class="flex flex-col justify-center items-center">
+        </div>
+        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="image/png, image/jpg, image/jpeg">
+    `; // Image MIME Types to handle: image/png, image/jpg, image/jpeg
+    document.getElementById('dropzone').insertAdjacentElement('afterbegin', dropzone);
+
+    //['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].forEach(function(event) {
+    //    dropzone.addEventListener(event, function(e) {
+    //        e.preventDefault();
+    //        e.stopPropagation();
+    //    });
+    //});
+    dropzone.addEventListener('dragover', function() {  dropzone.classList.add('hover', 'shadow-inner'); });  
+    dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('hover', 'shadow-inner'); });
+    dropzone.addEventListener('click', () => dropzone.querySelector('#dropzone-input').click() );
+  
+    dropzone.addEventListener('drop', function(e) {
+        this.classList.remove('hover', 'shadow-inner');
+        var file = e.dataTransfer.files[0];
+        handleFileSelection(file);
+      }, false);
+
+    dropzone.querySelector('#dropzone-input').addEventListener('change', function(e) {
+        var file = this.files[0];
+        handleFileSelection(file);
+    });
+}
+
+function handleFileSelection(file) {
+    const imageInput = document.getElementById('dropzone-input');
+    var allowedFormats = imageInput.accept.split(',').map(function (item) { return item.trim(); });
+    input_image_type = file.type
+    console.log(file.type)
+    let fileSizeMB = ( ( file.size / 1024 ) / 1024).toFixed(2);
+
+    if (allowedFormats.includes(file.type)) {
+        let dropzoneContentEl = document.getElementById('dropzone-preview');
+        
+        
+        dropzoneContentEl.innerHTML = '';
+        var image = document.createElement('img');
+        image.style.maxWidth = '100%';
+        dropzoneContentEl.appendChild(image)
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            image.src = event.target.result;
+            image.onload = function() {
+                document.getElementById('dropzone-label').innerHTML = `<p class="text-xs">Filename: ${file.name}; Size: ${fileSizeMB} MB; Resolution: ${image.naturalWidth} x ${image.naturalHeight} </p>`
+            }
+            const base64Image = event.target.result.split(',')[1]; // Get the base64 part
+            const imageType = file.type;
+            inputBase64String = `${imageType};base64,${base64Image}`;
+            appendResetIcon(dropzoneContentEl)
+            
+        };
+        reader.readAsDataURL(file);
+    } else {
+        alert('Sorry, but only image files of type ' + allowedFormats + ' are allowed!');
+        
+    }
+}
+
+
+
 function appendDownloadIcon(containerEl, image_data, prompt, seed, indx) {
     const template = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white shadow-md drop-shadow-md">
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -251,13 +312,56 @@ function appendDownloadIcon(containerEl, image_data, prompt, seed, indx) {
     dwnldIcon.addEventListener('click', ()=>{ downloadBase64File(image_data, prompt, seed, indx); });
 }
 
+function appendResetIcon(containerEl) {
+   
+    const template = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-white shadow-md drop-shadow-md">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+</svg>`;
+
+    const resetIcon = document.createElement('div');
+    resetIcon.id = 'resetButton';
+    resetIcon.title = "Remove image";
+    resetIcon.className = 'resetButton absolute top-0 right-0 p-2 hover:cursor-pointer';
+    resetIcon.innerHTML = template;
+    // Add event listener for hover effect on SVG element
+    resetIcon.addEventListener('mouseover', function() {
+        const svgElement = resetIcon.querySelector('svg');
+        svgElement.style.border = '1px solid #CBE4C9';
+    });
+
+    resetIcon.addEventListener('mouseout', function() {
+        const svgElement = resetIcon.querySelector('svg');
+        svgElement.style.border = 'none';
+    });
+
+    containerEl.appendChild(resetIcon);
+
+
+    containerEl.classList.add('relative');
+
+    resetIcon.addEventListener('click', function() {
+        event.stopPropagation();
+        resetDropZone()
+        initializeDropZone();
+    });
+
+}
+
+
+function resetDropZone() {
+    document.getElementById('dropzone-content').remove();
+    inputBase64String = ''
+
+}
+
 function downloadBase64File(base64Data, prompt, seed, indx) {
     const downloadLink = document.createElement("a");
     downloadLink.href = base64Data;
 
     let fileName = generateFileName(prompt);
     if(fileName === '') {
-        fileName = 'sdxl_empty_prompt';
+        fileName = 'sd3_empty_prompt';
     }
     fileName = fileName + '_' + seed + '_' + indx;
     downloadLink.download = fileName;
@@ -320,6 +424,28 @@ function handleKeyPress(event) {
         onSendAPIRequest();
     }
  }
+
+function handleImageUpload(event) {
+    const fileInput = event.target;
+    const imagePreview = document.getElementById('image_preview');
+
+    if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const image = document.createElement('img');
+            image.src = e.target.result;
+            image.style.maxWidth = '100%';
+            imagePreview.innerHTML = ''; // Clear any previous preview
+            imagePreview.appendChild(image);
+			const file_name = fileInput.files[0].name;
+            const file_extension_temp = file_name.split('.').pop().toLowerCase()
+			const file_extension = (file_extension_temp === 'jpg') ? 'jpeg' : file_extension_temp; //convert .jpg to .jpeg
+            fileInput.setAttribute('data-extension', file_extension);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+}
+
 
 function refreshRangeInputLayout() {
     const selectLabelElements = document.querySelectorAll('p.select-label');
@@ -417,6 +543,7 @@ window.addEventListener('load', function() {
 
     initializeSizeSwapButton();
     initializeImageContainer();
+    initializeDropZone();
     refreshRangeInputLayout();
 
     modelAPI.doAPILogin(function (data) {
