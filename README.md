@@ -64,7 +64,7 @@ Chat with 'Chloe', our Mixtral 8x7B or 8X22B based instruct chat-bot.
 
 * AIME Demo Server: [Mixtral Chat](https://api.aime.info/mixtral-chat/)
 * Your Local Server: [Mixtral Chat](/mixtral-chat/)
-* Source: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/mixtral_chat)
+* Source: [https://github.com/aime-labs/mixtral_chat](https://github.com/aime-labs/mixtral_chat)
 
 ### Stable Diffusion XL
 
