@@ -31,10 +31,10 @@ This software may be used and distributed according to the terms of the MIT LICE
 		<div id="layout" class="columns flex flex-col md:flex-row">
 			<!-- LEFT COLUMN -->
 			<div class="column md:container input-col relative md:flex-1 pb-4 min-w-0">
-				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">INPUT</h3>
+				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg no-print">INPUT</h3>
 				<div id="chatbox" class="relative">
-					<p class="select-label">Chat templates</p>
-					<select class="form-select w100 rounded" id="template-selection" onchange="switchTemplate()">
+					<p class="select-label no-print">Chat templates</p>
+					<select class="form-select w100 rounded no-print" id="template-selection" onchange="switchTemplate()">
 						<option value="deu">Deutsch</option>
 						<option value="ber">Deutsch - Berliner Schnauze</option>
 						<option value="wer">Deutsch - Röhrig</option>						
@@ -47,14 +47,14 @@ This software may be used and distributed according to the terms of the MIT LICE
 					<div id="chatbox-title" class="mb-2 bg-aime_lightgreen p-3 rounded-md">
 						<div class="overlook text-xs text-gray-500">System Prompt: </div>
 						<div contenteditable="true" id="system-prompt" class="eol-node mt-1 text-sm leading-4 italic"></div>
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#999" class="size-6 w-4 h-4">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#999" class="size-6 w-4 h-4 no-print">
 							<path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
 							<path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
 						</svg>
 					</div>
 					<div id="chatbox-content" class="bg-aime_darkblue rounded-t-md p-5 max-h-96 overflow-y-scroll pb-0"></div>
-					<div id="chatbox-fadeout" class="absolute inset-x-0 h-10 bg-gradient-to-t to-transparent from-aime_darkblue" style="bottom:57px;"></div>
-					<div id="chatbox-input" class="">
+					<div id="chatbox-fadeout" class="absolute inset-x-0 h-10 bg-gradient-to-t to-transparent from-aime_darkblue no-print" style="bottom:57px;"></div>
+					<div id="chatbox-input" class="no-print">
 						<div class="bg-aime_darkblue p-4 flex items-center rounded-b-md">
 							<input id="chat_input" name="chat_input" type="text" placeholder="Type your message..." class="flex-1 bg-aime_darkblue p-2 rounded-l-md border-1 border-gray-500 focus:outline-none text-white text-sm focus:outline-none focus:border-1 focus:border-gray-500" onkeydown="handleKeyPress(event)">
 							<button id="chat_send" title="Send" class="bg-gray-500 text-white p-2 rounded-r-md border-gray-500" onclick="onButtonClick();">
@@ -65,8 +65,13 @@ This software may be used and distributed according to the terms of the MIT LICE
 						</div>
 					</div>	
 				</div>
-				<a id="clear_chat_context" class="text-xs font-medium text-gray-400 border-b border-transparent hover:border-gray-400 focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out" onclick="clearChatContext()">Clear chat context</a>
-				<div id="settings_container" class="w100 mt-5">
+				
+				<div class="flex justify-between items-center mt-1">
+					<a id="clear_chat_context" class="cursor-pointer text-xs font-medium text-gray-400 border-b border-transparent hover:border-gray-400 focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out no-print" onclick="clearChatContext()">Clear chat context</a>
+					<a id="print_chat" class="cursor-pointer text-xs font-medium text-gray-400 border-b border-transparent hover:border-gray-400 focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out no-print" onclick="window.print();">Print Chat</a>
+				</div>
+
+				<div id="settings_container" class="w100 mt-5 no-print">
 					<p class="select-label">Top K</p>
 					<input id="top_k_range" class="slider w100" type="range" min="1" max="100" value="40" oninput="document.getElementById('top_k_label').innerHTML = this.value">
 					<label for="top_k_range" id="top_k_label">40</label>
@@ -86,12 +91,12 @@ This software may be used and distributed according to the terms of the MIT LICE
 			</div> <!-- /END LEFT COLUMN -->
 
 			<!-- DEVIDER -->
-			<div class="column-divider" role="separator">
+			<div class="column-divider no-print" role="separator">
 				<div class="thin-line"></div>
 			</div><!-- /END DEVIDER -->
 
 			<!-- RIGHT COLUMN -->
-			<div id="output_section" class="column md:container output-col md:flex-1 pb-4 min-w-0">
+			<div id="output_section" class="column md:container output-col md:flex-1 pb-4 min-w-0 no-print">
 				<div>
 					<div class="flex">
 						<button id="tab_button_output" class="tab-button active" data-tab="tab_output"><h3 class="text-lg pr-4">OUTPUT</h3></button>
