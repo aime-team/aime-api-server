@@ -9,7 +9,7 @@
  */
 class ModelAPI {
 
-    static version = 'JavaScript AIME API Client Interface 0.8.1';
+    static version = 'JavaScript AIME API Client Interface 0.8.0';
     
     /**
     * Constructor of the class.
@@ -114,9 +114,8 @@ class ModelAPI {
         const url = `/${this.endpointName}`;
         console.log(`URL: ${url}`);
         console.log(`API Key: ${this.clientSessionAuthKey}`);
-        //console.log('progressStream: ', progressStream);
+        console.log('progressStream: ', progressStream);
 
-        params = await this.stringifyObjects(params)
         params.client_session_auth_key = this.clientSessionAuthKey;
         params.wait_for_result = !progressCallback;
 
@@ -235,19 +234,6 @@ class ModelAPI {
         }
         checkProgress(this.defaultProgressIntervall);
     }
-    async stringifyObjects(params) {
-        var transformedParams = new Object()
-        for (let key in params) {
-            if (params.hasOwnProperty(key)) {
-                if (typeof params[key] === 'object' && params[key] !== null) {
-                    transformedParams[key] = JSON.stringify(params[key]);
-                } else {
-                    transformedParams[key] = params[key];
-                }
-            }
-        }
-        return transformedParams;
-    }
 }
 
 
@@ -259,8 +245,8 @@ class ModelAPI {
  * @param {function} resultCallback - The callback after the request is completed.
  * @param {function} [progressCallback=null] - The callback for progress updates.
  */
-function doAPIRequest(endpointName, params, resultCallback, user = null, key = null, progressCallback = null) {
-    const model = new ModelAPI(endpointName, user, key);
+function doAPIRequest(endpointName, params, resultCallback, progressCallback = null) {
+    const model = new ModelAPI(endpointName);
     model.doAPILogin((data) => {
         model.doAPIRequest(params, resultCallback, progressCallback);
     });
