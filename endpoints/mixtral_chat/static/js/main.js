@@ -230,10 +230,11 @@ function onResultCallback(data) {
   }
 	else {
     enableSendButton();
-        
+        infoBox.textContent = ''
 		if (data.total_duration) { 			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n'; }
 		if (data.compute_duration) { 		infoBox.textContent += 'Compute duration: ' + data.compute_duration + 's' + '\n'; }
 		if (data.num_generated_tokens) { 	infoBox.textContent += 'Generated tokens: ' + data.num_generated_tokens + '\n'; }
+        if (data.current_context_length) { 	infoBox.textContent += 'Current context length: ' + data.current_context_length + '\n'; }
         if (data.max_seq_len) { 	infoBox.textContent += 'Maximum context length: ' + data.max_seq_len + '\n'; }
 		if (data.compute_duration && data.num_generated_tokens) {
 				tokensPerSec = data.num_generated_tokens / data.compute_duration
