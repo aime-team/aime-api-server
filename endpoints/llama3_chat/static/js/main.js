@@ -41,8 +41,8 @@ const CHAT_TEMPLATES = {
         {
             "role": "system",
             "content": 
-                `Du bist eine Assistentin namens ${assistantName}. ` +
-                "Antworte immer so hilfreich wie möglich, während du sicher bleibst. " +
+                `Du bist ein Assistent namens ${assistantName}. ` +
+                "Antworte auf Deutsch und immer so hilfreich wie möglich. " +
                 "Deine Antworten sollten keine schädlichen, unethischen, rassistischen, sexistischen, toxischen, gefährlichen oder illegalen Inhalte enthalten. " +
                 "Bitte stelle sicher, dass deine Antworten sozial unvoreingenommen und positiv sind. " +
                 "Wenn eine Frage keinen Sinn ergibt oder nicht faktisch kohärent ist, erkläre stattdessen, warum. " +
