@@ -68,6 +68,7 @@ function onResultCallback(data) {
         document.getElementById('progress_label').innerText = '';
 
         num_images = parseInt(document.getElementById('num_samples_range').value);
+        console.log(data)
         imagesPerSec = num_images / data.total_duration
         infoBox.textContent = 'Prompt: ' +  data.prompt + '\nSeed: ' + data.seed + '\nTotal job duration: ' + 
             data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's' + '\nImages per second: ' + imagesPerSec.toFixed(1);
@@ -232,12 +233,12 @@ function initializeDropZone() {
             </svg>
             
             <p class="text-grey text-base font-bold">Drop image file here.</p>
-            <p class="text-grey text-sm font-semibold">(png, jpg or jpeg)</p>
+            <p class="text-grey text-sm font-semibold">(png, jpeg, bmp or webp)</p>
         </div>
         <div id="dropzone-label" class="flex flex-col justify-center items-center">
         </div>
-        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="image/png, image/jpg, image/jpeg">
-    `; // Image MIME Types to handle: image/png, image/jpg, image/jpeg
+        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="image/png, image/jpg, image/jpeg, image/bmp, image/webp">
+    `;
     document.getElementById('dropzone').insertAdjacentElement('afterbegin', dropzone);
 
     //['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].forEach(function(event) {
