@@ -33,6 +33,20 @@ from .markdown_compiler import MarkDownCompiler
 logger = logging.getLogger('API')
 thread_pool = ThreadPoolExecutor()
 
+TYPES_DICT = {
+    'string': str,
+    'str': str,
+    'integer': int,
+    'int': int,
+    'float': float,
+    'bool': bool,
+    'boolean': bool,
+    'image': str, 
+    'audio': str,
+    'json': str
+    }
+
+
 class MediaParams(Enum):
     FORMAT = 'format'
     DURATION = 'duration'
@@ -61,30 +75,6 @@ FFMPEG_FLAG_DICT = {
     MediaParams.COLOR_SPACE: [VIDEO_FILTER_FLAG, '-pix_fmt']
 }
 
-TYPES_DICT = {
-    'string': str,
-    'str': str,
-    'integer': int,
-    'int': int,
-    'float': float,
-    'bool': bool,
-    'boolean': bool,
-    'image': str, 
-    'audio': str,
-    'json': str
-    }
-
-FFMPEG_FILTER_DICT = {
-    MediaParams.FORMAT: str,
-    MediaParams.DURATION: str,
-    MediaParams.SAMPLE_RATE: str,
-    MediaParams.CHANNELS: str,
-    MediaParams.SAMPLE_BIT_DEPTH: str,
-    MediaParams.AUDIO_BIT_RATE: str,
-    MediaParams.SIZE: lambda size: f'scale={size[0]}:{size[1]}',
-    MediaParams.COLOR_SPACE: lambda color_space: f'format={color_space}'
-
-}
 
 MEDIA_ATTRIBUTE_DICT = {
     MediaParams.FORMAT: {
@@ -168,7 +158,6 @@ class StaticRouteHandler:
         self.app.logger.info(f'Static: {slug} -> {(self.config_file_path / route_path).resolve()}{compile_str}')
 
 
-
 class InputValidationHandler():
 
     def __init__(self, input_args, ep_input_param_config, server_input_type_config):
@@ -179,7 +168,7 @@ class InputValidationHandler():
         self.arg_definition = dict()
         self.arg_type = str()
         self.ep_input_param_name = str()
-        self.conversion_command = list()
+        self.ffmpeg_cmd = list()
         self.image = None
         self.convert_data = False
 
@@ -205,14 +194,13 @@ class InputValidationHandler():
                         job_data[ep_input_param_name] = self.validate_and_convert_json(value)
                     else:
                         job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
-                    
         return job_data, self.validation_errors
 
     
     def check_for_unknown_parameters(self):
         for param in self.input_args.keys():
             if param not in self.ep_input_param_config:
-                self.validation_errors.append(f'Invalid parameter: {param.value}')
+                self.validation_errors.append(f'Invalid parameter: {param}')
 
 
     def validate_required_argument(self, value):
@@ -436,29 +424,29 @@ class InputValidationHandler():
         media_params,
         target_media_params
         ):
-        if self.conversion_command:
-            if FORMAT_FLAG not in self.conversion_command:
+        if self.ffmpeg_cmd:
+            if FORMAT_FLAG not in self.ffmpeg_cmd:
                 target_format = target_media_params.get(MediaParams.FORMAT) if not self.arg_type == 'image' else 'image2pipe'
-                self.conversion_command += [FORMAT_FLAG, MEDIA_ATTRIBUTE_DICT.get(target_format, target_format)] # using 'pipe:x' needs explicit format definition
-            if VCODEC_FLAG not in self.conversion_command and self.arg_type == 'image':
-                self.conversion_command += [
+                self.ffmpeg_cmd += [FORMAT_FLAG, MEDIA_ATTRIBUTE_DICT.get(target_format, target_format)] # using 'pipe:x' needs explicit format definition
+            if VCODEC_FLAG not in self.ffmpeg_cmd and self.arg_type == 'image':
+                self.ffmpeg_cmd += [
                     VCODEC_FLAG, 
                     MEDIA_ATTRIBUTE_DICT[MediaParams.FORMAT].get(
                         media_params.get(MediaParams.FORMAT), 
                         media_params.get(MediaParams.FORMAT)
                     )[0]
                 ]
-            if AUDIO_BIT_RATE_FLAG not in self.conversion_command and self.arg_type == 'audio':
-                self.conversion_command += [AUDIO_BIT_RATE_FLAG, media_params.get(MediaParams.AUDIO_BIT_RATE)]
+            if AUDIO_BIT_RATE_FLAG not in self.ffmpeg_cmd and self.arg_type == 'audio':
+                self.ffmpeg_cmd += [AUDIO_BIT_RATE_FLAG, media_params.get(MediaParams.AUDIO_BIT_RATE)]
 
-            if self.arg_type == 'audio' and FFMPEG_FLAG_DICT[MediaParams.CHANNELS][0] not in self.conversion_command:
-                self.conversion_command += [FFMPEG_FLAG_DICT[MediaParams.CHANNELS][0], str(target_media_params.get(MediaParams.CHANNELS, 1))] # If not specifies sometimes output has different channels then source
+            if self.arg_type == 'audio' and FFMPEG_FLAG_DICT[MediaParams.CHANNELS][0] not in self.ffmpeg_cmd:
+                self.ffmpeg_cmd += [FFMPEG_FLAG_DICT[MediaParams.CHANNELS][0], str(target_media_params.get(MediaParams.CHANNELS, 1))] # If not specifies sometimes output has different channels then source
             
-            conversion_command = ['ffmpeg', '-i', 'pipe:0'] + self.conversion_command + ['pipe:1']
-            logger.debug(f'ffmpeg command: {conversion_command}')
-            process = await asyncio.create_subprocess_exec(*conversion_command, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            ffmpeg_cmd = ['ffmpeg', '-i', 'pipe:0'] + self.ffmpeg_cmd + ['pipe:1']
+            logger.debug(f'ffmpeg command: {ffmpeg_cmd}')
+            process = await asyncio.create_subprocess_exec(*ffmpeg_cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
             logger.info(f'Media input data converted from {format_params_for_logger(media_params)} to {format_params_for_logger(target_media_params)}')
-            self.conversion_command.clear()
+            self.ffmpeg_cmd.clear()
             media_binary, conversion_error = await process.communicate(input=media_binary)
             try:
                 await process.stdin.wait_closed()
@@ -489,7 +477,7 @@ class InputValidationHandler():
             if supported_value_list and param_value not in supported_value_list:
                 if arg_param_definition.get('auto_convert'):
                     self.convert_data = True
-                    self.make_ffmpeg_cmd(default_value, param_name)
+                    self.add_ffmpeg_cmd(param_value, default_value, param_name)
                     return default_value
                 else: 
                     self.validation_errors.append(
@@ -502,15 +490,15 @@ class InputValidationHandler():
 
 
     def validate_numerical_attribute(self, param_value, param_name):
-        new_param_value = self.validate_numerical_value(
+        target_param_value = self.validate_numerical_value(
             param_value,
             f'{self.ep_input_param_name}.{param_name}',
             self.arg_definition.get(param_name.value)
         )
-        if self.arg_type in ('audio','image') and new_param_value != param_value:
+        if self.arg_type in ('audio','image') and target_param_value != param_value:
             self.convert_data = True
-            self.make_ffmpeg_cmd(new_param_value, param_name)
-        return new_param_value
+            self.add_ffmpeg_cmd(param_value, target_param_value, param_name)
+        return target_param_value
 
 
     def validate_numerical_value(self, param_value, param_name, definition):
@@ -576,25 +564,23 @@ class InputValidationHandler():
         return param_value
 
     
-    def make_ffmpeg_cmd(self, param_value, param_name):
+    def add_ffmpeg_cmd(self, param_value, target_param_value, param_name):
 
         for flag in FFMPEG_FLAG_DICT.get(param_name, []):
             if flag == VIDEO_FILTER_FLAG:
-                ffmpeg_value = FFMPEG_FILTER_DICT[param_name](param_value)
+                ffmpeg_value = self.get_video_filter_string(param_value, target_param_value, param_name)
                         
             elif flag == FORMAT_FLAG and self.arg_type == 'image':
                 ffmpeg_value = 'image2pipe'
             else:
-                ffmpeg_value = str(param_value)
+                ffmpeg_value = str(target_param_value)
 
-            if flag in self.conversion_command:
-                self.conversion_command[
-                    self.conversion_command.index(flag) + 1
+            if flag in self.ffmpeg_cmd:
+                self.ffmpeg_cmd[
+                    self.ffmpeg_cmd.index(flag) + 1
                 ] += ',' + ffmpeg_value
             else:
-                self.conversion_command += [flag, ffmpeg_value]
-
-
+                self.ffmpeg_cmd += [flag, ffmpeg_value]
 
 
     def get_ffmpeg_conform_parameters(self, param_value, param_name):
@@ -614,6 +600,35 @@ class InputValidationHandler():
             return media_attribute_dict.get(param_value, [param_value])[0], media_attribute_dict.get(default_value, [default_value])[0], supported_value_list
         else:
             return param_value, default_value, arg_param_definition.get('supported')
+
+
+    def get_video_filter_string(self, param_value, target_param_value, param_name):
+
+        if param_name == MediaParams.SIZE:
+            crop_size, top_left = self.get_crop_parameter(param_value, target_param_value, param_name)
+            return f'crop={crop_size[0]}:{crop_size[1]}:{top_left[0]}:{top_left[1]},scale={target_param_value[0]}:{target_param_value[1]}'
+        elif param_name == MediaParams.COLOR_SPACE:
+            return f'format={target_param_value}'
+
+
+    def get_crop_parameter(self, size, target_size, param_name):
+        
+        target_aspect_ratio = target_size[0] / target_size[1]
+        original_aspect_ratio = size[0] / size[1]
+        crop_size = list(size)
+        top_left = [0, 0]
+        print(param_name, self.arg_definition)
+        if self.arg_definition.get(param_name.value).get('resize_method') == 'crop':
+            if original_aspect_ratio > target_aspect_ratio:
+                # Reduce width
+                crop_size[0] = int(size[1] * target_aspect_ratio)
+                top_left[0] = (size[0] - crop_size[0]) // 2
+            else:
+                # Reduce height
+                crop_size[1] = int(size[0] / target_aspect_ratio)
+                top_left[1] = (size[1] - crop_size[1]) // 2
+
+        return tuple(crop_size), tuple(top_left)
 
 
 class CustomFormatter(logging.Formatter):
