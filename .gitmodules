@@ -1,8 +1,8 @@
 [submodule "api_worker_interface"]
 	path = api_worker_interface
-	url = https://github.com/aime-labs/aime-api-worker-interface
+	url = https://github.com/aime-team/aime-api-worker-interface
         branch = main
 
 [submodule "api_client_interfaces"]
 	path = api_client_interfaces
-	url = https://github.com/aime-labs/aime-api-client-interfaces
+	url = https://github.com/aime-team/aime-api-client-interfaces
