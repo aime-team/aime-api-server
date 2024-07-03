@@ -21,7 +21,7 @@ import asyncio
 from .api_endpoint import APIEndpoint
 from .job_queue import JobQueue, JobState
 from .flags import Flags
-from .utils import StaticRouteHandler, shorten_strings, CustomFormatter
+from .utils.misc import StaticRouteHandler, shorten_strings, CustomFormatter
 from .__version import __version__
 
 

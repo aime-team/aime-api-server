@@ -14,7 +14,8 @@ from pathlib import Path
 import toml
 
 from .job_queue import JobState
-from .utils import StaticRouteHandler, shorten_strings, generate_auth_key, calculate_estimate_time, InputValidationHandler
+from .utils.misc import StaticRouteHandler, shorten_strings, generate_auth_key, calculate_estimate_time
+from .input_validation import InputValidationHandler
 
 
 

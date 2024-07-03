@@ -212,7 +212,7 @@ class ApiTest():
     def make_request_with_invalid_parameters(self, params):
         try:    
             response = self.fetch_sync(params, self.endpoint_names[0])
-            assert response.status_code == 400, f'Invalid parameters {params} did not reply with status code 400'
+            assert response.status_code == 400, f'Invalid parameters {params} did not reply with status code 400. Response {response.json()}'
             return True
 
 
