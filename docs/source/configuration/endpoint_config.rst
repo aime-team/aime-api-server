@@ -156,13 +156,13 @@ If there are only certain values supported by the worker, the type ``"selection"
   or the first element of the* ``supported`` *array, if no* ``default`` *value is found.*
 
 
-Types ``"image"``, ``"image_list"`` and ``"audio"``:
+Types ``"image"`` and ``"audio"``:
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
 * ``format`` *(str): The format supported by the workers* 
 
-  * *Available values for the type* ``"audio"`` *:* ``"wav"`` *,* ``"mp3"`` *,* ``"ogg"`` *,* ``"webm"`` *,* ``"mp4"``
-  * *Available values for the type* ``"image"`` *or* ``"image_list"`` *:* ``"jpeg"`` *,* ``"jpg"`` *,* ``"png"``
+  * *Available values for the type* ``"audio"`` *:* ``"wav"`` *,* ``"mp3"`` *,* ``"ogg"`` *,* ``"webm"`` *,* ``"mp4"`` *,* ``"mp4"`` *
+  * *Available values for the type* ``"image"`` *:* ``"jpeg"`` *,* ``"jpg"`` *,* ``"png"`` *,* ``"tiff"`` *,* ``"bmp"`` *,* ``"gif"`` *,* ``"webp"`` *
 * ``color_space`` *(str): The color space of images supported by the workers. Available values:* ``"rgb"`` *,* ``"cmyk"`` *,* ``"ycbcr"``
 * ``size`` *(array): The size of images [width, height] in pixel*
 * ``sample_rate`` *(int): The sample rate in Hz of the audio data supported by the workers*
@@ -170,6 +170,15 @@ Types ``"image"``, ``"image_list"`` and ``"audio"``:
 * ``audio_bit_rate`` *(int): The audio bit rate in bits/second supported by the workers*
 * ``channels`` *(int): The number of channels (Mono=1, Stereo=2, etc.) of audio data supported by the workers*
 * ``duration`` *(int): The duration in seconds of audio data supported by the workers*
+* ``resize_method`` *(str): The method to use for resizing images. Availabe values:* ``"crop"`` *and* ``"scale"``
+* ``check_conversion`` *(bool): Whether to perform another ffprobe check after conversion and log a warning if the target media parameters are different to the measured media parameters
+* ``input_temp_file`` *(str): Whether an input temp file is generated for media conversion.* ``"auto"`` *: temp file is generated for image format "tiff" and "gif" and for input type "audio". Availabe values:* ``"yes"``, ``"no"`` *and* ``"auto"``
+* ``output_temp_file`` *(str): Whether an input temp file is generated for media conversion.* ``"auto"`` *: temp file is generated automatically for conversion to* ``"mp4"`` *format. Availabe values:* ``"yes"``, ``"no"`` *and* ``"auto"``
+
+audio_input.check_conversion = false # another ffprobe check and logs a warning if the target media parameters are different to the measured media parameters
+audio_input.input_temp_file = "auto" # "auto": temp file is generated automatically for image format "tiff" and "gif" and for input type "audio", ("yes", "no", "auto")
+audio_input.output_temp_file = "auto" # "auto": temp file is generated automatically for conversion to* ``"mp4"`` * format, ("yes", "no", "auto")
+
 
 
 Since the attributes of media data need specifications for each attribute seperately, we use nested attributes to do so. That means each attribute above will be configured using the following attributes:
@@ -180,7 +189,7 @@ Since the attributes of media data need specifications for each attribute sepera
 * ``minimum`` or ``min`` *(int/float): The smallest allowed value. If* ``auto_convert = true`` *, parameters with smaller values will be converted to the* ``min`` *value.*
 * ``maximum`` or ``max`` *(int/float):The highest allowed value. If* ``auto_convert = true`` *, parameters with higher values will be converted to the* ``max`` *value.*
 * ``align`` *(int): Only multiples of the align value are allowed. If* ``auto_convert = true`` *, parameters with values not aligning will be converted to the nearest aligned value.*
-* ``resize_method`` *(str): The method to use for resizing images. Availabe values:* ``"crop"`` and ``"scale"``
+
 
 
 Example:

@@ -19,6 +19,7 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 import json
 import random
+import re
 
 
 from sanic_sass import SassManifest
@@ -47,25 +48,46 @@ TYPES_DICT = {
     }
 
 
-class MediaParams(Enum):
-    FORMAT = 'format'
-    DURATION = 'duration'
-    SAMPLE_RATE = 'sample_rate'
-    CHANNELS = 'channels'
-    SAMPLE_BIT_DEPTH = 'sample_bit_depth'
-    COLOR_SPACE = 'color_space'
-    SIZE = 'size'
-    AUDIO_BIT_RATE = 'audio_bit_rate'
+class MediaParams(dict):
+    FORMAT: str  = 'format'
+    AUDIO_CODEC: str  = 'audio_codec'
+    VIDEO_CODEC: str  = 'video_codec'
+    DURATION: int  = 'duration'
+    SAMPLE_RATE: int  = 'sample_rate'
+    CHANNELS: int  = 'channels'
+    SAMPLE_BIT_DEPTH: str  = 'sample_bit_depth'
+    COLOR_SPACE: str  = 'color_space'
+    SIZE: tuple  = 'size'
+    AUDIO_BIT_RATE: int  = 'audio_bit_rate'
+    VIDEO_BIT_RATE: int  = 'video_bit_rate'
+
+    def __init__(self):
+        super().__init__({
+            self.FORMAT: None,
+            self.AUDIO_CODEC: None,
+            self.VIDEO_CODEC: None,
+            self.DURATION: None,
+            self.SAMPLE_RATE: None,
+            self.CHANNELS: None,
+            self.SAMPLE_BIT_DEPTH: None,
+            self.COLOR_SPACE: None,
+            self.SIZE: None,
+            self.AUDIO_BIT_RATE: None,
+            self.VIDEO_BIT_RATE: None,
+        })
 
 
 VIDEO_FILTER_FLAG = '-vf'
 FORMAT_FLAG = '-f'
-VCODEC_FLAG = '-vcodec'
+VIDEO_CODEC_FLAG = '-vcodec'
+AUDIO_CODEC_FLAG = '-acodec'
 AUDIO_BIT_RATE_FLAG = '-b:a'
 
 
 FFMPEG_FLAG_DICT = {
-    MediaParams.FORMAT: [FORMAT_FLAG, VCODEC_FLAG, '-acodec'],
+    MediaParams.FORMAT: [FORMAT_FLAG, ],
+    MediaParams.AUDIO_CODEC: [AUDIO_CODEC_FLAG, ],
+    MediaParams.VIDEO_CODEC: [VIDEO_CODEC_FLAG, ],
     MediaParams.DURATION: ['-t', ],
     MediaParams.SAMPLE_RATE: ['-ar', ],
     MediaParams.CHANNELS: ['-ac', ],
@@ -76,16 +98,111 @@ FFMPEG_FLAG_DICT = {
 }
 
 
+FFPROBE_DICT = {
+    MediaParams.FORMAT: 'format_name',
+    MediaParams.AUDIO_CODEC: 'codec_name',
+    MediaParams.VIDEO_CODEC: 'codec_name',
+    MediaParams.AUDIO_BIT_RATE: 'bit_rate',
+    MediaParams.VIDEO_BIT_RATE: 'bit_rate',
+    MediaParams.DURATION: 'duration',
+    MediaParams.CHANNELS: 'channels',
+    MediaParams.SAMPLE_RATE: 'sample_rate',
+    MediaParams.SAMPLE_BIT_DEPTH: 'sample_fmt',
+    MediaParams.COLOR_SPACE: 'pix_fmt',                        
+    MediaParams.SIZE: ('width', 'height')
+}
+
+FORMAT_CODEC_DICT = {
+    'ogg': 'libvorbis',
+    'jpeg': 'mjpeg',
+    'jpg': 'mjpeg',
+}
+
+MIME_TYPE_DICT = {
+    'jpg': lambda media_type: 'jpeg',
+    'vnd.wave': lambda media_type: 'wav',
+    'mpeg': lambda media_type: 'mp3' if media_type == 'audio' else 'mp4',
+}
+
+
 MEDIA_ATTRIBUTE_DICT = {
     MediaParams.FORMAT: {
-        'jpeg': ('mjpeg', ),
-        'jpg': ('mjpeg', ),
-        'webp': ('libwebp', )
+        'jpg': ('jpeg', 'image2'),
+        'jpeg': ('jpeg', 'image2'),
+        'png': ('png', 'image2'),
+        'webp': ('webp', 'libwebp'),
+        'image2': ('jpeg', 'png'),
+        'mp3': ('mp3', 'libmp3lame'),
     },
     MediaParams.COLOR_SPACE: {
-        'rgb': ('rgb24', 'rgb0'),
-        'yuv': ('yuvj420p', 'yuvj422p', 'yuvj444p'),
-
+        'rgb': (
+            'rgb24', 'rgb0', 'rgb565be', 'rgb565le', 'rgb555be', 
+            'rgb555le', 'rgb444le', 'rgb444be', 'rgb48be', 'rgb48le', 
+            'rgb8', 'rgb4', 'rgb4_byte', 'x2rgb10le', 'x2rgb10be'
+        ),
+        'rgba': (
+            'rgba', 'argb', 'abgr', 'bgra', 'rgba64be', 'rgba64le', 
+            'bgra64be', 'bgra64le'
+        ),
+        'bgr': (
+            'bgr24', '0bgr', 'bgr444le', 'bgr444be', 'bgr565be', 
+            'bgr565le', 'bgr555be', 'bgr555le', 'bgr48be', 'bgr48le', 
+            'bgr8', 'bgr4', 'bgr4_byte'
+        ),
+        'gbr': (
+            'gbrp', 'gbrp9be', 'gbrp9le', 'gbrp10be', 'gbrp10le', 
+            'gbrp16be', 'gbrp16le', 'gbrp12be', 'gbrp12le', 
+            'gbrp14be', 'gbrp14le', 'gbrpf32be', 'gbrpf32le'
+        ),
+        'gbr_alpha': (
+            'gbrap', 'gbrap16be', 'gbrap16le', 'gbrap12be', 
+            'gbrap12le', 'gbrap10be', 'gbrap10le', 'gbrapf32be', 
+            'gbrapf32le'
+        ),
+        'yuv': (
+            'yuv420p', 'yuyv422', 'yuv422p', 'yuv444p', 'yuv410p', 
+            'yuv411p', 'yuv440p', 'yuvj420p', 'yuvj422p', 'yuvj444p', 
+            'yuvj440p', 'nv12', 'nv21', 'nv16', 'nv24', 'nv42', 
+            'yuv420p16le', 'yuv420p16be', 'yuv422p16le', 'yuv422p16be', 
+            'yuv444p16le', 'yuv444p16be', 'yuv420p9be', 'yuv420p9le', 
+            'yuv420p10be', 'yuv420p10le', 'yuv422p10be', 'yuv422p10le', 
+            'yuv444p9be', 'yuv444p9le', 'yuv444p10be', 'yuv444p10le', 
+            'yuv422p9be', 'yuv422p9le', 'yuv420p12be', 'yuv420p12le', 
+            'yuv420p14be', 'yuv420p14le', 'yuv422p12be', 'yuv422p12le', 
+            'yuv422p14be', 'yuv422p14le', 'yuv444p12be', 'yuv444p12le', 
+            'yuv444p14be', 'yuv444p14le', 'yuvj411p', 'yuv440p10le', 
+            'yuv440p10be', 'yuv440p12le', 'yuv440p12be'
+        ),
+        'gray': (
+            'gray', 'gray16be', 'gray16le', 'gray12be', 'gray12le', 
+            'gray10be', 'gray10le', 'gray9be', 'gray9le', 'gray14be', 
+            'gray14le', 'grayf32be', 'grayf32le'
+        ),
+        'monochrome': (
+            'monow', 'monob'
+        ),
+        'palette': (
+            'pal8'
+        ),
+        'alpha': (
+            'ya8', 'ya16be', 'ya16le'
+        ),
+        'yuva': (
+            'yuva420p', 'yuva422p', 'yuva444p', 'yuva420p9be', 
+            'yuva420p9le', 'yuva422p9be', 'yuva422p9le', 'yuva444p9be', 
+            'yuva444p9le', 'yuva420p10be', 'yuva420p10le', 'yuva422p10be', 
+            'yuva422p10le', 'yuva444p10be', 'yuva444p10le', 'yuva420p16be', 
+            'yuva420p16le', 'yuva422p16be', 'yuva422p16le', 'yuva444p16be', 
+            'yuva444p16le', 'yuva422p12be', 'yuva422p12le', 'yuva444p12be', 
+            'yuva444p12le'
+        ),
+        'other': (
+            'uyvy422', 'yvyu422', 'p010le', 'p010be', 'p016le', 
+            'p016be', 'y210le', 'y210be', 'vaapi_moco', 'vaapi_idct', 
+            'vaapi_vld', 'dxva2_vld', 'vdpau', 'videotoolbox_vld', 
+            'vulkan', 'drm_prime', 'opencl', 'qsv', 'mmal', 'd3d11va_vld', 
+            'cuda', 'd3d11'
+        )
     },
     MediaParams.SAMPLE_BIT_DEPTH: {
         8: ('u8', 'u8p'),
@@ -169,7 +286,6 @@ class InputValidationHandler():
         self.arg_type = str()
         self.ep_input_param_name = str()
         self.ffmpeg_cmd = list()
-        self.image = None
         self.convert_data = False
 
 
@@ -272,49 +388,37 @@ class InputValidationHandler():
             except (TypeError, json.decoder.JSONDecodeError):
                 self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} has invalid json format!')
 
-
     async def validate_media_base64_string(self, media_base64):
-        media_binary = await run_in_executor(self.convert_base64_string_to_binary, media_base64)
-        if media_binary:
-            media_params = await self.get_media_parameters(media_binary)
+        ffmpeg_media = FFmpeg(self.ep_input_param_name, media_base64, self.arg_definition, self.validation_errors)
+        await ffmpeg_media.analyze()
+        if not self.validation_errors:
             await run_in_executor(
                 self.validate_media_parameters_on_server,
-                    media_params
+                    ffmpeg_media.media_params
             )
-            logger.info(f'ffprobe analysis media parameters: {format_params_for_logger(media_params)}')
             target_media_params = await run_in_executor(
                 self.validate_media_parameters_on_endpoint,
-                    media_params
+                    ffmpeg_media.media_params
             )
-            if self.convert_data and not self.validation_errors:
-                media_binary = await self.convert_media_data(
-                    media_binary,
-                    media_params,
-                    target_media_params,
-                )
-                
-                return await run_in_executor(
-                    self.convert_binary_to_base64_string, 
-                        media_binary,
-                        target_media_params
-                )
-            elif not self.validation_errors:
-                return media_base64
+            if target_media_params != ffmpeg_media.media_params and not self.validation_errors:
+                await ffmpeg_media.convert(target_media_params)
+                return await ffmpeg_media.get_data()
 
 
     def validate_media_parameters_on_server(self, params):
         if params:
-            for param_name, param in params.items():
-                arg_definition_server = self.server_input_type_config.get(self.arg_type)
+            for param_name, param_value in params.items():
+                arg_definition_server = self.server_input_type_config.get(self.arg_type).get(param_name)
                 if arg_definition_server:
-                    arg_param_definition_server = arg_definition_server.get(param_name.value)
-                    if arg_param_definition_server:
-                        allowed_values_list = arg_param_definition_server.get(f'allowed')
-                        if allowed_values_list and param not in allowed_values_list:
-                            self.validation_errors.append(
-                                f'{"Invalid" if param else "Unknown"} {param_name.value} {param if param else ""}. '+\
-                                f'Only {", ".join(allowed_values_list)} are allowed by the AIME API Server!'
-                            )
+                    
+                    allowed_values_list = self.get_ffmpeg_conform_parameter(arg_definition_server.get('allowed'), param_name)
+                    param_value = self.get_ffmpeg_conform_parameter(param_value, param_name)
+                    value_container = param_value.split(',') if isinstance(param_value, str) else [param_value]
+                    if allowed_values_list and not any(value in allowed_values_list for value in value_container):
+                        self.validation_errors.append(
+                            f'{"Invalid parameter" if param_value else "Unknown"} {param_name} {param_value if param_value else ""}. '+\
+                            f'Only {", ".join(arg_definition_server.get("allowed"))} are allowed by the AIME API Server!'
+                        )
 
 
     def validate_media_parameters_on_endpoint(self, params):
@@ -324,180 +428,57 @@ class InputValidationHandler():
                 param_value = self.validate_supported_values(param_value, param_name)
                 param_value = self.validate_numerical_attribute(param_value, param_name)
                 valid_params[param_name] = param_value
-            return valid_params
-
-
-    def convert_base64_string_to_binary(self, base64_string):
-        try:
-            return base64.b64decode(base64_string.split(',')[1])
-        except (TypeError, base64.binascii.Error, ValueError):
-            validation_errors.append(f'Invalid base64 body')
-        except IndexError:
-            validation_errors.append(f'Invalid base64 format. Valid example: "data:<media_type>/<format>;base64,,<body>"')
-        
-
-    def convert_binary_to_base64_string(self, media_binary, target_media_params):
-        if media_binary and not self.validation_errors:
-            media_format = target_media_params.get(MediaParams.FORMAT)
-            return f'data:{self.arg_type}/{media_format};base64,' + base64.b64encode(media_binary).decode('utf-8')
-
-
-    def parse_media_params_from_result(self, result):
-        if result:
-            result = json.loads(result.decode())
-            return {
-                    MediaParams.FORMAT: self.get_media_format(result), 
-                    MediaParams.DURATION: round(float(result.get('format', {}).get('duration'))) if result.get('format', {}).get('duration') is not None else None,
-                    MediaParams.AUDIO_BIT_RATE: result.get('format', {}).get('bit_rate'),
-                    MediaParams.CHANNELS: self.get_stream_param(result, 'channels', int),
-                    MediaParams.SAMPLE_RATE: self.get_stream_param(result, 'sample_rate', int),
-                    MediaParams.SAMPLE_BIT_DEPTH: self.get_stream_param(result, 'sample_fmt'),
-                    MediaParams.COLOR_SPACE: self.get_stream_param(result, 'pix_fmt'),
-                    MediaParams.SIZE: (
-                        self.get_stream_param(result, 'width', int), 
-                        self.get_stream_param(result, 'height', int)
-                    )
-            }
-        else:
-            return {param.value: None for param in MediaParams}
-
-
-    async def get_media_parameters(self, media_binary):
-        process = await asyncio.create_subprocess_exec(
-            *make_ffprobe_command('pipe:0'), 
-            stdin=asyncio.subprocess.PIPE, 
-            stdout=asyncio.subprocess.PIPE, 
-            stderr=asyncio.subprocess.PIPE
-        )
-        result, _ = await process.communicate(input=media_binary)
-        media_params = self.parse_media_params_from_result(result)
-        try:
-            await process.stdin.wait_closed()
-        except BrokenPipeError:
-            pass    # Non-critical issue in asyncio.create_subprocess_exec, see https://github.com/python/cpython/issues/104340
-                    # Didn't find solution for process being closed before input is fully received.
-                    # BrokenPipeError only handable in process.stdin.wait_closed() but is ignored anyway. Result is still present.
-
-        if any(param is None for param in media_params.values()):
-            if media_params[MediaParams.FORMAT]:
-                temp_file_name = f'{str(uuid.uuid4())[:8]}.{media_params[MediaParams.FORMAT]}'
-                process = await asyncio.create_subprocess_exec(*['ffmpeg', '-i', 'pipe:0', VCODEC_FLAG, 'copy', '-acodec', 'copy', temp_file_name], stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-                await process.communicate(input=media_binary)
-
-                process = await asyncio.create_subprocess_exec(*make_ffprobe_command(temp_file_name), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-                result, _ = await process.communicate()
-                await aiofiles.os.remove(temp_file_name)
-
-                media_params_copied = self.parse_media_params_from_result(result)
-                media_params = {
-                    key: param if param else media_params_copied[key] for key, param in media_params.items()
-                }
-            else:
-                logger.info(f'Parameter {self.ep_input_param_name} denied. Format not recognized by ffprobe.')
-        return media_params
-
-
-    def get_media_format(self, result):
-        media_format_list = result.get('format', {}).get('format_name', '').split(',')
-        if media_format_list:
-            if len(media_format_list) > 1:
-                allowed_formats = self.server_input_type_config.get(self.arg_type, {}).get('format', {}).get('allowed', [])
-                media_format_list = [media_format for media_format in media_format_list if media_format in allowed_formats]
-            return media_format_list[0].replace('_pipe', '')
-
-
-    def get_stream_param(self, result, param_name, param_type=None):
-        value = None
-        for stream in result.get('streams', [{}]):
-            value = stream.get(param_name)
-        if value is not None and param_type is not None:
-            try:
-                return param_type(value)
-            except (ValueError, TypeError):
-                return None
-        return value
-
-
-    async def convert_media_data(
-        self,
-        media_binary,
-        media_params,
-        target_media_params
-        ):
-        if self.ffmpeg_cmd:
-            if FORMAT_FLAG not in self.ffmpeg_cmd:
-                target_format = target_media_params.get(MediaParams.FORMAT) if not self.arg_type == 'image' else 'image2pipe'
-                self.ffmpeg_cmd += [FORMAT_FLAG, MEDIA_ATTRIBUTE_DICT.get(target_format, target_format)] # using 'pipe:x' needs explicit format definition
-            if VCODEC_FLAG not in self.ffmpeg_cmd and self.arg_type == 'image':
-                self.ffmpeg_cmd += [
-                    VCODEC_FLAG, 
-                    MEDIA_ATTRIBUTE_DICT[MediaParams.FORMAT].get(
-                        media_params.get(MediaParams.FORMAT), 
-                        media_params.get(MediaParams.FORMAT)
-                    )[0]
-                ]
-            if AUDIO_BIT_RATE_FLAG not in self.ffmpeg_cmd and self.arg_type == 'audio':
-                self.ffmpeg_cmd += [AUDIO_BIT_RATE_FLAG, media_params.get(MediaParams.AUDIO_BIT_RATE)]
-
-            if self.arg_type == 'audio' and FFMPEG_FLAG_DICT[MediaParams.CHANNELS][0] not in self.ffmpeg_cmd:
-                self.ffmpeg_cmd += [FFMPEG_FLAG_DICT[MediaParams.CHANNELS][0], str(target_media_params.get(MediaParams.CHANNELS, 1))] # If not specifies sometimes output has different channels then source
+            if self.arg_type in ('image', 'video'):
+                target_media_format = valid_params[MediaParams.FORMAT]
+                
+                if valid_params.get(MediaParams.VIDEO_CODEC) != FORMAT_CODEC_DICT.get(target_media_format, target_media_format):
+                    valid_params[MediaParams.VIDEO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)
+                if params.get(MediaParams.SIZE) in (None, (0,0)):
+                    self.validation_errors.append(f'Could not determine the {MediaParams.SIZE} of the parameter {self.ep_input_param_name}.')
             
-            ffmpeg_cmd = ['ffmpeg', '-i', 'pipe:0'] + self.ffmpeg_cmd + ['pipe:1']
-            logger.debug(f'ffmpeg command: {ffmpeg_cmd}')
-            process = await asyncio.create_subprocess_exec(*ffmpeg_cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-            logger.info(f'Media input data converted from {format_params_for_logger(media_params)} to {format_params_for_logger(target_media_params)}')
-            self.ffmpeg_cmd.clear()
-            media_binary, conversion_error = await process.communicate(input=media_binary)
-            try:
-                await process.stdin.wait_closed()
-            except BrokenPipeError:
-                pass    # Non-critical issue in asyncio.create_subprocess_exec, see https://github.com/python/cpython/issues/104340
-                        # Didn't find solution for process being closed before input is fully received.
-                        # BrokenPipeError only handable in process.stdin.wait_closed() but is ignored anyway. Result is still present.
-            if process.returncode != 0:
-                self.validation_errors.append(f'ffmpeg returned error code {process.returncode} and the message {conversion_error}')
-                logger.debug(conversion_error)
-            else:
-                media_params = await self.get_media_parameters(media_binary)
-                logger.info(f'After conversion: ffprobe analysis media parameters: {format_params_for_logger(media_params)}')
-                if target_media_params != media_params:
-                    logger.debug(
-                        f"WARNING: The media input parameters do not match the target parameters after the conversion! "+\
-                        f"Parameters should be {format_params_for_logger(target_media_params)} but are {format_params_for_logger(media_params)}."
-                    )
-                    # Error handling with self.validation_errors? Sometimes conversion of sample_bit_depth doesn't work!
-        return media_binary
+            if self.arg_type in ('audio', 'video'):
+                if valid_params.get(MediaParams.AUDIO_CODEC) is not FORMAT_CODEC_DICT.get(valid_params.get(MediaParams.FORMAT), valid_params.get(MediaParams.FORMAT)):
+                    target_media_format = valid_params[MediaParams.FORMAT]
+                    valid_params[MediaParams.AUDIO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)
+            if self.arg_type in ('image', 'video'):
+                if valid_params.get(MediaParams.VIDEO_CODEC) is not FORMAT_CODEC_DICT.get(valid_params.get(MediaParams.FORMAT), valid_params.get(MediaParams.FORMAT)):
+                    target_media_format = valid_params[MediaParams.FORMAT]
+                    valid_params[MediaParams.VIDEO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)
+            return valid_params
 
 
     def validate_supported_values(self, param_value, param_name):
         
-        arg_param_definition = self.arg_definition.get(param_name.value)
+        arg_param_definition = self.arg_definition.get(param_name)
         if arg_param_definition:
-            param_value, default_value, supported_value_list = self.get_ffmpeg_conform_parameters(param_value, param_name)
-            if supported_value_list and param_value not in supported_value_list:
-                if arg_param_definition.get('auto_convert'):
-                    self.convert_data = True
-                    self.add_ffmpeg_cmd(param_value, default_value, param_name)
-                    return default_value
-                else: 
-                    self.validation_errors.append(
-                        f'{"Invalid" if param_value else "Unknown"} {param_name}{": " + param_value + " " if param_value else ""}!\n'+\
-                        f'Only {", ".join(supported_value_list)} are supported by this endpoint!\n'+\
-                        f'Set {param_name}.{{ auto_convert = true }} in the [INPUT] section of the endpoint config file to avoid this error.'
-                    ) 
+            supported_value_list = self.get_ffmpeg_conform_parameter(arg_param_definition.get('supported'), param_name)
+            param_value = self.get_ffmpeg_conform_parameter(param_value, param_name)
+            value_container = param_value.split(',') if isinstance(param_value, str) else [param_value]
+            if supported_value_list:
+                for value in value_container:
+                    if value in supported_value_list:
+                        return value
+                if not any(value in supported_value_list for value in value_container):
+                    if arg_param_definition.get('auto_convert'):
+                        return self.get_ffmpeg_conform_parameter(arg_param_definition.get('default'), param_name)
+                    else: 
+                        self.validation_errors.append(
+                            f'{"Invalid" if param_value else "Unknown"} {param_name}{": " + param_value + " " if param_value else ""}!\n'+\
+                            f'Only {", ".join(supported_value_list)} are supported by this endpoint!\n'+\
+                            f'Set {param_name}.{{ auto_convert = true }} in the [INPUT] section of the endpoint config file to avoid this error.'
+                        )
             else:
                 return param_value
+        else:
+            return param_value
 
 
     def validate_numerical_attribute(self, param_value, param_name):
         target_param_value = self.validate_numerical_value(
             param_value,
             f'{self.ep_input_param_name}.{param_name}',
-            self.arg_definition.get(param_name.value)
+            self.arg_definition.get(param_name)
         )
-        if self.arg_type in ('audio','image') and target_param_value != param_value:
-            self.convert_data = True
-            self.add_ffmpeg_cmd(param_value, target_param_value, param_name)
         return target_param_value
 
 
@@ -531,6 +512,7 @@ class InputValidationHandler():
     def convert_to_limit(self, param_value, param_name, param_limit, auto_convert, mode):
         is_out_of_limit = operator.gt if mode == 'max' else operator.lt
         if isinstance(param_value, (int, float)) and isinstance(param_limit, (int, float)):
+
             if is_out_of_limit(param_value, param_limit):
                 if auto_convert:
                     return param_limit
@@ -540,8 +522,10 @@ class InputValidationHandler():
                         f'{mode.capitalize()} supported value for {param_name} on this endpoint is {param_limit}!\n'+\
                         f'\nSet auto_convert = true for {param_name} in the [INPUT] section of the endpoint config file to avoid this error.\n'
                     )
-        elif isinstance(param_value, (list, tuple)) and isinstance(param_limit, (list, tuple)):
+        elif isinstance(param_value, list) and isinstance(param_limit, (list, tuple)):
             return [self.convert_to_limit(element, param_name, element_limit, auto_convert, mode) for element, element_limit in zip(param_value, param_limit)]
+        elif isinstance(param_value, tuple) and isinstance(param_limit, (list, tuple)):
+            return tuple(self.convert_to_limit(element, param_name, element_limit, auto_convert, mode) for element, element_limit in zip(param_value, param_limit))
         return param_value
 
 
@@ -559,76 +543,30 @@ class InputValidationHandler():
                         f'Choose multiple of {align_value} for {param_name} on this endpoint!\n'+\
                         f'\nSet auto_convert = true for {param_name} in the [INPUT] section of the endpoint config file to avoid this error.\n'
                     )
-        elif isinstance(param_value, (list, tuple)) and isinstance(align_value, (list, tuple)):
+        elif isinstance(param_value, list) and isinstance(align_value, (list, tuple)):
             return [self.convert_to_align_value(element, param_name, element_align_value, min_value, auto_convert) for element, element_align_value in zip(param_value, align_value)]
+        elif isinstance(param_value, tuple) and isinstance(align_value, (list, tuple)):
+            return tuple(self.convert_to_align_value(element, param_name, element_align_value, min_value, auto_convert) for element, element_align_value in zip(param_value, align_value))
         return param_value
 
-    
-    def add_ffmpeg_cmd(self, param_value, target_param_value, param_name):
 
-        for flag in FFMPEG_FLAG_DICT.get(param_name, []):
-            if flag == VIDEO_FILTER_FLAG:
-                ffmpeg_value = self.get_video_filter_string(param_value, target_param_value, param_name)
-                        
-            elif flag == FORMAT_FLAG and self.arg_type == 'image':
-                ffmpeg_value = 'image2pipe'
+    def get_ffmpeg_conform_parameter(self, param_value, param_name):
+        media_attribute_dict = MEDIA_ATTRIBUTE_DICT.get(param_name)
+        if media_attribute_dict:
+            if isinstance(param_value, (list, tuple)):
+                if param_name in MEDIA_ATTRIBUTE_DICT:
+                    value_list = []
+                    for value in param_value:
+                        value = value.lower() if isinstance(value, str) else value
+                        value_list.extend(
+                            media_attribute_dict.get(value, [value])
+                        )
+                    return value_list
             else:
-                ffmpeg_value = str(target_param_value)
-
-            if flag in self.ffmpeg_cmd:
-                self.ffmpeg_cmd[
-                    self.ffmpeg_cmd.index(flag) + 1
-                ] += ',' + ffmpeg_value
-            else:
-                self.ffmpeg_cmd += [flag, ffmpeg_value]
-
-
-    def get_ffmpeg_conform_parameters(self, param_value, param_name):
-        arg_param_definition = self.arg_definition.get(param_name.value)
-        default_value = arg_param_definition.get('default')           
-        default_value = default_value.lower() if isinstance(default_value, str) else default_value
-
-        if param_name in MEDIA_ATTRIBUTE_DICT:
-            media_attribute_dict = MEDIA_ATTRIBUTE_DICT[param_name]
-            supported_value_list = []
-            for supported_value in arg_param_definition.get('supported'):
-                supported_value = supported_value.lower() if isinstance(supported_value, str) else supported_value
-                for converted_param in media_attribute_dict.get(supported_value, [supported_value]):
-                    supported_value_list.extend(
-                        media_attribute_dict.get(supported_value, [supported_value])
-                    )
-            return media_attribute_dict.get(param_value, [param_value])[0], media_attribute_dict.get(default_value, [default_value])[0], supported_value_list
+                param_value = param_value.lower() if isinstance(param_value, str) else param_value
+                return media_attribute_dict.get(param_value, (param_value, ))[0]
         else:
-            return param_value, default_value, arg_param_definition.get('supported')
-
-
-    def get_video_filter_string(self, param_value, target_param_value, param_name):
-
-        if param_name == MediaParams.SIZE:
-            crop_size, top_left = self.get_crop_parameter(param_value, target_param_value, param_name)
-            return f'crop={crop_size[0]}:{crop_size[1]}:{top_left[0]}:{top_left[1]},scale={target_param_value[0]}:{target_param_value[1]}'
-        elif param_name == MediaParams.COLOR_SPACE:
-            return f'format={target_param_value}'
-
-
-    def get_crop_parameter(self, size, target_size, param_name):
-        
-        target_aspect_ratio = target_size[0] / target_size[1]
-        original_aspect_ratio = size[0] / size[1]
-        crop_size = list(size)
-        top_left = [0, 0]
-        print(param_name, self.arg_definition)
-        if self.arg_definition.get(param_name.value).get('resize_method') == 'crop':
-            if original_aspect_ratio > target_aspect_ratio:
-                # Reduce width
-                crop_size[0] = int(size[1] * target_aspect_ratio)
-                top_left[0] = (size[0] - crop_size[0]) // 2
-            else:
-                # Reduce height
-                crop_size[1] = int(size[0] / target_aspect_ratio)
-                top_left[1] = (size[1] - crop_size[1]) // 2
-
-        return tuple(crop_size), tuple(top_left)
+            return param_value
 
 
 class CustomFormatter(logging.Formatter):
@@ -639,7 +577,6 @@ class CustomFormatter(logging.Formatter):
     AIME_YELLOW = '\033[38;2;255;188;68m'
     AIME_LIGHT_GREEN = '\033[38;2;197;229;199m'
     RESET = '\033[0m'
-
         
 
     desc_format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
@@ -662,27 +599,295 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def make_ffprobe_command(input_source):
+class FFmpeg():
+    def __init__(
+        self,
+        ep_param_name,
+        base64_string=None,
+        config={},
+        errors=None,
+        media_binary=None,
+        arg_type=None,
+        resize_method=None,
+        input_temp_file_config=None,
+        output_temp_file_config=None,
+        check_conversion_config=None,
+        ):
+        self.ep_param_name = ep_param_name
+        self.base64_string = base64_string
+        self.media_binary = media_binary
+        self.errors = errors
+        self.arg_type = config.get('type') or arg_type
+        self.resize_method = resize_method or config.get('resize_method')
+        self.input_temp_file_config = input_temp_file_config or config.get('input_temp_file', 'auto')
+        self.output_temp_file_config = output_temp_file_config or config.get('output_temp_file', 'auto')
+        self.check_conversion_config = check_conversion_config or config.get('check_conversion', True)
+
+        self.media_params = MediaParams()
+        self.media_converted = False
+        self.current_temp_file = None
+        self.output_temp_file = None
+        self.base64_format = None
+        self.base64_type = None
     
-    return (
-        'ffprobe',
-        '-i', input_source,
-        '-show_entries',
-        'format=format_name,bit_rate,duration:stream=channels,sample_rate,sample_fmt,width,height,pix_fmt',
-        '-v', 'quiet',
-        '-of', 'json'
-    )
+
+    async def analyze(self, base64_string=None, media_binary=None):
+       
+        self.media_binary = media_binary or self.media_binary
+        if not self.media_binary:
+            self.base64_string = base64_string or self.base64_string             
+            self.media_binary = await run_in_executor(self.convert_base64_string_to_binary)
+        await self.check_media_with_ffprobe()
+        return self.media_params
 
 
-def format_params_for_logger(media_params):
-    return '{ ' + ', '.join(f'{key.value}: {value}' for key, value in media_params.items()) + ' }'
+    async def convert(self, target_media_params, resize_method=None):
+        self.resize_method = resize_method or self.resize_method
+        ffmpeg_cmd = self.make_ffmpeg_cmd(target_media_params)
+        if ffmpeg_cmd:
+            ffmpeg_process = await asyncio.create_subprocess_exec(*ffmpeg_cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            logger.info(f'Input parameter "{self.ep_param_name}" type "{self.arg_type}" converting from {self.format_params_for_logger(self.media_params)} to {self.format_params_for_logger(target_media_params)}')
+            
+            self.media_binary, conversion_error = await ffmpeg_process.communicate(input=self.media_binary if not self.current_temp_file else None)
+            if self.current_temp_file:
+                await aiofiles.os.remove(self.current_temp_file)
+                self.current_temp_file = None
+            if ffmpeg_process.returncode != 0:
+                self.handle_error(f'ffmpeg returned error code {ffmpeg_process.returncode} and the message {conversion_error.decode()}', TypeError)
+            else:
+                if self.output_temp_file:
+                    self.current_temp_file = self.output_temp_file
+                    async with aiofiles.open(self.output_temp_file, 'rb') as file:
+                        self.media_binary = await file.read()
+                self.media_converted = True
+                if self.check_conversion_config:
+                    await self.check_media_with_ffprobe()
+                    warning = False
+                    for param_name, param_value in target_media_params.items(): 
+                        if self.media_params[param_name] not in MEDIA_ATTRIBUTE_DICT.get(param_name, {}).get(self.get_attribute_class(param_value, param_name), [param_value]):
+                            warning = True
+                    if warning:
+                        logger.warning(
+                            f"WARNING: The media input parameters do not match the target parameters after the conversion! "+\
+                            f"Parameters should be {self.format_params_for_logger(target_media_params)} but are {self.format_params_for_logger(self.media_params)}."
+                        )
+        if self.current_temp_file:
+            await aiofiles.os.remove(self.current_temp_file)
 
 
-def specify_sample_bit_depth(supported_sample_bit_depth_list, default_value):
-    detailed_supported_sample_bit_depth_list = []
-    for param in supported_sample_bit_depth_list:
-        detailed_supported_sample_bit_depth_list.extend(BIT_DEPTH_DICT.get(param))
-    return detailed_supported_sample_bit_depth_list, BIT_DEPTH_DICT.get(default_value)[0]
+    def handle_error(self, error_message, error_type):
+        if self.errors is not None:
+            self.errors.append(error_message)
+        else:
+            raise error_type(error_message)
+
+
+    async def get_data(self, output_format='base64'):
+        if output_format == 'base64':
+            if self.media_converted:
+                return await run_in_executor(self.convert_binary_to_base64_string)
+            else:
+                return self.base64_string
+        elif output_format in ('binary', bytes):
+            return self.media_binary
+
+
+    def get_attribute_class(self, param_value, param_name):
+        for param_class, param_values in MEDIA_ATTRIBUTE_DICT.get(param_name, {}).items():
+            if param_value is not None and param_value in param_values:
+                return param_class
+
+
+    def convert_base64_string_to_binary(self):
+        if not self.base64_string :
+            self.handle_error('base64_string of media input parameter {self.ep_param_name} is missing.', ValueError)
+        try:
+            base64_header, base64_body = self.base64_string.split(',')
+            match = re.match(r'^data:(\w+)/([\w.-]+);base64$', base64_header)
+            if match:
+                self.base64_type = match.group(1)
+                format_name = match.group(2)
+                self.base64_format = MIME_TYPE_DICT.get(format_name, lambda media_type: format_name)(self.base64_type)
+                self.arg_type = self.arg_type or self.base64_type          
+            return base64.b64decode(base64_body)
+
+        except (TypeError, base64.binascii.Error, ValueError) as error:
+            self.handle_error(f'Invalid base64 body of media input parameter {self.ep_param_name}', error)
+        except IndexError:
+            self.handle_error(f'Invalid base64 format of media input parameter {self.ep_param_name}. Valid example: "data:<media_type>/<format>;base64,<body>"', IndexError)
+
+    def convert_binary_to_base64_string(self):
+        if self.media_binary and not self.errors:
+            media_format = self.media_params.get(MediaParams.FORMAT).split(',')[0]
+            return f'data:{self.arg_type}/{media_format};base64,' + base64.b64encode(self.media_binary).decode('utf-8')
+        
+
+    def parse_media_params_from_ffprobe_result(self, ffprobe_result):
+        self.media_params = MediaParams()
+        if ffprobe_result:
+            ffprobe_result_dict = json.loads(ffprobe_result.decode())
+            format_header = ffprobe_result_dict.get('format', {})
+            streams = ffprobe_result_dict.get('streams', [{}])
+            existing_stream_codec_types = [stream.get('codec_type') for stream in streams]
+            if format_header:
+                for param_name in self.media_params.keys():
+                    if 'audio' in param_name or 'video' in param_name: # bit_rate from format header could be wrong, ogg files with dynamic bit rate show the estimated bit rate only in the format header, but only after creating a temp file
+                        for existing_stream_codec_type in existing_stream_codec_types:
+                            if existing_stream_codec_type in param_name:
+                                self.media_params[param_name] = self.get_ffprobe_param(format_header, param_name) 
+                    else:
+                        self.media_params[param_name] = self.get_ffprobe_param(format_header, param_name)
+            for stream in streams:
+                codec_type = stream.get('codec_type')
+                for param_name in self.media_params.keys():
+                    if FFPROBE_DICT[param_name] in stream or FFPROBE_DICT[param_name][0] in stream:
+                        if ('audio' not in param_name and 'video' not in param_name) or codec_type in param_name:
+                            value = self.get_ffprobe_param(stream, param_name)
+                            if value is not None or (isinstance(value, tuple) and any(value)):
+                                self.media_params[param_name] = value              
+
+
+    async def check_media_with_ffprobe(self):
+        if not self.output_temp_file:
+            ffprobe_process = await asyncio.create_subprocess_exec(
+                *self.make_ffprobe_command(), 
+                stdin=asyncio.subprocess.PIPE, 
+                stdout=asyncio.subprocess.PIPE, 
+                stderr=asyncio.subprocess.PIPE
+            )
+            ffprobe_result, _ = await ffprobe_process.communicate(input=self.media_binary)
+            self.parse_media_params_from_ffprobe_result(ffprobe_result)
+            logger.info(f'ffprobe analysis of input parameter "{self.ep_param_name}" type "{self.arg_type}": {self.format_params_for_logger(self.media_params)}')
+            try:
+                await ffprobe_process.stdin.wait_closed()
+            except BrokenPipeError:
+                pass    # Non-critical issue in asyncio.create_subprocess_exec, see https://github.com/python/cpython/issues/104340
+                        # Didn't find solution for process being closed before input is fully received.
+                        # BrokenPipeError only handable in process.stdin.wait_closed() but is ignored anyway. Result is still present.
+
+            if self.media_params.get(MediaParams.FORMAT):
+                if self.base64_format not in self.media_params.get(MediaParams.FORMAT, '').split(',') and not self.media_converted:
+                    logger.warning(
+                        f'Media format "{self.base64_format}" specified in base64 header of {self.ep_param_name} is different to' +\
+                        f'media format measured by ffprobe "{self.media_params.get(MediaParams.FORMAT)}"!'
+                    )
+            auto_temp_file_condition = not self.arg_type == 'image' or self.media_params.get(MediaParams.FORMAT) == 'tiff' or self.base64_format == 'gif'
+            if not self.current_temp_file and (self.input_temp_file_config == 'yes' or \
+            (self.input_temp_file_config == 'auto' and auto_temp_file_condition)):
+                self.current_temp_file = f'{str(uuid.uuid4())[:8]}.{(self.media_params.get(MediaParams.FORMAT) or self.base64_format).split(",")[0]}'
+                async with aiofiles.open(self.current_temp_file, 'wb') as temp_file:
+                    await temp_file.write(self.media_binary)
+        if self.current_temp_file:
+            ffprobe_process = await asyncio.create_subprocess_exec(*self.make_ffprobe_command(self.current_temp_file), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            ffprobe_result, _ = await ffprobe_process.communicate()
+            self.parse_media_params_from_ffprobe_result(ffprobe_result)
+            logger.info(f'ffprobe analysis of input parameter with temp file "{self.ep_param_name}" type "{self.arg_type}": {self.format_params_for_logger(self.media_params)}')
+        if not self.media_params.get(MediaParams.FORMAT):
+            self.handle_error(f'Parameter {self.ep_param_name} denied. Format not recognized by ffprobe.', TypeError)
+
+
+    def get_ffprobe_param(self, ffprobe_result_section, param_name):
+        ffprobe_label = FFPROBE_DICT.get(param_name, param_name)
+
+        if isinstance(ffprobe_label, tuple):
+            return tuple(self.get_ffprobe_param(ffprobe_result_section, sub_label) for sub_label in ffprobe_label)
+        else:
+            value = ffprobe_result_section.get(ffprobe_label)
+            try:
+                return round(float(value))
+            except (TypeError, ValueError):
+                value = value.replace('_pipe', '') if param_name == MediaParams.FORMAT else value
+                return value
+
+
+    def make_ffmpeg_cmd(self, target_media_params):
+        ffmpeg_cmd = list()
+        if self.output_temp_file_config == 'yes' or (self.output_temp_file_config == 'auto' and target_media_params.get(MediaParams.FORMAT) == 'mp4'):
+            self.output_temp_file = f'{str(uuid.uuid4())[:8]}.{target_media_params.get(MediaParams.FORMAT)}'
+        for target_param_name, target_param_value in target_media_params.items():
+            essential_parameters = {
+                'audio': (MediaParams.FORMAT, MediaParams.CHANNELS, MediaParams.AUDIO_BIT_RATE, MediaParams.AUDIO_CODEC),
+                'image': (MediaParams.FORMAT, MediaParams.VIDEO_CODEC, ),
+                'video': (MediaParams.FORMAT, MediaParams.CHANNELS, MediaParams.AUDIO_BIT_RATE, MediaParams.AUDIO_CODEC, MediaParams.VIDEO_CODEC)
+            }
+            if (target_param_value is not None and target_param_value != self.media_params.get(target_param_name)) or \
+            target_param_name in essential_parameters[self.arg_type] and not self.output_temp_file:
+                
+                for flag in FFMPEG_FLAG_DICT.get(target_param_name, []):
+                    if flag == FORMAT_FLAG:
+                        if not self.output_temp_file:
+                            if self.arg_type == 'image':
+                                ffmpeg_value = 'image2pipe'
+                            else:
+                                ffmpeg_value = target_param_value
+                        else:
+                            ffmpeg_value = None
+
+                    elif flag == VIDEO_FILTER_FLAG:
+                        ffmpeg_value = self.get_video_filter_string(target_param_value, target_param_name)  
+                    else:
+                        ffmpeg_value = str(target_param_value)
+                    if ffmpeg_value:
+                        if flag in ffmpeg_cmd: # add to existing flags
+                            ffmpeg_cmd[ffmpeg_cmd.index(flag) + 1] += ',' + ffmpeg_value
+                        else:
+                            ffmpeg_cmd += [flag, ffmpeg_value]
+
+        if ffmpeg_cmd:
+            if self.arg_type == 'audio':
+                ffmpeg_cmd += ['-vn']
+            input_source = self.current_temp_file or 'pipe:0'
+            output_target = self.output_temp_file or 'pipe:1'
+            
+            ffmpeg_cmd = ['ffmpeg', '-i', input_source, *ffmpeg_cmd, output_target]
+            logger.debug(f'ffmpeg command: {ffmpeg_cmd}')
+
+            return ffmpeg_cmd
+
+
+    def get_video_filter_string(self, target_param_value, param_name):
+
+        if param_name == MediaParams.SIZE:
+            crop_size, top_left = self.get_crop_parameter(self.media_params[param_name], target_param_value, param_name)
+            return f'crop={crop_size[0]}:{crop_size[1]}:{top_left[0]}:{top_left[1]},scale={target_param_value[0]}:{target_param_value[1]}'
+        elif param_name == MediaParams.COLOR_SPACE:
+            return f'format={target_param_value}'
+        else:
+            return target_param_value
+
+
+    def get_crop_parameter(self, size, target_size, param_name):
+
+        target_aspect_ratio = target_size[0] / target_size[1]
+        original_aspect_ratio = size[0] / size[1]
+        crop_size = list(size)
+        top_left = [0, 0]
+        if self.resize_method == 'crop':
+            if original_aspect_ratio > target_aspect_ratio:
+                # Reduce width
+                crop_size[0] = int(size[1] * target_aspect_ratio)
+                top_left[0] = (size[0] - crop_size[0]) // 2
+            else:
+                # Reduce height
+                crop_size[1] = int(size[0] / target_aspect_ratio)
+                top_left[1] = (size[1] - crop_size[1]) // 2
+
+        return tuple(crop_size), tuple(top_left)
+
+
+    def make_ffprobe_command(self, input_source='pipe:0'):
+        return (
+            'ffprobe',
+            '-i', input_source,
+            '-show_entries',
+            'format=format_name,duration,bit_rate:stream=codec_type,duration,bit_rate,codec_name,channels,sample_rate,sample_fmt,width,height,pix_fmt',
+            '-v', 'quiet',
+            '-of', 'json'
+        )
+
+    @staticmethod
+    def format_params_for_logger(media_params):
+        return '\n    ' + ', '.join(f'{key}: {value}' for key, value in media_params.items() if value not in (None, (None, None)))
 
 
 def calculate_estimate_time(estimate_duration, start_time):
@@ -735,3 +940,5 @@ def copy_js_client_interface_to_frontend_folder():
         frontend_folder = Path('./frontend/static/js/')
         logger.info(f'Subrepository "AIME API Client Interfaces" folder in {js_client_interface_folder.parent.resolve()} is present. Javascript client interface {js_client_interface_filename} is copied from {js_client_interface_folder.resolve()} to {frontend_folder.resolve()}.')
         shutil.copy(js_client_interface_folder / js_client_interface_filename, frontend_folder / js_client_interface_filename)
+
+

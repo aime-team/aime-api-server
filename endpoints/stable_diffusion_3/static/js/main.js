@@ -52,9 +52,31 @@ function onResultCallback(data) {
         }
         else {
             infoBox.textContent = 'Error: ' + data.error + '\n';
+            if (data.images) {
+                infoBox.style.height = 'auto';
+                infoBox.style.height = infoBox.scrollHeight + 'px';
+                
+                var imageContainer = document.getElementById('image_container');
+                imageContainer.innerHTML = '';
+                var images = data.images;
+                for (var i = 0; i < images.length; i++) {
+                    var image_data = images[i].trim();
+                    if (image_data) {
+                        var img = document.createElement('img');
+                        img.src = image_data;
+                        img.classList.add('generated_image');
+                        // img.style.width = '1024px';
+                        img.style.marginBottom = '10px';
+        
+                        var imageDiv = document.createElement('div');
+                        imageDiv.appendChild(img);
+                        appendDownloadIcon(imageDiv, image_data, data.prompt, data.seed, i);
+                        imageContainer.appendChild(imageDiv);
+                    }
+                }
+            }
             enableSendButton();
             removeSpinner();
-            initializeImageContainer();
         }
     }
     else {
@@ -237,7 +259,7 @@ function initializeDropZone() {
         </div>
         <div id="dropzone-label" class="flex flex-col justify-center items-center">
         </div>
-        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="image/png, image/jpg, image/jpeg, image/bmp, image/webp">
+        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="image/png, image/jpg, image/jpeg, image/bmp, image/webp, image/gif, image/tiff">
     `;
     document.getElementById('dropzone').insertAdjacentElement('afterbegin', dropzone);
 
@@ -286,7 +308,7 @@ function handleFileSelection(file) {
             }
             const base64Image = event.target.result.split(',')[1]; // Get the base64 part
             const imageType = file.type;
-            inputBase64String = `${imageType};base64,${base64Image}`;
+            inputBase64String = `data:${imageType};base64,${base64Image}`;
             appendResetIcon(dropzoneContentEl)
             
         };
