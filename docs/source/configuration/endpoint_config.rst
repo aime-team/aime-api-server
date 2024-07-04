@@ -1,6 +1,8 @@
 .. Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
    This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
 
+.. _ep_config:
+
 Endpoint Configuration
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -93,6 +95,8 @@ Example:
     provide_worker_meta_data = true
 
 
+.. _ep_input_config:
+
 Input Parameters
 ^^^^^^^^^^^^^^^^
 
@@ -101,7 +105,7 @@ The ``[INPUTS]`` section offers configuration of the following attributes to adj
 
 * ``type`` *(str): The most important attribute. Each input parameter needs at least the specification of its type or the related client request will be rejected by the AIME API Server. 
   Also if the specified type doesn't match the recognized type of the parameter and the attribute* ``auto_convert`` *is not set to* ``true`` *(It's* ``false`` *by default).
-  Available types:* ``"boolean"`` */* ``"bool"`` *,* ``"string"`` */* ``"str"`` *,* ``"integer"`` */* ``"int"`` *,* ``"float"`` *,* ``"selection"`` *,* ``"image"`` *,* ``"image_list"`` *,* ``"audio"``
+  Available types:* ``"boolean"`` */* ``"bool"`` *,* ``"string"`` */* ``"str"`` *,* ``"integer"`` */* ``"int"`` *,* ``"float"`` *,* ``"selection"`` *,* ``"json"``  *,* ``"image"`` *,* ``"image_list"`` *,* ``"audio"``
 
 All parameter types:
 """"""""""""""""""""
@@ -161,9 +165,9 @@ Types ``"image"`` and ``"audio"``:
 
 * ``format`` *(str): The format supported by the workers* 
 
-  * *Available values for the type* ``"audio"`` *:* ``"wav"`` *,* ``"mp3"`` *,* ``"ogg"`` *,* ``"webm"`` *,* ``"mp4"`` *,* ``"mp4"`` *
-  * *Available values for the type* ``"image"`` *:* ``"jpeg"`` *,* ``"jpg"`` *,* ``"png"`` *,* ``"tiff"`` *,* ``"bmp"`` *,* ``"gif"`` *,* ``"webp"`` *
-* ``color_space`` *(str): The color space of images supported by the workers. Available values:* ``"rgb"`` *,* ``"cmyk"`` *,* ``"ycbcr"``
+  * *Available values for the type* ``"audio"`` *:* ``"wav"`` *,* ``"mp3"`` *,* ``"ogg"`` *,* ``"webm"`` *,* ``"mp4"`` *
+  * *Available values for the type* ``"image"`` *:* ``"jpeg"`` */* ``"jpg"`` *,* ``"png"`` *,* ``"tiff"`` *,* ``"bmp"`` *,* ``"gif"`` *,* ``"webp"`` *
+* ``color_space`` *(str): The color space of images supported by the workers. Available values:* ``"rgb"`` *,* ``"yuv"`` *,* ``"rgba"`` *,* ``"yuva"`` *,* ``"bgr"`` *,* ``"gbr"`` *,* ``"gbr_alpha"`` *,* ``"gray"`` *,* ``"monochrome"`` *,* ``"palette"`` *,* ``"alpha"`` *,* ``"other"``
 * ``size`` *(array): The size of images [width, height] in pixel*
 * ``sample_rate`` *(int): The sample rate in Hz of the audio data supported by the workers*
 * ``sample_bit_depth`` *(int): The sample bit depth in bits per sample of audio data supported by the workers*
@@ -171,15 +175,9 @@ Types ``"image"`` and ``"audio"``:
 * ``channels`` *(int): The number of channels (Mono=1, Stereo=2, etc.) of audio data supported by the workers*
 * ``duration`` *(int): The duration in seconds of audio data supported by the workers*
 * ``resize_method`` *(str): The method to use for resizing images. Availabe values:* ``"crop"`` *and* ``"scale"``
-* ``check_conversion`` *(bool): Whether to perform another ffprobe check after conversion and log a warning if the target media parameters are different to the measured media parameters
+* ``check_conversion`` *(bool): Whether to perform another ffprobe check after conversion and log a warning if the target media parameters are different to the measured media parameters*
 * ``input_temp_file`` *(str): Whether an input temp file is generated for media conversion.* ``"auto"`` *: temp file is generated for image format "tiff" and "gif" and for input type "audio". Availabe values:* ``"yes"``, ``"no"`` *and* ``"auto"``
 * ``output_temp_file`` *(str): Whether an input temp file is generated for media conversion.* ``"auto"`` *: temp file is generated automatically for conversion to* ``"mp4"`` *format. Availabe values:* ``"yes"``, ``"no"`` *and* ``"auto"``
-
-audio_input.check_conversion = false # another ffprobe check and logs a warning if the target media parameters are different to the measured media parameters
-audio_input.input_temp_file = "auto" # "auto": temp file is generated automatically for image format "tiff" and "gif" and for input type "audio", ("yes", "no", "auto")
-audio_input.output_temp_file = "auto" # "auto": temp file is generated automatically for conversion to* ``"mp4"`` * format, ("yes", "no", "auto")
-
-
 
 Since the attributes of media data need specifications for each attribute seperately, we use nested attributes to do so. That means each attribute above will be configured using the following attributes:
 
@@ -220,20 +218,24 @@ Example:
     audio_param.audio_bit_rate = { max = 192000, auto_convert = true } # in bits/s
     audio_param.channels = { supported = [ 1 ], default = 1, auto_convert = true }
     audio_param.duration = { max = 30, auto_convert = true } # in seconds
+    audio_param.check_conversion = true
+    audio_param.input_temp_file = "auto"
+    audio_param.output_temp_file = "auto"
 
     image_param.type = "image"
     image_param.format = { supported = [ "JPG", "PNG" ], default = "JPG", auto_convert = true }
     image_param.color_space = { supported = [ "RGB" ], default = "RGB", auto_convert = true }
+    image_param.check_conversion = true
+    image_param.input_temp_file = "auto"
+    image_param.output_temp_file = "auto"
+    image_param.resize_method = "scale"
 
-    image_list_param.type = "image_list"
-    image_list_param.format = { supported = [ "JPG", "PNG" ], default = "JPG", auto_convert = true }
-    image_list_param.color_space = { supported = [ "RGB" ], default = "RGB", auto_convert = true }
-    
 
 Output Parameters
 ^^^^^^^^^^^^^^^^^
 
-Similar to the input parameters also the output parameters need to be declared. Job result parameters coming from the worker not being listed in the section ``[OUTPUTS]`` won't be forwarded to the clients. 
+Similar to the input parameters, the output parameters need to be declared as well. Job result parameters coming from the worker not being listed in the section ``[OUTPUTS]`` won't be forwarded to the clients. 
+In opposite to the input paramters, output parameters also support the type ``"image_list"`` to send multiple images as result. The output types ``"image"`` and ``"image_list"`` provide automatic conversion in the worker interface to the defined format and color space. 
 
 Example:
 
@@ -241,9 +243,20 @@ Example:
 .. code-block:: toml
 
     [OUTPUTS]
-    text = { type = "string" }
-    num_generated_tokens = { type = "integer" }
-    model_name = { type = "string" }
+    integer_param = { type = "integer" }
+    float_param = { type = "float" }
+    string_param = { type = "string" }
+
+    image_param.type = "image"
+    image_param.format = { supported = [ "JPG", "PNG" ], default = "JPG", auto_convert = true }
+    image_param.color_space = { supported = [ "RGB" ], default = "RGB", auto_convert = true }
+
+    image_list_param.type = "image_list"
+    image_list_param.format = { supported = [ "jpeg", "png" ], default = "jpeg", auto_convert = true }
+    image_list_param.color_space = { supported = [ "rgb" ], default = "rgb", auto_convert = true }
+
+    audio_param.type = "audio"
+
 
 Progress
 ^^^^^^^^

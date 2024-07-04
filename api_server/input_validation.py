@@ -19,81 +19,100 @@ TYPES_DICT = {
 
 
 class InputValidationHandler():
+    """Handler to validate and convert API server input parameters.
 
-    def __init__(self, input_args, ep_input_param_config, server_input_type_config):
-        self.input_args = input_args
+    Args:
+        input_params (dict): Dictionary containing all input parameters.
+        ep_input_param_config (dict): Endpoint configuration of all input parameters.
+        server_input_param_config (dict): Server configuration of all input parameters.
+    """       
+
+    def __init__(self, input_params, ep_input_param_config, server_input_param_config):
+        """Handler to validate and convert API server input parameters.
+
+        Args:
+            input_params (dict): Dictionary containing all input parameters.
+            ep_input_param_config (dict): Endpoint configuration of all input parameters.
+            server_input_param_config (dict): Server configuration of all input parameters.
+        """        
+        self.input_params = input_params
         self.ep_input_param_config = ep_input_param_config
-        self.server_input_type_config = server_input_type_config
+        self.server_input_param_config = server_input_param_config
         self.validation_errors = list()
-        self.arg_definition = dict()
-        self.arg_type = str()
+        self.param_config = dict()
+        self.param_type = str()
         self.ep_input_param_name = str()
         self.ffmpeg_cmd = list()
         self.convert_data = False
 
 
-    async def validate_input_parameter(self):
+    async def validate_input_parameters(self):
+        """Validate all input parameters.
+
+        Returns:
+            tuple(dict, list): Tuple of dictionary containing valid parameters and list of validation errors.
+        """        
         job_data = dict()
         self.check_for_unknown_parameters()
-        for ep_input_param_name, arg_definition in self.ep_input_param_config.items():
-            self.arg_definition = arg_definition
-            self.arg_type = arg_definition.get('type', 'string')
+        for ep_input_param_name, param_config in self.ep_input_param_config.items():
+            self.param_config = param_config
+            self.param_type = param_config.get('type', 'string')
             self.ep_input_param_name = ep_input_param_name
-            value = self.validate_required_argument(self.input_args.get(ep_input_param_name))       
+            value = self.validate_required_argument(self.input_params.get(ep_input_param_name))       
             value = self.validate_input_type(value)
-            if self.arg_type == 'selection':
+            if self.param_type == 'selection':
                 job_data[ep_input_param_name] = self.validatate_selection_parameter(value)
             else:
                 if isinstance(value, (int, float)):
                     job_data[ep_input_param_name] = self.validate_number(value)
                 elif isinstance(value, str):
-                    if self.arg_type == 'string':
+                    if self.param_type == 'string':
                         job_data[ep_input_param_name] = self.validate_string(value)
-                    elif self.arg_type == 'json':
+                    elif self.param_type == 'json':
                         job_data[ep_input_param_name] = self.validate_and_convert_json(value)
-                    else:
+                    elif self.param_type in ('audio', 'image'):
                         job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
         return job_data, self.validation_errors
 
     
     def check_for_unknown_parameters(self):
-        for param in self.input_args.keys():
+        for param in self.input_params.keys():
             if param not in self.ep_input_param_config:
                 self.validation_errors.append(f'Invalid parameter: {param}')
 
 
     def validate_required_argument(self, value):
         if value is None:
-            if self.arg_definition.get('required'):
+            if self.param_config.get('required'):
                 self.validation_errors.append(f'Missing required argument: {self.ep_input_param_name}')
             else:
-                return self.arg_definition.get('default', None)
+                return self.param_config.get('default', None)
         return value
 
     def validatate_selection_parameter(self, value):
-        if value not in self.arg_definition.get('supported'):
-            if self.arg_definition.get('auto_convert') == True:
-                if self.arg_definition.get('default'):
-                    return self.arg_definition.get('default')
-                elif self.arg_definition.get('supported'):
-                    return self.arg_definition.get('supported')[0]
+        if value not in self.param_config.get('supported'):
+            if self.param_config.get('auto_convert') == True:
+                if self.param_config.get('default'):
+                    return self.param_config.get('default')
+                elif self.param_config.get('supported'):
+                    return self.param_config.get('supported')[0]
             else:
                 self.validation_errors.append(
-                    f'Parameter {self.ep_input_param_name} = {value} not in supported values {self.arg_definition.get("supported")}!'
+                    f'Parameter {self.ep_input_param_name} = {value} not in supported values {self.param_config.get("supported")}!'
                     f'\nSet auto_convert = true for {self.ep_input_param_name} in the [INPUT] section of the endpoint config file to avoid this error.\n')
         else:
             return value
 
 
     def validate_input_type(self, value):
-        if self.arg_definition.get('type') == 'selection':
-            expected_value_type = type(self.arg_definition.get('default') or self.arg_definition.get('supported')[0])
+        if self.param_config.get('type') == 'selection':
+            expected_value_type = type(self.param_config.get('default') or self.param_config.get('supported')[0])
         else:
-            expected_value_type = TYPES_DICT[self.arg_definition.get('type', 'string')]
+            expected_value_type = TYPES_DICT[self.param_config.get('type', 'string')]
         if value is not None and not isinstance(value, expected_value_type):
             if expected_value_type in (int, float) and isinstance(value, (int, float)):
                 return expected_value_type(value)
-            elif self.arg_definition.get('auto_convert'):
+            elif self.param_config.get('auto_convert'):
                 try:
                     return expected_value_type(value)
                 except (ValueError, TypeError):
@@ -109,20 +128,21 @@ class InputValidationHandler():
         return self.validate_numerical_value(
             param_value,
             self.ep_input_param_name,
-            self.arg_definition
+            self.param_config
         )
         
 
     def validate_string(self, value):
-        max_length = self.arg_definition.get('max_length', None)
+        max_length = self.param_config.get('max_length', None)
         if max_length is not None and len(value) > max_length:
-            if self.arg_definition.get('auto_convert'):
+            if self.param_config.get('auto_convert'):
                 return max_length
             else:
                 self.validation_errors.append(f'Length of argument {self.ep_input_param_name}={shorten_strings(value)} exceeds the maximum length ({max_length})!')
 
         #self.validate_supported_values(self.ep_input_param_name)
         return value
+
 
     def validate_and_convert_json(self, value):
         if value:
@@ -131,8 +151,18 @@ class InputValidationHandler():
             except (TypeError, json.decoder.JSONDecodeError):
                 self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} has invalid json format!')
 
+
     async def validate_media_base64_string(self, media_base64):
-        ffmpeg_media = FFmpeg(self.ep_input_param_name, media_base64, self.arg_definition, self.validation_errors)
+        """Validation of given base64 representation of media input parameter. Checks the media attributes with ffprobe and validates it with the server and the endpoint configuration. 
+        If auto_convert is True in endpoint configuration, media input parameter will be converted to valid target media attributes with ffmpeg defined in the endpoint config.
+
+        Args:
+            media_base64 (str): Base64 representation of media input parameter
+
+        Returns:
+            str: Base64 representation of validated and converted media input parameter
+        """        
+        ffmpeg_media = FFmpeg(self.ep_input_param_name, media_base64, self.param_config, self.validation_errors)
         await ffmpeg_media.analyze()
         if not self.validation_errors:
             await run_in_executor(
@@ -151,7 +181,7 @@ class InputValidationHandler():
     def validate_media_parameters_on_server(self, params):
         if params:
             for param_name, param_value in params.items():
-                arg_definition_server = self.server_input_type_config.get(self.arg_type).get(param_name)
+                arg_definition_server = self.server_input_param_config.get(self.param_type).get(param_name)
                 if arg_definition_server:
                     
                     allowed_values_list = FFmpeg.get_ffmpeg_conform_parameter(arg_definition_server.get('allowed'), param_name)
@@ -171,7 +201,7 @@ class InputValidationHandler():
                 param_value = self.validate_supported_values(param_value, param_name)
                 param_value = self.validate_numerical_attribute(param_value, param_name)
                 valid_params[param_name] = param_value
-            if self.arg_type in ('image', 'video'):
+            if self.param_type in ('image', 'video'):
                 target_media_format = valid_params[MediaParams.FORMAT]
                 
                 if valid_params.get(MediaParams.VIDEO_CODEC) != FORMAT_CODEC_DICT.get(target_media_format, target_media_format):
@@ -179,11 +209,11 @@ class InputValidationHandler():
                 if params.get(MediaParams.SIZE) in (None, (0,0)):
                     self.validation_errors.append(f'Could not determine the {MediaParams.SIZE} of the parameter {self.ep_input_param_name}.')
             
-            if self.arg_type in ('audio', 'video'):
+            if self.param_type in ('audio', 'video'):
                 if valid_params.get(MediaParams.AUDIO_CODEC) is not FORMAT_CODEC_DICT.get(valid_params.get(MediaParams.FORMAT), valid_params.get(MediaParams.FORMAT)):
                     target_media_format = valid_params[MediaParams.FORMAT]
                     valid_params[MediaParams.AUDIO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)
-            if self.arg_type in ('image', 'video'):
+            if self.param_type in ('image', 'video'):
                 if valid_params.get(MediaParams.VIDEO_CODEC) is not FORMAT_CODEC_DICT.get(valid_params.get(MediaParams.FORMAT), valid_params.get(MediaParams.FORMAT)):
                     target_media_format = valid_params[MediaParams.FORMAT]
                     valid_params[MediaParams.VIDEO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)
@@ -192,7 +222,7 @@ class InputValidationHandler():
 
     def validate_supported_values(self, param_value, param_name):
         
-        arg_param_definition = self.arg_definition.get(param_name)
+        arg_param_definition = self.param_config.get(param_name)
         if arg_param_definition:
             supported_value_list = FFmpeg.get_ffmpeg_conform_parameter(arg_param_definition.get('supported'), param_name)
             param_value = FFmpeg.get_ffmpeg_conform_parameter(param_value, param_name)
@@ -220,7 +250,7 @@ class InputValidationHandler():
         target_param_value = self.validate_numerical_value(
             param_value,
             f'{self.ep_input_param_name}.{param_name}',
-            self.arg_definition.get(param_name)
+            self.param_config.get(param_name)
         )
         return target_param_value
 

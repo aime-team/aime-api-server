@@ -14,5 +14,11 @@ AIME API Server Documentation
 .. autoclass:: api_server.job_queue.JobQueue
    :members:
 
-.. autoclass:: api_server.job_queue.JobState
+.. autoclass:: api_server.utils.ffmpeg.FFmpeg
+   :members: 
+
+.. autoclass:: api_server.utils.ffmpeg.MediaParams
+   :members: 
+
+.. autoclass:: api_server.input_validation.InputValidationHandler
    :members: 
