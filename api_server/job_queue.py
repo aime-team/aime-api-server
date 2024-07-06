@@ -34,10 +34,20 @@ class JobQueue():
     """Job queue to manage jobs for the given job type. Assignes jobs offered from client on APIEndpoint.api_request 
     via route /endpoint_name with a job_id and collects the job_data. The workers asking for jobs on worker_job_request_json get
     the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.
+
+    Args:
+        job_type (str): Job type
+        worker_auth_key (str): Key for worker authorization
     """    
     job_id = AtomicCounter()    # this has to be an atomic counter
 
     def __init__(self, job_type, worker_auth_key):
+        """_summary_
+
+        Args:
+            job_type (_type_): _description_
+            worker_auth_key (_type_): _description_
+        """        
         self.job_type = job_type
         self.worker_auth_key = worker_auth_key
         self.queue = asyncio.Queue()

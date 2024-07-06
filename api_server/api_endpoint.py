@@ -14,7 +14,8 @@ from pathlib import Path
 import toml
 
 from .job_queue import JobState
-from .utils import StaticRouteHandler, shorten_strings, generate_auth_key, calculate_estimate_time, InputValidationHandler
+from .utils.misc import StaticRouteHandler, shorten_strings, generate_auth_key, calculate_estimate_time
+from .input_validation import InputValidationHandler
 
 
 
@@ -22,7 +23,7 @@ TYPES_DICT = {'string': str, 'integer':int, 'float':float, 'bool':bool, 'image':
 
 
 class APIEndpoint():
-    """AIME ML API endpoint
+    """AIME API endpoint
 
     Args:
         app (APIServer): Instance of APIServer()
@@ -342,7 +343,7 @@ class APIEndpoint():
             job_future (_type_): _description_
 
         Returns:
-            _type_: _description_
+            dict: Dictionary representation of the response.
         """        
 
         response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
@@ -377,8 +378,8 @@ class APIEndpoint():
     async def validate_input_parameters_for_job_data(self, input_args):
         """Check if worker input parameters received from client are as specified in the endpoint config file
         """
-        input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.input_type_config)
-        return await input_validator.validate_input_parameter()
+        input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.input_param_config)
+        return await input_validator.validate_input_parameters()
            
 
 

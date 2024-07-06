@@ -77,7 +77,18 @@
 <li class="toctree-l3"><a class="reference internal" href="#api_server.job_queue.JobQueue.put"><code class="docutils literal notranslate"><span class="pre">JobQueue.put()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#api_server.job_queue.JobState"><code class="docutils literal notranslate"><span class="pre">JobState</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api_server.utils.ffmpeg.FFmpeg"><code class="docutils literal notranslate"><span class="pre">FFmpeg</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.utils.ffmpeg.FFmpeg.analyze"><code class="docutils literal notranslate"><span class="pre">FFmpeg.analyze()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.utils.ffmpeg.FFmpeg.convert"><code class="docutils literal notranslate"><span class="pre">FFmpeg.convert()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.utils.ffmpeg.FFmpeg.get_data"><code class="docutils literal notranslate"><span class="pre">FFmpeg.get_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#api_server.utils.ffmpeg.MediaParams"><code class="docutils literal notranslate"><span class="pre">MediaParams</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api_server.input_validation.InputValidationHandler"><code class="docutils literal notranslate"><span class="pre">InputValidationHandler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.input_validation.InputValidationHandler.validate_input_parameters"><code class="docutils literal notranslate"><span class="pre">InputValidationHandler.validate_input_parameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.input_validation.InputValidationHandler.validate_media_base64_string"><code class="docutils literal notranslate"><span class="pre">InputValidationHandler.validate_media_base64_string()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api_worker_interface/index_api_worker_interface.html">API Worker Interface</a></li>
@@ -123,13 +134,10 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_server.</span></span><span class="sig-name descname"><span class="pre">APIServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer" title="Link to this definition"></a></dt>
-<dd><p>AIME ML API Server</p>
+<dd><p>AIME API Server</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>api_name</strong> (<em>str</em>) – Name of API server</p></li>
-<li><p><strong>args</strong> (<em>argparse.Namespace</em>) – Command line arguments parsed with argparse</p></li>
-</ul>
+<dd class="field-odd"><p><strong>api_name</strong> (<em>str</em>) – Name of API server</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -302,7 +310,7 @@ to make it available by APIEndpoint.api_request and APIEndpoint.api_progress to 
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.api_endpoint.</span></span><span class="sig-name descname"><span class="pre">APIEndpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint" title="Link to this definition"></a></dt>
-<dd><p>AIME ML API endpoint</p>
+<dd><p>AIME API endpoint</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -388,10 +396,10 @@ initialized in api_request() to get the results.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>_description_</p>
+<dd class="field-even"><p>Dictionary representation of the response.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>_type_</p>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -483,6 +491,14 @@ given endpoint config file.</p>
 <dd><p>Job queue to manage jobs for the given job type. Assignes jobs offered from client on APIEndpoint.api_request
 via route /endpoint_name with a job_id and collects the job_data. The workers asking for jobs on worker_job_request_json get
 the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>job_type</strong> (<em>str</em>) – Job type</p></li>
+<li><p><strong>worker_auth_key</strong> (<em>str</em>) – Key for worker authorization</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue.fetch_waiting_job">
 <span class="sig-name descname"><span class="pre">fetch_waiting_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.fetch_waiting_job" title="Link to this definition"></a></dt>
@@ -531,9 +547,130 @@ the job_data for the next job in the queue to process. Also monitors states of w
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="api_server.job_queue.JobState">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobState" title="Link to this definition"></a></dt>
-<dd><p>An enumeration.</p>
+<dt class="sig sig-object py" id="api_server.utils.ffmpeg.FFmpeg">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.utils.ffmpeg.</span></span><span class="sig-name descname"><span class="pre">FFmpeg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base64_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">media_binary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_temp_file_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_temp_file_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_conversion_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.utils.ffmpeg.FFmpeg" title="Link to this definition"></a></dt>
+<dd><p>Python binding for FFmpeg to analyze and convert media data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param_name</strong> (<em>str</em>) – Name of the input parameter.</p></li>
+<li><p><strong>base64_string</strong> (<em>str</em><em>, </em><em>optional</em>) – String of base64 encoded input parameter. Defaults to None.</p></li>
+<li><p><strong>config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Configuration of parameter containing arg_type, resize_method, input_temp_file_config, output_temp_file_config and check_conversion_config. Defaults to {}.</p></li>
+<li><p><strong>errors</strong> (<em>list</em><em>, </em><em>optional</em>) – Error list to accumulate errors occuring during media analysis or conversion. If not given, errors will be raise. Defaults to None.</p></li>
+<li><p><strong>media_binary</strong> (<em>bytes</em><em>, </em><em>optional</em>) – Binary data of input data as alternative to base64_string. Defaults to None.</p></li>
+<li><p><strong>arg_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Input parameter type. Must be present if no config is given. Supported values: (‘image’, ‘audio’, ‘video’). Defaults to None.</p></li>
+<li><p><strong>resize_method</strong> (<em>str</em><em>, </em><em>optional</em>) – Resize method for input image conversion. Supported values: (‘scale’, ‘crop’). Defaults to None.</p></li>
+<li><p><strong>input_temp_file_config</strong> (<em>str</em><em>, </em><em>optional</em>) – Config whether an input temp file is generated. Supported values: (‘auto’, ‘yes’, ‘no’). Defaults to None.</p></li>
+<li><p><strong>output_temp_file_config</strong> (<em>str</em><em>, </em><em>optional</em>) – Config whether an output temp file is generated. Supported values: (‘auto’, ‘yes’, ‘no’). Defaults to None.</p></li>
+<li><p><strong>check_conversion_config</strong> (<em>bool</em><em>, </em><em>optional</em>) – Config whether to check if the media attributes of the input parameter are as supposed after its conversion. Defaults to False.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.utils.ffmpeg.FFmpeg.analyze">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">analyze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base64_string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">media_binary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.utils.ffmpeg.FFmpeg.analyze" title="Link to this definition"></a></dt>
+<dd><p>Analyze input parameter with ffprobe. Save the measured media parameters in self.media_params and return it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base64_string</strong> (<em>str</em><em>, </em><em>optional</em>) – String of base64 encoded input parameter. Defaults to None.</p></li>
+<li><p><strong>media_binary</strong> (<em>bytes</em><em>, </em><em>optional</em>) – Binary data of input data as alternative to base64_string. Defaults to None. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Measured media parameters as instance of MediaParams.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#api_server.utils.ffmpeg.MediaParams" title="api_server.utils.ffmpeg.MediaParams">MediaParams</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.utils.ffmpeg.FFmpeg.convert">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_media_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.utils.ffmpeg.FFmpeg.convert" title="Link to this definition"></a></dt>
+<dd><p>Convert input parameter with ffmpeg to given target_media_paramters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_media_params</strong> (<a class="reference internal" href="#api_server.utils.ffmpeg.MediaParams" title="api_server.utils.ffmpeg.MediaParams"><em>MediaParams</em></a><em> or </em><em>dict</em>) – Target media parameters for conversion.</p></li>
+<li><p><strong>resize_method</strong> (<em>str</em><em>, </em><em>optional</em>) – Resize method for input image conversion to change resize method given at initialization. Supported values: (‘scale’, ‘crop’). Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.utils.ffmpeg.FFmpeg.get_data">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'base64'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.utils.ffmpeg.FFmpeg.get_data" title="Link to this definition"></a></dt>
+<dd><p>Get the base64 or binary representation of the stored media data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>output_format</strong> (<em>str</em><em>, </em><em>optional</em>) – Desired output format. Supported values: (‘base64’, ‘binary’). Defaults to ‘base64’.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Base64 or binary representation of stored media data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str or bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="api_server.utils.ffmpeg.MediaParams">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.utils.ffmpeg.</span></span><span class="sig-name descname"><span class="pre">MediaParams</span></span><a class="headerlink" href="#api_server.utils.ffmpeg.MediaParams" title="Link to this definition"></a></dt>
+<dd><p>Specialized dictionary class designed to store media parameter information.
+It inherits from Python’s built-in dict class and predefines keys related to the media attributes.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="api_server.input_validation.InputValidationHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.input_validation.</span></span><span class="sig-name descname"><span class="pre">InputValidationHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ep_input_param_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_input_param_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.input_validation.InputValidationHandler" title="Link to this definition"></a></dt>
+<dd><p>Handler to validate and convert API server input parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_params</strong> (<em>dict</em>) – Dictionary containing all input parameters.</p></li>
+<li><p><strong>ep_input_param_config</strong> (<em>dict</em>) – Endpoint configuration of all input parameters.</p></li>
+<li><p><strong>server_input_param_config</strong> (<em>dict</em>) – Server configuration of all input parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.input_validation.InputValidationHandler.validate_input_parameters">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_input_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.input_validation.InputValidationHandler.validate_input_parameters" title="Link to this definition"></a></dt>
+<dd><p>Validate all input parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple of dictionary containing valid parameters and list of validation errors.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple(dict, list)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.input_validation.InputValidationHandler.validate_media_base64_string">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_media_base64_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">media_base64</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.input_validation.InputValidationHandler.validate_media_base64_string" title="Link to this definition"></a></dt>
+<dd><p>Validation of given base64 representation of media input parameter. Checks the media attributes with ffprobe and validates it with the server and the endpoint configuration.
+If auto_convert is True in endpoint configuration, media input parameter will be converted to valid target media attributes with ffmpeg defined in the endpoint config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>media_base64</strong> (<em>str</em>) – Base64 representation of media input parameter</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Base64 representation of validated and converted media input parameter</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>

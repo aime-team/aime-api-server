@@ -21,7 +21,7 @@ import asyncio
 from .api_endpoint import APIEndpoint
 from .job_queue import JobQueue, JobState
 from .flags import Flags
-from .utils import StaticRouteHandler, shorten_strings, CustomFormatter
+from .utils.misc import StaticRouteHandler, shorten_strings, CustomFormatter
 from .__version import __version__
 
 
@@ -29,11 +29,10 @@ logging.getLogger('asyncio').setLevel(logging.ERROR)
 
 
 class APIServer(Sanic):
-    """AIME ML API Server
+    """AIME API Server
 
     Args:
         api_name (str): Name of API server
-        args (argparse.Namespace): Command line arguments parsed with argparse
     """
     job_queues = {} # key: endpoint_name
     endpoints = {}  # key: endpoint_name
@@ -44,7 +43,7 @@ class APIServer(Sanic):
     args = None
     static_routes = {}
     worker_config = {}
-    input_type_config = {}
+    input_param_config = {}
     default_authentification = "None"
     default_authorization = "None"
     default_authorization_keys = {}
@@ -314,7 +313,7 @@ class APIServer(Sanic):
         self.set_server_sanic_config(server_config, app)
         if not self.args.ep_config:
             self.args.ep_config = server_config.get('SERVER').get('endpoint_configs', './endpoints')
-        APIServer.input_type_config = server_config.get('INPUTS', {})
+        APIServer.input_param_config = server_config.get('INPUTS', {})
         APIServer.static_routes = server_config.get('STATIC', {})
         APIServer.worker_config = server_config.get('WORKERS', {})
 

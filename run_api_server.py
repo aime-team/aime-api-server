@@ -4,7 +4,7 @@
 
 from sanic_session import Session, InMemorySessionInterface
 from api_server.api_server import APIServer
-from api_server.utils import copy_js_client_interface_to_frontend_folder
+from api_server.utils.misc import copy_js_client_interface_to_frontend_folder
 
 
 API_NAME = "AIME_API_Server"

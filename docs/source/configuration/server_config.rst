@@ -155,7 +155,8 @@ Input Parameters
 ^^^^^^^^^^^^^^^^
 
 Attribute restrictions of certain input parameter types can be set in the section ``[INPUTS]``. Be aware that all input parameters of that type having attributes with values not being allowed here will be rejected no matter of the supported values in the endpoint configuration file!
- 
+See section in :ref:`ep_input_config` in :ref:`documentation of the endpoint configuration <ep_config>` for supported attributes and its supported values.
+
 Example:
 
 .. highlight:: toml
