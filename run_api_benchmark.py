@@ -132,7 +132,7 @@ class BenchmarkApiEndpoint():
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
             else:
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
-                if args.num_units == 1:
+                if not args.endpoint_name == 'stable_diffusion_3' and args.num_units == 1:
                     args.num_units = 500
         return args
 
@@ -396,7 +396,7 @@ class BenchmarkApiEndpoint():
             ep_inputs = config.get('INPUTS', {})
             params = dict()
             for ep_input in ep_inputs:
-                if ep_inputs[ep_input].get('required') is not False:
+                if ep_inputs[ep_input].get('required') or ep_inputs[ep_input].get('default') is not None:
                     params[ep_input] = ep_inputs[ep_input].get('default')
             if params.get('seed'):
                 params['seed'] = 1
