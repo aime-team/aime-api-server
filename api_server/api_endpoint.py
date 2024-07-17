@@ -373,7 +373,6 @@ class APIEndpoint():
         self.app.progress_states[job_id] = {}
         return response
 
-    
 
     async def validate_input_parameters_for_job_data(self, input_args):
         """Check if worker input parameters received from client are as specified in the endpoint config file

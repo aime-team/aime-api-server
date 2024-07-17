@@ -194,7 +194,8 @@ class FFmpeg():
         input_temp_file_config (str, optional): Config whether an input temp file is generated. Supported values: ('auto', 'yes', 'no'). Defaults to None.
         output_temp_file_config (str, optional): Config whether an output temp file is generated. Supported values: ('auto', 'yes', 'no'). Defaults to None.
         check_conversion_config (bool, optional): Config whether to check if the media attributes of the input parameter are as supposed after its conversion. Defaults to False.
-    """        
+    """
+    ffmpeg_installed = None 
     def __init__(
         self,
         param_name,
@@ -543,3 +544,15 @@ class FFmpeg():
     @staticmethod
     def format_params_for_logger(media_params):
         return '\n    ' + ', '.join(f'{key}: {value}' for key, value in media_params.items() if value not in (None, (None, None)))
+
+
+
+    @staticmethod
+    def is_ffmpeg_installed(app=None, loop=None):
+        try:
+            subprocess.run(['ffmpeg', '-version'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            logger.warning('Attention: FFmpeg is not installed! If there media input parameters like audio or images, install ffmpeg with sudo apt install ffmpeg')
+            FFmpeg.ffmpeg_installed = False
+        else:
+            FFmpeg.ffmpeg_installed = True

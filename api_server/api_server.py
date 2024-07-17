@@ -22,6 +22,7 @@ from .api_endpoint import APIEndpoint
 from .job_queue import JobQueue, JobState
 from .flags import Flags
 from .utils.misc import StaticRouteHandler, shorten_strings, CustomFormatter
+from .utils.ffmpeg import FFmpeg
 from .__version import __version__
 
 
@@ -517,6 +518,7 @@ class APIServer(Sanic):
         self.register_listener(self.setup_static_routes, 'before_server_start')
         self.register_listener(self.init_all_endpoints, 'before_server_start')
         self.register_listener(self.create_job_queues, "after_server_start")
+        self.register_listener(FFmpeg.is_ffmpeg_installed, 'after_server_start')
 
 
     def create_job_queues(self, app, loop):

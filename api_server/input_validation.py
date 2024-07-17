@@ -71,7 +71,11 @@ class InputValidationHandler():
                     elif self.param_type == 'json':
                         job_data[ep_input_param_name] = self.validate_and_convert_json(value)
                     elif self.param_type in ('audio', 'image'):
-                        job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
+                        if FFmpeg.ffmpeg_installed:
+                            job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
+                        else:
+                            self.validation_errors.append('Media input parameters like "image" and "audio" are disabled since FFmpeg is not installed on the API Server!')
+
         return job_data, self.validation_errors
 
     
