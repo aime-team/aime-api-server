@@ -94,15 +94,18 @@ function onResultCallback(data) {
         imagesPerSec = num_images / data.total_duration
         infoBox.textContent = 'Prompt: ' +  data.prompt + '\nSeed: ' + data.seed + '\nTotal job duration: ' + 
             data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's' + '\nImages per second: ' + imagesPerSec.toFixed(1);
-    
+        if (data.model_name) {
+            infoBox.textContent += '\nModel name: ' + data.model_name;
+        }
         if (data.auth) {
             infoBox.textContent += '\nWorker: ' + data.auth;
         }
-        
         if (data.worker_interface_version) {
             infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version;
         }
-        
+        if (data.ep_version != null) {
+            infoBox.textContent += '\nEndpoint version: ' + data.ep_version;
+        }
         if (data.images) {
     
             infoBox.style.height = 'auto';
@@ -129,13 +132,17 @@ function onResultCallback(data) {
         }
     }
 }
+
+
 function onProgressCallback(progress_info, progress_data) {
     const progress = progress_info.progress;
     const queue_position = progress_info.queue_position;
     const estimate = progress_info.estimate;
     const num_workers_online = progress_info.num_workers_online;
-    
     if(progress_data) {
+        if(progress_data.progress_message) {
+            infoBox.textContent = progress_data.progress_message;
+        }
         var imageContainer = document.getElementById('image_container');
         imageContainer.innerHTML = '';
         if(progress_data.progress_images) {
@@ -289,7 +296,6 @@ function handleFileSelection(file) {
     const imageInput = document.getElementById('dropzone-input');
     var allowedFormats = imageInput.accept.split(',').map(function (item) { return item.trim(); });
     input_image_type = file.type
-    console.log(file.type)
     let fileSizeMB = ( ( file.size / 1024 ) / 1024).toFixed(2);
 
     if (allowedFormats.includes(file.type)) {
@@ -305,7 +311,19 @@ function handleFileSelection(file) {
             image.src = event.target.result;
             image.onload = function() {
                 document.getElementById('dropzone-label').innerHTML = `<p class="text-xs">Filename: ${file.name}; Size: ${fileSizeMB} MB; Resolution: ${image.naturalWidth} x ${image.naturalHeight} </p>`
+                if (image.naturalWidth > image.naturalHeight) {
+                    var targetWidth = 1024
+                    var targetHeight = roundToNearestMultipleOf16(image.naturalHeight * 1024 / image.naturalWidth)
+    
+                }
+                else {
+                    var targetWidth = roundToNearestMultipleOf16(image.naturalWidth * 1024 / image.naturalHeight)
+                    var targetHeight = 1024
+                }
+                document.getElementById('width_range').value = targetWidth
+                document.getElementById('height_range').value = targetHeight
             }
+
             const base64Image = event.target.result.split(',')[1]; // Get the base64 part
             const imageType = file.type;
             inputBase64String = `data:${imageType};base64,${base64Image}`;
@@ -508,11 +526,11 @@ function refreshRangeInputLayout() {
     });
 }
 
-function roundToNearestMultipleOf64(number) {
+function roundToNearestMultipleOf16(number) {
     if (number % 64 === 0) {
       return number;
     } else {
-      return Math.round(number / 64) * 64;
+      return Math.round(number / 16) * 16;
     }
 }
 
