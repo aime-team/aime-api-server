@@ -6,6 +6,7 @@ import json
 import re
 from sanic.log import logging
 import aiofiles
+import tempfile
 
 from .misc import run_in_executor
 
@@ -400,9 +401,9 @@ class FFmpeg():
                         f'media format measured by ffprobe "{self.media_params.get(MediaParams.FORMAT)}"!'
                     )
             auto_temp_file_condition = not self.arg_type == 'image' or self.media_params.get(MediaParams.FORMAT) == 'tiff' or self.base64_format == 'gif'
-            if not self.current_temp_file and (self.input_temp_file_config == 'yes' or \
-            (self.input_temp_file_config == 'auto' and auto_temp_file_condition)):
-                self.current_temp_file = f'{str(uuid.uuid4())[:8]}.{(self.media_params.get(MediaParams.FORMAT) or self.base64_format).split(",")[0]}'
+            if not self.current_temp_file and (self.input_temp_file_config == 'yes' or (self.input_temp_file_config == 'auto' and auto_temp_file_condition)):
+                temp_dir = tempfile.gettempdir()
+                self.current_temp_file = f'{tempfile.gettempdir()}/{str(uuid.uuid4())[:8]}.{(self.media_params.get(MediaParams.FORMAT) or self.base64_format).split(",")[0]}'
                 async with aiofiles.open(self.current_temp_file, 'wb') as temp_file:
                     await temp_file.write(self.media_binary)
         if self.current_temp_file:
@@ -431,7 +432,7 @@ class FFmpeg():
     def __make_ffmpeg_cmd(self, target_media_params):
         ffmpeg_cmd = list()
         if self.output_temp_file_config == 'yes' or (self.output_temp_file_config == 'auto' and target_media_params.get(MediaParams.FORMAT) == 'mp4'):
-            self.output_temp_file = f'{str(uuid.uuid4())[:8]}.{target_media_params.get(MediaParams.FORMAT)}'
+            self.output_temp_file = f'{tempfile.gettempdir()}/{str(uuid.uuid4())[:8]}.{target_media_params.get(MediaParams.FORMAT)}'
         for target_param_name, target_param_value in target_media_params.items():
             essential_parameters = {
                 'audio': (MediaParams.FORMAT, MediaParams.CHANNELS, MediaParams.AUDIO_BIT_RATE, MediaParams.AUDIO_CODEC),
