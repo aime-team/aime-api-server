@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<!-- 
+Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+
+This software may be used and distributed according to the terms of the MIT LICENSE
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
+
+    <title>AIME Seamless communication m4tv2</title>
+
+    <link rel="stylesheet" href="/model_api/frontend/css/font.css">
+    <link rel="stylesheet" href="/tts-tortoise/static/css/highlight.css">
+    <link rel="stylesheet" href="/tts-tortoise/static/css/style.css">
+
+	<script src="/model_api/js/model_api.js"></script>
+	<script src="/tts-tortoise/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
+	<script src="/tts-tortoise/static/js/highlight.js"></script>
+	<script src="/tts-tortoise/static/js/main.js"></script>
+</head>
+
+<body>
+    <div class="pl-5 pr-5 max-w-7xl mx-auto min-h-screen">
+        <div id="top">
+            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: Tortoise TTS</h2>
+        </div>
+		<div id="layout" class="columns flex flex-col md:flex-row">
+			<!-- LEFT COLUMN -->
+			<form class="column md:container input-col relative md:flex-1 pb-4 min-w-0" onsubmit="return false;">
+				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">INPUT</h3>
+					<div class="flex">
+						<button id="tab_button_text_input" class="tab-button active" data-tab="tab_text_input" data-tab-group="input"><h3 class="text-lg pr-4">Text</h3></button>
+						<button id="tab_button_audio_input" class="tab-button" data-tab="tab_audio_input" data-tab-group="input"><h3 class="text-lg pl-4">Audio</h3></button>
+					</div>
+				<div id="tab_text_input" class="tab-content pl-0 mt-2" data-tab-group="input">
+					<textarea id="textInput" 
+								name="textInput" 
+								class="rounded form-input border p-2 border-black w-full disabled:cursor-not-allowed disabled:opacity-50" 
+								style="height: 66px !important;"
+								placeholder="Enter text to generate speech for..."
+								oninput="updateWordCount()"
+								onkeydown="handleKeyPress(event)"
+					>Hello! How can I help you today? I'm here to answer any questions you might have to the best of my ability.</textarea>
+					<div id="wordCount" class="text-xs text-gray-400 italic">0 words (putput max_seq_len: 1024 subword tokens)</div>
+				</div>
+				<div id="tab_audio_input" class="hidden tab-content p-0 mt-5" data-tab-group="input">
+					<div class="w100 flex items-center">
+						<div id="dropzone" class="w100 rounded flex flex-col items-center justify-center"></div>
+						<button id="recordButton" 
+							type="button" 
+							title="Click to start recording audio."
+							class="border-gray border-1 bg-gray-100 hover:bg-aime_blue active:bg-aime_red border-2 hover:border-aime_blue active:border-aime_red border-dashed focus:border-dashed hover:border-solid active:border-solid text-aime_darkblue hover:text-white font-bold py-2 px-2 ml-10 rounded-lg"
+							onclick=startStopRecording() >
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+							</svg>							  
+						</button>
+					
+					</div>
+
+				</div>
+				
+				<p class="label mt-5">Settings</p>
+
+				<div class="w100 row">
+					<div id="language-selector" class="flex space-x-4 items-center">
+						<div class="w-1/2">
+							<p class="select-label">Source language:</p>
+							<select id="srcLang" name="srcLang" class="langselector form-select w100 rounded"></select>
+						</div>
+						<div class="w-1/2">
+							<p class="select-label">Preset:</p>
+							<select id="preset" name="preset" class="presetselector form-select w100 rounded"></select>
+						</div>
+					</div>
+					<div id="voice-selector" class="flex space-x-4 items-center">
+						<div class="w-1/2">
+							<p class="select-label">Voice:</p>
+							<select id="voice" name="voice" class="voiceselector form-select w100 rounded"></select>
+						</div>
+					</div>
+				</div>
+				<div class="flex justify-end mb-10 mt-8 items-center">
+					<button id="sendButton" 
+							type="button" 
+							class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" 
+							onclick="onButtonClick();">Generate</button>
+				</div>
+				
+			</form> <!-- /END LEFT COLUMN -->
+
+			<!-- DEVIDER -->
+			<div class="column-divider" role="separator">
+				<div class="thin-line"></div>
+			</div><!-- /END DEVIDER -->
+
+			<!-- RIGHT COLUMN -->
+			<div id="output_section" class="column md:container output-col md:flex-1 pb-4 min-w-0">
+				<div class="flex">
+					<button id="tab_button_output" class="tab-button active" data-tab="tab_output"><h3 class="text-lg pr-4">OUTPUT</h3></button>
+					<button id="tab_button_json" class="tab-button" data-tab="tab_json"><h3 class="text-lg pl-4">JSON</h3></button>
+				</div>
+				<div id="tab_output" class="tab-content">
+					<div id="progress_container" class="w100">
+						<p class="label">Progress</p>
+						<span id="progress_label" class="text-sm"></span>
+						<label id="tasks_to_wait_for" class="text-sm"></label>
+						<label id="estimate" class="text-sm"></label>
+						<label id="num_workers_online" class="text-sm"></label>
+					</div>
+
+					<p class="label mt-5">Console Output</p>
+					<textarea readonly id="infoBox" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm text-aime_blue">>_</textarea>
+
+					<p class="label mt-5">Text Output</p>
+					<textarea readonly id="textOutput" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm"></textarea>
+
+					<div id="audioOutputContainer" class="w hidden">
+						<p class="label mt-5">Audio Output</p>
+						<div class="audio-controls-container flex items-center">
+							<audio id="audioPlayerOutput" controls class="rounded-lg w100">
+								Your browser does not support the audio element.
+							</audio>
+							<button id="downloadButton" 
+									type="button" 
+									alt="Click to download audio file"
+									class="bg-white hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-2 ml-2 rounded-lg" 
+									onclick="downloadHandler();">
+									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+									</svg>
+							</button>
+						</div>
+					</div>
+					
+
+				</div>
+				<div id="tab_json" class="hidden tab-content">
+                    <div>
+                        <p class="label">JSON Example</p>
+    
+                        <p class="select-label">API Call (Text)</p>
+                        <pre><code class="info-field code language-json rounded">
+		{
+			"src_lang":"deu",
+			"tgt_lang":"eng",
+			"generate_audio":true,
+			"text_input":"Text to be translated...",
+			"client_session_auth_key":"2e561c1b-...-2af93ebaa47a",
+			"wait_for_result":false
+		}
+                        </code></pre>
+						<br/>
+						<p class="select-label">API Call (Audio)</p>
+                        <pre><code class="info-field code language-json rounded">
+		{
+			"src_lang":"deu",
+			"tgt_lang":"eng",
+			"generate_audio":true,
+			"audio_input":"data:application/octet-stream;base64,T2dnUwAC...F1Ad",
+			"client_session_auth_key":"8a59bdb2-...-7880d2ff2bc2",
+			"wait_for_result":false
+		}
+                        </code></pre>
+                        <br/>
+                        <p class="select-label">Progress</p>
+                        <pre><code class="info-field code language-json rounded">
+		{
+			"success":true,
+			"job_id":"JID85",
+			"ep_version":0,
+			"job_state":"processing",
+			"progress":{
+				"progress":0,
+				"estimate":0.54,
+				"queue_position":0,
+				"num_workers_online":1
+			}
+		}
+                        </code></pre>
+						<br/>
+                        <p class="select-label">Result</p>
+                        <pre><code class="info-field code language-json rounded">
+		{
+			"success":true,
+			"job_id":"JID85",
+			"ep_version":0,
+			"job_result":{
+				"success":true,
+				"job_id":"JID85",
+				"ep_version":0,
+				"text_output":"Translated text...",
+				"audio_output":"data:audio/wav;base64,UklGR.../2X/cf8=",
+				"task":"S2ST",
+				"model_name":"seamlessM4T_v2_large",
+				"compute_duration":0.2,
+				"total_duration":0.5,
+				"auth":"instance_06_NVIDIA GeForce RTX 3090 Ti_0",
+				"worker_interface_version":"AIME-API-Worker-Interface 0.3.8"
+			},
+			"job_state":"done",
+			"progress":{
+				"progress":0,
+				"estimate":0.54,
+				"queue_position":0,
+				"num_workers_online":1
+			}
+		}
+                        </code></pre>
+                    </div>
+				</div>
+			</div>
+		</div>
+
+		<div class="flex justify-end">
+			<button id="scrollToTopBtn" class="ml-auto bg-aime_green hover:bg-aime_blue active:bg-aime_blue mb-2 p-2 rounded-full cursor-pointer md:hidden">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+					<path fill-rule="evenodd" d="M11.47 10.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 12.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
+					<path fill-rule="evenodd" d="M11.47 4.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 6.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
+				</svg>
+			</button>
+		</div>
+	</div>
+
+	<footer class="text-xs p-4 mt-20 text-center">
+		<div class="flex items-center justify-center space-x-2">
+			<span>&copy; 2024 AIME GmbH | Powered by <a href="https://api.aime.info" target="_blank" class="text-aime_darkblue font-bold">AIME API</a> | <a href="https://www.aime.info/imprint" target="_blank" class="text-aime_darkblue font-bold">Imprint</a></span>
+		</div>
+		<div class="text-xs text-gray-400 p-5 leading-3 max-w-2xl mx-auto">Disclaimer: The content provided on this platform is for informational and educational purposes only, and its use is at your own risk. We do not assume any liability for the accuracy, completeness, or usefulness of the information provided. Viewer discretion is advised as the content may contain explicit material. This platform is intended for research and demonstration purposes only and should not be used as a substitute for professional advice. By accessing this platform, you agree to these terms and conditions.</div>
+	</footer>
+</body>
+</html>
