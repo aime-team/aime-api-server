@@ -228,7 +228,7 @@ function onResultCallback(data) {
           enableSendButton();
       }
   }
-	else {
+  else {
     enableSendButton();
         infoBox.textContent = ''
 		if (data.total_duration) { 			infoBox.textContent += 'Total job duration: ' + data.total_duration + 's' + '\n'; }
