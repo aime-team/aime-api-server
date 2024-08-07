@@ -270,12 +270,12 @@ function initializeDropZone() {
     `;
     document.getElementById('dropzone').insertAdjacentElement('afterbegin', dropzone);
 
-    //['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].forEach(function(event) {
-    //    dropzone.addEventListener(event, function(e) {
-    //        e.preventDefault();
-    //        e.stopPropagation();
-    //    });
-    //});
+    ['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].forEach(function(event) {
+        dropzone.addEventListener(event, function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
     dropzone.addEventListener('dragover', function() {  dropzone.classList.add('hover', 'shadow-inner'); });  
     dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('hover', 'shadow-inner'); });
     dropzone.addEventListener('click', () => dropzone.querySelector('#dropzone-input').click() );
