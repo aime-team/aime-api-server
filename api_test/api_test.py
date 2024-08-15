@@ -227,7 +227,7 @@ class ApiTest():
         min_size = tuple(ep_inputs.get('image').get('size').get('minimum'))
         max_size = tuple(ep_inputs.get('image').get('size').get('maximum'))
         align_values = tuple(ep_inputs.get('image').get('size').get('align'))
-        option_resize_method = ep_inputs.get('image').get('size').get('resize_method')
+        option_resize_method = ep_inputs.get('image').get('resize_method')
         
         worker_input_test_image_expected_format = ep_inputs.get('image').get('format').get('default')
         worker_input_test_image_expected_color_space = ep_inputs.get('image').get('color_space').get('default')
@@ -248,7 +248,7 @@ class ApiTest():
 
         #print('response', shorten_strings(response.json(), 30))
         worker_input_test_image = convert_base64_str_list_to_image_list(response.json().get('images'))[0]
-        assert min_size <= worker_input_test_image.size <= max_size, f'Resizing failed: min: {min_size}, max: {max_size}, converted size: {worker_input_test_image.size}'
+        assert min_size <= worker_input_test_image.size <= max_size, f'Resizing on endpoint {endpoint_name} failed: min: {min_size}, max: {max_size}, converted size: {worker_input_test_image.size}'
         for image_size_value, align_value in zip(worker_input_test_image.size, align_values):
             assert image_size_value % align_value == 0
             
@@ -268,10 +268,10 @@ class ApiTest():
             min_size = ep_inputs.get('image').get('size').get('minimum')
             max_size = ep_inputs.get('image').get('size').get('maximum')
 
-            client_output_test_image_too_small = resize_test_image(client_output_test_image, min_size[0]-1, min_size[1]-1)
-            #client_output_test_image_too_big = resize_test_image(client_output_test_image, max_size[0]+1, max_size[1]+1)
-        reports.append(self.check_image_resizing_for_given_client_output_test_image_on_given_endpoint(endpoint_name, client_output_test_image_too_small))
-        #reports.append(self.check_image_resizing_for_given_client_output_test_image_on_given_endpoint(endpoint_name, client_output_test_image_too_big))
+            #client_output_test_image_too_small = resize_test_image(client_output_test_image, min_size[0]-1, min_size[1]-1)
+            client_output_test_image_too_big = resize_test_image(client_output_test_image, max_size[0]+1, max_size[1]+1)
+        #reports.append(self.check_image_resizing_for_given_client_output_test_image_on_given_endpoint(endpoint_name, client_output_test_image_too_small))
+        reports.append(self.check_image_resizing_for_given_client_output_test_image_on_given_endpoint(endpoint_name, client_output_test_image_too_big))
         return reports
 
 
