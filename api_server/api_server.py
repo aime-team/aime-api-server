@@ -149,7 +149,7 @@ class APIServer(Sanic):
         APIServer.logger.debug(f'Request on /worker_job_request: {shorten_strings(req_json)}')
         queue = APIServer.job_queues.get(req_json.get('job_type'))
         job_cmd = await self.validate_worker_queue(queue, req_json)
-        if job_cmd['cmd'] not in ('ok', 'warning'):
+        if job_cmd.get('cmd') != 'ok':
             APIServer.logger.warning(f"Worker {req_json.get('auth')} tried a job request for job type {req_json.get('job_type')}, but following error occured: {job_cmd.get('msg')}")
             return sanic_json(job_cmd)
              
@@ -170,15 +170,15 @@ class APIServer(Sanic):
         """
         result = self.process_job_result(request)
         job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(result.get('job_type')), result)
-        if job_cmd['cmd'] not in ('ok', 'warning'):
+        if job_cmd.get('cmd') != 'ok':
             APIServer.logger.warning(f"Worker {result.get('auth')} tried to send job result for job type {result.get('job_type')}, but following error occured: {job_cmd.get('msg')}")
             return sanic_json(job_cmd)
         job_id = result.get('job_id')
 
-        try:
-            APIServer.job_result_futures[job_id].set_result(result)
+        if APIServer.job_result_futures.get(job_id):
+            APIServer.job_result_futures.get(job_id).set_result(result)
             response = {'cmd': 'ok'}
-        except KeyError:
+        else:
             job_id = 'unknown job'
             response = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
         APIServer.logger.info(f"Worker '{result.get('auth')}' processed job {job_id}")
@@ -236,12 +236,11 @@ class APIServer(Sanic):
             job_id = job_data.get('job_id')
             job_type = job_data.get('job_type')
             job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(job_type), job_data)
-            if job_cmd.get('cmd') not in ('ok', 'warning'):
+            if job_cmd.get('cmd') not in ('ok'):
                 APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
                 return sanic_json(job_cmd) # Fast exit if worker is not authorized or wrong job type.
 
             if APIServer.job_result_futures.get(job_id):
-
                 APIServer.progress_states[job_id] = job_data
             else:
                 job_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
@@ -352,12 +351,11 @@ class APIServer(Sanic):
 
     async def validate_worker_queue(self, queue, req_json):
         job_type = req_json.get('job_type')
-        if queue == None:
+        if not queue:
             if APIServer.args.dev:
                 job_cmd = { 'cmd': "error", 'msg': f"No job queue for job_type: {job_type}" }
             else:
                 job_cmd = { 'cmd': "warning", 'msg': f"No job queue for job_type: {job_type}" }
-
         elif queue.worker_auth_key != req_json.get('auth_key'):
             job_cmd = { 'cmd': "error", 'msg': f"Worker not authorized!" }
         else: 
