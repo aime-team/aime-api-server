@@ -187,7 +187,7 @@ Since the attributes of media data need specifications for each attribute sepera
 * ``minimum`` or ``min`` *(int/float): The smallest allowed value. If* ``auto_convert = true`` *, parameters with smaller values will be converted to the* ``min`` *value.*
 * ``maximum`` or ``max`` *(int/float):The highest allowed value. If* ``auto_convert = true`` *, parameters with higher values will be converted to the* ``max`` *value.*
 * ``align`` *(int): Only multiples of the align value are allowed. If* ``auto_convert = true`` *, parameters with values not aligning will be converted to the nearest aligned value.*
-
+* ``keep_aspect_ratio`` *(bool): Used for the attribute* ``size`` *if* ``resize_method = "scale"`` *to keep the original aspect ratio within the restrictions set by* ``min`` *,* ``max`` *and* ``align`` *. Default is false*
 
 
 Example:
@@ -223,7 +223,7 @@ Example:
     audio_param.output_temp_file = "auto"
 
     image_param.type = "image"
-    image_param.format = { supported = [ "JPG", "PNG" ], default = "JPG", auto_convert = true }
+    image_param.format = { supported = [ "JPG", "PNG" ], default = "JPG", auto_convert = true, keep_aspect_ratio = true }
     image_param.color_space = { supported = [ "RGB" ], default = "RGB", auto_convert = true }
     image_param.check_conversion = true
     image_param.input_temp_file = "auto"
