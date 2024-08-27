@@ -11,7 +11,7 @@ This software may be used and distributed according to the terms of the MIT LICE
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
 
-    <title>AIME Seamless communication m4tv2</title>
+    <title>AIME TTS Tortoise</title>
 
     <link rel="stylesheet" href="/model_api/frontend/css/font.css">
     <link rel="stylesheet" href="/tts-tortoise/static/css/highlight.css">
@@ -32,42 +32,37 @@ This software may be used and distributed according to the terms of the MIT LICE
 			<!-- LEFT COLUMN -->
 			<form class="column md:container input-col relative md:flex-1 pb-4 min-w-0" onsubmit="return false;">
 				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">INPUT</h3>
-					<div class="flex">
-						<button id="tab_button_text_input" class="tab-button active" data-tab="tab_text_input" data-tab-group="input"><h3 class="text-lg pr-4">Text</h3></button>
-						<button id="tab_button_audio_input" class="tab-button" data-tab="tab_audio_input" data-tab-group="input"><h3 class="text-lg pl-4">Audio</h3></button>
-					</div>
-				<div id="tab_text_input" class="tab-content pl-0 mt-2" data-tab-group="input">
-					<textarea id="textInput" 
-								name="textInput" 
-								class="rounded form-input border p-2 border-black w-full disabled:cursor-not-allowed disabled:opacity-50" 
-								style="height: 66px !important;"
-								placeholder="Enter text to generate speech for..."
-								oninput="updateWordCount()"
-								onkeydown="handleKeyPress(event)"
-					>Hello! How can I help you today? I'm here to answer any questions you might have to the best of my ability.</textarea>
-					<div id="wordCount" class="text-xs text-gray-400 italic">0 words (putput max_seq_len: 1024 subword tokens)</div>
-				</div>
-				<div id="tab_audio_input" class="hidden tab-content p-0 mt-5" data-tab-group="input">
-					<div class="w100 flex items-center">
-						<div id="dropzone" class="w100 rounded flex flex-col items-center justify-center"></div>
-						<button id="recordButton" 
-							type="button" 
-							title="Click to start recording audio."
-							class="border-gray border-1 bg-gray-100 hover:bg-aime_blue active:bg-aime_red border-2 hover:border-aime_blue active:border-aime_red border-dashed focus:border-dashed hover:border-solid active:border-solid text-aime_darkblue hover:text-white font-bold py-2 px-2 ml-10 rounded-lg"
-							onclick=startStopRecording() >
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
-							</svg>							  
-						</button>
-					
-					</div>
-
-				</div>
+				<textarea id="textInput" 
+							name="textInput" 
+							class="rounded form-input border p-2 border-black w-full disabled:cursor-not-allowed disabled:opacity-50" 
+							style="height: 66px !important;"
+							placeholder="Enter text to generate speech for..."
+							oninput="updateWordCount()"
+							onkeydown="handleKeyPress(event)"
+				>Hello! How can I help you today? I'm here to answer any questions you might have to the best of my ability.</textarea>
+				<div id="wordCount" class="text-xs text-gray-400 italic">0 words (putput max_seq_len: 1024 subword tokens)</div>
 				
-				<p class="label mt-5">Settings</p>
+				<p class="label mt-5">Generation</p>
 
 				<div class="w100 row">
-					<div id="language-selector" class="flex space-x-4 items-center">
+					
+					<div id="voice-selector" class="flex space-x-4 items-center">
+						<div class="w-1/2">
+							<p class="select-label">Voice:</p>
+							<select id="voice" name="voice" class="voiceselector form-select w100 rounded"></select>
+						</div>
+						<div class="w-1/2 flex justify-end">
+							<button id="sendButton" 
+									type="button" 
+									class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" 
+									onclick="onButtonClick();">Generate</button>
+						</div>
+					</div>
+				</div>
+
+				<div id="settings_container" class="w100">
+                    <p class="label mt-5">Settings</p>
+					<div id="language-and-preset-selector" class="flex space-x-4 items-center">
 						<div class="w-1/2">
 							<p class="select-label">Source language:</p>
 							<select id="srcLang" name="srcLang" class="langselector form-select w100 rounded"></select>
@@ -77,20 +72,36 @@ This software may be used and distributed according to the terms of the MIT LICE
 							<select id="preset" name="preset" class="presetselector form-select w100 rounded"></select>
 						</div>
 					</div>
-					<div id="voice-selector" class="flex space-x-4 items-center">
-						<div class="w-1/2">
-							<p class="select-label">Voice:</p>
-							<select id="voice" name="voice" class="voiceselector form-select w100 rounded"></select>
-						</div>
-					</div>
+
+
+                    <p class="select-label">Stream Chunk Size</p>
+                    <input type="range" min="1" max="200" value="40" class="slider w100" id="streamChunkSize" oninput="document.getElementById('streamChunkSizeLabel').innerHTML = this.value">
+                    <label for="streamChunkSize" id="streamChunkSizeLabel">40</label>
+                                                
+                    <p class="select-label">Temperature</p>
+                    <input type="range" min="0.0" max="1.0" value="0.8" class="slider w100" step="0.1" id="temperature" oninput="document.getElementById('temperatureLabel').innerHTML = this.value">
+                    <label for="temperature" id="temperatureLabel">0.8</label>
+
+                    <p class="select-label">Length Penalty</p>
+                    <input type="range" min="-10.0" max="10.0" value="1.0" class="slider w100" step="0.1" id="lengthPenalty" oninput="document.getElementById('lengthPenaltyLabel').innerHTML = this.value">
+                    <label for="lengthPenalty" id="lengthPenaltyLabel">1.0</label>
+
+                    <p class="select-label">Repetition Penalty</p>
+                    <input type="range" min="1.0" max="10.0" value="2.0" class="slider w100" step="0.1" id="repetitionPenalty" oninput="document.getElementById('repetitionPenaltyLabel').innerHTML = this.value">
+                    <label for="repetitionPenalty" id="repetitionPenaltyLabel">2.0</label>
+
+                    <p class="select-label">Top P</p>
+                    <input type="range" min="0.0" max="1.0" value="0.8" class="slider w100" step="0.1" id="topP" oninput="document.getElementById('topPLabel').innerHTML = this.value">
+                    <label for="topP" id="topPLabel">0.8</label>
+
+                    <p class="select-label">Maximum Mel Tokens</p>
+                    <input type="range" min="0" max="600.0" value="500" class="slider w100" id="maxMelTokens" oninput="document.getElementById('maxMelTokensLabel').innerHTML = this.value">
+                    <label for="maxMelTokens" id="maxMelTokensLabel">500</label>
+
+                    <p class="select-label">Cvvp Amount</p>
+                    <input type="range" min="0.0" max="1.0" value="0.0" class="slider w100" step="0.1" id="cvvpAmount" oninput="document.getElementById('cvvpAmountLabel').innerHTML = this.value">
+                    <label for="cvvpAmount" id="cvvpAmountLabel">0.0</label>
 				</div>
-				<div class="flex justify-end mb-10 mt-8 items-center">
-					<button id="sendButton" 
-							type="button" 
-							class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" 
-							onclick="onButtonClick();">Generate</button>
-				</div>
-				
 			</form> <!-- /END LEFT COLUMN -->
 
 			<!-- DEVIDER -->

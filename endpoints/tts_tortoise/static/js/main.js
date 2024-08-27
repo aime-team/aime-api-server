@@ -31,10 +31,12 @@ const presets = [
 	{ code: 'standard', name: 'Standard' },
     { code: 'high_quality', name: 'High Quality' },
 ];
-
+let infoBox = document.getElementById('info_box');
 let readyToSendRequest = true;
 let audioOutputElement = new Audio();
-var audioInputBlob;
+let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let lastEndTime = audioContext.currentTime; // Track when the last buffer should end
+
 let mediaRecorder;
 let audioChunks = [];
 let timerInterval;
@@ -49,6 +51,15 @@ function onSendAPIRequest() {
 	params.language = document.getElementById('srcLang').value;
 	params.voice = document.getElementById('voice').value;
 	params.preset = document.getElementById('preset').value;
+    params.stream_chunk_size = parseInt(document.getElementById('streamChunkSize').value);
+	params.temperature = parseFloat(document.getElementById('temperature').value);
+	params.length_penalty = parseFloat(document.getElementById('lengthPenalty').value);
+    params.repetition_penalty = parseFloat(document.getElementById('repetitionPenalty').value);
+    params.top_p = parseFloat(document.getElementById('topP').value);
+    params.max_mel_tokens = parseInt(document.getElementById('maxMelTokens').value);
+    params.cvvp_amount = parseFloat(document.getElementById('cvvpAmount').value);
+
+
 
     try {
         params.text = textInput;
@@ -63,6 +74,7 @@ function onSendAPIRequest() {
 }
 
 function onResultCallback(data) {
+    
     if (data.error) {
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
           modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
@@ -89,20 +101,20 @@ function onResultCallback(data) {
         if (data.worker_interface_version) { infoBox.textContent += '\nAPI Worker Interface version: ' + data.worker_interface_version; }
         
         adjustTextareasHeight();
-    
-        let audioOutputContainer = document.getElementById('audioOutputContainer');
-        let audioOutput = document.getElementById('audioPlayerOutput');
-        audioOutputContainer.classList.remove('hidden');
+
+        //let audioOutputContainer = document.getElementById('audioOutputContainer');
+        //let audioOutput = document.getElementById('audioPlayerOutput');
+        //audioOutputContainer.classList.remove('hidden');
         
-        if (data.audio_output) {
-            audioOutputElement.src = data.audio_output;
-            audioOutput.src = data.audio_output;
-            audioOutput.play();
-        } else {
-            audioOutputElement.src = '';
-            audioOutput.src = '';
-            audioOutputContainer.classList.add('hidden');
-        }
+        //if (data.audio_output) {
+        //    audioOutputElement.src = data.audio_output;
+        //    audioOutput.src = data.audio_output;
+        //    audioOutput.play();
+        //} else {
+        //    audioOutputElement.src = '';
+        //    audioOutput.src = '';
+        //    audioOutputContainer.classList.add('hidden');
+        //}
     }
 }
 
@@ -112,10 +124,46 @@ function onProgressCallback(progress_info, progress_data) {
     const estimate = progress_info.estimate;
     const num_workers_online = progress_info.num_workers_online;
 
+    document.getElementById('progress_label').innerText = 'Generated audio chunks: ' + progress;
     document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queue_position;
     document.getElementById('estimate').innerText = ' | Estimate time: ' + estimate;
     document.getElementById('num_workers_online').innerText = ' | Workers online: ' + num_workers_online;
-    document.getElementById('progress_label').innerText = progress+'%';
+
+    console.log(progress_data)
+    if (progress_data?.audio_output) {
+        // Convert the base64-encoded chunk to an ArrayBuffer
+        const audioChunkArrayBuffer = base64ToArrayBuffer(progress_data.audio_output);
+
+        // Decode the audio data
+        audioContext.decodeAudioData(audioChunkArrayBuffer, (audioBuffer) => {
+            schedulePlayback(audioBuffer);
+        });
+    }
+}
+
+function schedulePlayback(audioBuffer) {
+    const bufferSource = audioContext.createBufferSource();
+    bufferSource.buffer = audioBuffer;
+    bufferSource.connect(audioContext.destination);
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+    const startTime = Math.max(audioContext.currentTime, lastEndTime); 
+    bufferSource.start(startTime);
+    lastEndTime = startTime + audioBuffer.duration;
+    bufferSource.onended = () => {
+        bufferSource.disconnect();
+    };
+}
+
+function base64ToArrayBuffer(base64) {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
 }
 
 function populateDropdowns() {
@@ -354,47 +402,6 @@ function enableSendButton() {
 }
 
 
-function initializeDropZone() {
-    var dropzone = document.createElement('div');
-    dropzone.className = 'w100 rounded dropzone flex flex-col items-center justify-center p-7 bg-gray-100 border-2 border-dashed';
-    dropzone.id = 'dropzone-content';
-    dropzone.title = "Klick here to select file to be uploaded...";
-    dropzone.innerHTML = `
-        <div id="dropzone-text" class="flex flex-col justify-center items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-grey mb-3">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-            </svg>
-            
-            <p class="text-grey text-base font-bold">Drop audio file here.</p>
-            <p class="text-grey text-sm font-semibold">(wav, mp3 or ogg)</p>
-            <p class="text-grey text-xs mt-2 italic">Or press the record button.</p>
-        </div>
-        <input id="dropzone-input" class="mt-7 hidden" type="file" accept="audio/wav, audio/x-wav, audio/mp3, audio/mp4, video/mp4, audio/mpeg, video/mpeg, audio/vnd.wave, audio/ogg", video/ogg>
-    `; // Audio MIME Types to handle: audio/mp3, audio/mpeg, audio/wav, audio/x-wav, audio/aac, audio/ogg, audio/flac, audio/amr, audio/x-ms-wma
-    document.getElementById('dropzone').insertAdjacentElement('afterbegin', dropzone);
-
-    ['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].forEach(function(event) {
-        dropzone.addEventListener(event, function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-    });
-    dropzone.addEventListener('dragover', function() {  dropzone.classList.add('hover', 'shadow-inner'); });  
-    dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('hover', 'shadow-inner'); });
-    dropzone.addEventListener('click', () => dropzone.querySelector('#dropzone-input').click() );
-  
-    dropzone.addEventListener('drop', function(e) {
-        this.classList.remove('hover', 'shadow-inner');
-        var file = e.dataTransfer.files[0];
-        handleFileSelection(file);
-      }, false);
-
-    dropzone.querySelector('#dropzone-input').addEventListener('change', function(e) {
-        var file = this.files[0];
-        handleFileSelection(file);
-    });
-}
-
 function removeAudioPlayerIfAny() {
     var audioPlayerEl = document.getElementById('audio-player');
     var audioFileInfo = document.getElementById('audio-fileinfo');
@@ -428,20 +435,6 @@ function createAudioPlayer(file) {
     file.name = `recorded_audio_${Date.now()}`;
     audioFileInfo.textContent = file.name + ' | Size: ' + formatFileSize(file.size);
     audioContainer.append(audioFileInfo);
-}
-
-function handleFileSelection(file) {
-    const audioInput = document.getElementById('dropzone-input');
-    var allowedFormats = audioInput.accept.split(',').map(function (item) { return item.trim(); });
-    console.log(file.type)
-
-    if (allowedFormats.includes(file.type)) {
-        audioInputBlob = file;
-        createAudioPlayer(file);
-    } else {
-        alert('Sorry, but only audio files of type ' + allowedFormats + ' are allowed!');
-        audioInput.value = '';
-    }
 }
 
 function formatFileSize(size) {
@@ -479,6 +472,45 @@ function onButtonClick() {
         onSendAPIRequest();
     }
 }
+
+function refreshRangeInputLayout() {
+    const selectLabelElements = document.querySelectorAll('p.select-label');
+    selectLabelElements.forEach((selectLabelElement) => {
+        const inputElement = selectLabelElement.nextElementSibling;
+        const labelElement = inputElement.nextElementSibling;
+        if (
+            inputElement && inputElement.tagName === 'INPUT' &&
+            inputElement.type === 'range' &&
+            labelElement && labelElement.tagName === 'LABEL'
+        ) {
+            const labelText = selectLabelElement.textContent.trim();
+            const sliderId = inputElement.getAttribute('id'); // + '_range';
+            const minAttributeValue = inputElement.getAttribute('min');
+            const maxAttributeValue = inputElement.getAttribute('max');
+            const stepAttributeValue = inputElement.getAttribute('step');
+            const valueAttributeValue = inputElement.getAttribute('value');
+
+            const template = `
+              <div class="range-group mb-3">
+                <label for="${sliderId}" class="select-label text-gray-700 text-sm font-bold">${labelText}</label>
+                <div class="input-group flex items-center">
+                  <input type="range" class="form-range slider flex-grow" id="${sliderId}" min="${minAttributeValue}" max="${maxAttributeValue}" step="${stepAttributeValue}" value="${valueAttributeValue}" oninput="document.getElementById('${sliderId}_value').value = this.value">
+                  <div class="mx-2"></div>
+                  <input type="number" class="form-input col-span-1 text-sm w-1/4" id="${sliderId}_value" min="${minAttributeValue}" max="${maxAttributeValue}" step="${stepAttributeValue}" value="${valueAttributeValue}" oninput="document.getElementById('${sliderId}').value = this.value">
+                </div>
+              </div>
+            `;
+
+            const newBlock = document.createElement('div');
+            newBlock.innerHTML = template;
+
+            labelElement.remove();
+            inputElement.remove();
+            selectLabelElement.replaceWith(newBlock);
+        }
+    });
+}
+
 
 function handleKeyPress(event) {
     if (event && event.keyCode === 13) {
@@ -525,7 +557,7 @@ window.addEventListener('load', function() {
     hljs.highlightAll();
 
     populateDropdowns();
-    initializeDropZone();
+    refreshRangeInputLayout();
     updateWordCount();
 
     infoBox = document.getElementById('infoBox');
@@ -548,31 +580,6 @@ window.addEventListener('load', function() {
         window.scrollTo({ top: textarea.offsetTop, left: 0, behavior: 'smooth' });
         textarea.focus();
         textarea.select();
-    });
-
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const tabName = button.getAttribute('data-tab');
-            const tabGroup = button.getAttribute('data-tab-group');
-            
-
-            tabButtons.forEach(tabButton => {
-                if (tabButton.getAttribute('data-tab-group') === tabGroup) {
-                    tabButton.classList.remove('active');
-                }
-            });
-            tabContents.forEach(tabContent => {
-                if (tabContent.getAttribute('data-tab-group') === tabGroup) {
-                    tabContent.classList.add('hidden');
-                }
-            });
-
-            button.classList.add('active');            
-            document.getElementById(tabName).classList.remove('hidden');
-        });
     });
 
     modelAPI.doAPILogin(function (data) {

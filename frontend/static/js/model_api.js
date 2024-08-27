@@ -9,7 +9,7 @@
  */
 class ModelAPI {
 
-    static version = 'JavaScript AIME API Client Interface 0.8.1';
+    static version = 'JavaScript AIME API Client Interface 0.8.2';
     
     /**
     * Constructor of the class.
@@ -216,18 +216,21 @@ class ModelAPI {
                     resultCallback(jobResult);
                 } else {
                     const progress = result.progress;
-                    const progressInfo = {
-                        progress: progress.progress,
-                        queue_position: progress.queue_position,
-                        estimate: progress.estimate,
-                        num_workers_online: progress.num_workers_online
-                    };
+                    for (const progress_step of progress) { 
+                        console.log(progress_step)
+                        const progressInfo = {
+                            progress: progress_step.progress,
+                            queue_position: progress_step.queue_position,
+                            estimate: progress_step.estimate,
+                            num_workers_online: progress_step.num_workers_online
+                        };
 
-                    progressCallback(progressInfo, progress.progress_data);
-
+                        progressCallback(progressInfo, progress_step.progress_data);
+                    }
                     if (result.job_state === 'canceled') {
                         // Do nothing
-                    } else {
+                    }
+                    else {
                         setTimeout(checkProgress.bind(this), this.defaultProgressIntervall);        
                     }
                 }

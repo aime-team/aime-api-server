@@ -221,7 +221,6 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client with progress result and end result
         """        
-
         input_args = request.json if request.method == "POST" else request.args
         job_id, validation_errors = self.validate_progress_request(input_args)
 
@@ -230,10 +229,11 @@ class APIEndpoint():
 
         response = {"success": True, 'job_id': job_id, 'ep_version': self.version}
         progress_state = self.get_and_validate_progress_data(job_id)
+
         job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
         if job_state == JobState.PROCESSING:
             job_future =  self.app.job_result_futures.get(job_id, None)
-            if job_future and job_future.done():
+            if job_future and job_future.done() and not progress_state:
                 response['job_result'] = await self.finalize_request(request, job_id, job_future)
                 job_state = self.app.job_states.get(job_id, job_state)       
 
@@ -348,7 +348,6 @@ class APIEndpoint():
 
         response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
         result = await job_future
-
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
@@ -417,33 +416,51 @@ class APIEndpoint():
 
 
     def get_and_validate_progress_data(self, job_id):
-        progress_state = self.app.progress_states.get(job_id, {})
+        progress_state = self.app.progress_states.pop(job_id, [])
         queue = self.app.job_queues.get(self.worker_job_type)
+        progress_state_validated = list()
         if progress_state:          
-            progress_data_validated = dict()
-            progress_data = progress_state.get('progress_data', None)
-            if progress_data:
-                for ep_progress_output_param_name in self.ep_progress_param_config.get('OUTPUTS'):
-                    if ep_progress_output_param_name in progress_data:
-                        progress_data_validated[ep_progress_output_param_name] = progress_data[ep_progress_output_param_name]
-            progress_state['progress_data'] = progress_data_validated
+            for state in progress_state:
+                progress_data = state.get('progress_data')
+                if progress_data:
+                    progress_data_validated = dict()
+                    for ep_progress_output_param_name in self.ep_progress_param_config.get('OUTPUTS'):
+                        if ep_progress_output_param_name in progress_data:
+                            progress_data_validated[ep_progress_output_param_name] = progress_data[ep_progress_output_param_name]
+
+                    queue_position, estimate, num_workers_online = self.get_queue_parameters(job_id, queue, state)
+                    progress_state_validated.append(
+                        {
+                            'progress_data': progress_data_validated,
+                            'progress': state.get('progress'),
+                            'queue_position': queue_position,
+                            'estimate': estimate,
+                            'num_workers_online': num_workers_online
+                        }
+                    )
+        elif not self.app.job_result_futures.get(job_id):
+            queue_position, estimate, num_workers_online = self.get_queue_parameters(job_id, queue)
+            progress_state_validated.append(
+                {
+                    'progress': 0,
+                    'queue_position': queue_position,
+                    'estimate': estimate,
+                    'num_workers_online': num_workers_online
+                }
+            )
         else:
-            progress_state['progress'] = 0
+            progress_state_validated = []
 
-        queue_position, estimate, num_workers_online = self.get_queue_parameters(job_id, queue, progress_state)
-        progress_state['estimate'] = estimate
-        progress_state['queue_position'] = queue_position
-        progress_state['num_workers_online'] = num_workers_online
-        return progress_state
+        return progress_state_validated
 
 
-    def get_queue_parameters(self, job_id, queue, progress_state):
+    def get_queue_parameters(self, job_id, queue, progress_state={}):
                 
         job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
         queue_position = 0
         queue.update_worker_status()
         num_workers_online = sum(1 for worker in queue.registered_workers.values() if worker.get('status') in ('waiting', 'processing', f'finished job {job_id}'))
-        if progress_state['progress'] == 100:
+        if progress_state.get('progress') == 100:
             estimate = 0
         elif job_state == JobState.QUEUED:
             queue_position = queue.get_rank_for_job_id(job_id)

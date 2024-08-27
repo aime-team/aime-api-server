@@ -39,7 +39,7 @@ select:active,
 .form-select:active,
 select.form-select:active,
 .form-input:active,
-.form-input:focus, .form-textarea:focus, .form-select:focus, .form-multiselect:focus,
+.form-input:focus, .form-textarea:focus, .form-select:focus, .form-multiselect:focus
  {
     outline: none !important;
     border: 2px solid #F6BE5C !important;
@@ -185,7 +185,6 @@ textarea.form-input:focus {
     transition: 0.5s height ease-in-out;
     height: auto;
 }
-
 progress[value]::-webkit-progress-bar {
     background-color: #eee;
     border-radius: 5px; 
@@ -228,6 +227,80 @@ progress[value]::-moz-progress-bar {
     border-radius: 5px;
 }
 
+
+input[type="range"] { 
+    margin: auto;
+    -webkit-appearance: none;
+    position: relative;
+    overflow: hidden;
+    height: 20px;
+    width: 100%;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+::-webkit-slider-runnable-track {
+    background: #ddd;
+}
+
+::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 5px;
+    height: 20px;
+    background: #2093ad;
+    box-shadow: -5000px 0 0 5000px #4FBFD7;
+    border: none;
+}
+
+::-moz-range-track {
+    height: 20px;
+    background: #eee;
+}
+
+::-moz-range-thumb {
+    background: #2093ad;
+    height: 40px;
+    width: 5px;
+    border: none;
+    border-radius: 0 !important;
+    box-shadow: -5000px 0 0 5000px #4FBFD7;
+    box-sizing: border-box;
+}
+
+
+::-ms-fill-lower { 
+    background: #4FBFD7;
+}
+
+::-ms-thumb { 
+    background: #fff;
+    border: none;
+    height: 20px;
+    width: 5px;
+    box-sizing: border-box;
+}
+
+::-ms-ticks-after { 
+    display: none; 
+}
+
+::-ms-ticks-before { 
+    display: none; 
+}
+
+::-ms-track { 
+    background: #ddd;
+    color: transparent;
+    height: 20px;
+    border: none;
+}
+
+::-ms-tooltip { 
+    display: none;
+}
+
+
+
 #recordButton:focus,
 #recordButton:active {
     outline: none;
@@ -236,3 +309,4 @@ progress[value]::-moz-progress-bar {
     border-radius: 50%;
     transition: border-radius 0.3s ease-in-out;
   }
+

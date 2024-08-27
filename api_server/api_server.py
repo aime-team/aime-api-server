@@ -176,6 +176,7 @@ class APIServer(Sanic):
         job_id = result.get('job_id')
 
         if APIServer.job_result_futures.get(job_id):
+
             APIServer.job_result_futures.get(job_id).set_result(result)
             response = {'cmd': 'ok'}
         else:
@@ -235,13 +236,17 @@ class APIServer(Sanic):
         for job_data in req_json:
             job_id = job_data.get('job_id')
             job_type = job_data.get('job_type')
+            
             job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(job_type), job_data)
             if job_cmd.get('cmd') not in ('ok'):
                 APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
                 return sanic_json(job_cmd) # Fast exit if worker is not authorized or wrong job type.
 
             if APIServer.job_result_futures.get(job_id):
-                APIServer.progress_states[job_id] = job_data
+                if self.get_ep_progress_param_config(job_type).get('stream_buffer') and APIServer.progress_states.get(job_id):
+                    APIServer.progress_states[job_id] += [job_data]
+                else:
+                    APIServer.progress_states[job_id] = [job_data]
             else:
                 job_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
                 APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
@@ -249,7 +254,10 @@ class APIServer(Sanic):
        
         return sanic_json(job_cmd_list)
 
-
+    def get_ep_progress_param_config(self, job_type):
+        for endpoint in APIServer.endpoints.values():
+            if job_type == endpoint.worker_job_type:
+                return endpoint.ep_progress_param_config
 
     async def worker_check_server_status(self, request):
         """Route /worker_check_server_status for API worker interface to check
@@ -422,17 +430,17 @@ class APIServer(Sanic):
         job_batch_data = [job_data]
 
         # fill batch with already waiting jobs
-        if(max_job_batch > 1):
+        if max_job_batch > 1:
             fetch_waiting_jobs = True
-            while((len(job_batch_data) < max_job_batch) and fetch_waiting_jobs):
+            while (len(job_batch_data) < max_job_batch) and fetch_waiting_jobs:
                 job_data = queue.fetch_waiting_job()
-                if(job_data):
+                if job_data:
                     client_session_auth_key = job_data.pop('client_session_auth_key', '')
                     if not client_session_auth_key in self.registered_client_sessions:
                         APIServer.logger.warn(f"discarding job, client session auth key not valid anymore")
                     else:
                         job_id = job_data['job_id']
-                        if(APIServer.job_states[job_id] == JobState.QUEUED):
+                        if APIServer.job_states[job_id] == JobState.QUEUED:
                             APIServer.job_states[job_id] = JobState.PROCESSING
                             job_data.pop('endpoint_name', '')
                             APIServer.logger.info(f"Worker '{auth}' got job {job_id}")
