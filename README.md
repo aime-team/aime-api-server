@@ -98,7 +98,7 @@ Create photo realistic images with Stable Diffusion 3
 
 #### Tortoise TTS
 
-Create photo realistic images with Stable Diffusion 3
+Tortoise TTS: high quality Text-To-Speech Demo 
 
 * Local Endpoint: [Tortoise TTS](/tts-tortoise/)
 * Worker Implementation: [https://github.com/aime-labs/tortoise-tts](https://github.com/aime-labs/tortoise-tts)
