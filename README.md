@@ -93,7 +93,7 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 
 Create photo realistic images with Stable Diffusion 3
 
-* Local Endpoint: [Stable Diffusion3](/sd3/)
+* Local Endpoint: [Stable Diffusion 3](/sd3/)
 * Worker Implementation: [https://github.com/aime-labs/stable_diffusion_3](https://github.com/aime-labs/stable_diffusion_3)
 
 #### Tortoise TTS
