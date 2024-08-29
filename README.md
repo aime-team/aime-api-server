@@ -89,6 +89,20 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 
 ### Implementation for following model endpoints are also available
 
+#### Stable Diffusion 3
+
+Create photo realistic images with Stable Diffusion 3
+
+* Local Endpoint: [Stable Diffusion3](/sd3/)
+* Worker Implementation: [https://github.com/aime-labs/stable_diffusion_3](https://github.com/aime-labs/stable_diffusion_3)
+
+#### Tortoise TTS
+
+Create photo realistic images with Stable Diffusion 3
+
+* Local Endpoint: [Tortoise TTS](/tts-tortoise/)
+* Worker Implementation: [https://github.com/aime-labs/tortoise-tts](https://github.com/aime-labs/tortoise-tts)
+
 #### Llama2 Chat
 
 Chat with 'Dave', the Llama2 based chat-bot. 

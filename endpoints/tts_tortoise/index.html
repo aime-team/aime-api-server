@@ -32,10 +32,6 @@ This software may be used and distributed according to the terms of the MIT LICE
 			<!-- LEFT COLUMN -->
 			<form class="column md:container input-col relative md:flex-1 pb-4 min-w-0" onsubmit="return false;">
 				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">INPUT</h3>
-					<div class="flex">
-						<button id="tab_button_text_input" class="tab-button active" data-tab="tab_text_input" data-tab-group="input"><h3 class="text-lg pr-4">Text</h3></button>
-						<button id="tab_button_audio_input" class="tab-button" data-tab="tab_audio_input" data-tab-group="input"><h3 class="text-lg pl-4">Audio</h3></button>
-					</div>
 				<div id="tab_text_input" class="tab-content pl-0 mt-2" data-tab-group="input">
 					<textarea id="textInput" 
 								name="textInput" 
@@ -46,22 +42,6 @@ This software may be used and distributed according to the terms of the MIT LICE
 								onkeydown="handleKeyPress(event)"
 					>Hello! How can I help you today? I'm here to answer any questions you might have to the best of my ability.</textarea>
 					<div id="wordCount" class="text-xs text-gray-400 italic">0 words (putput max_seq_len: 1024 subword tokens)</div>
-				</div>
-				<div id="tab_audio_input" class="hidden tab-content p-0 mt-5" data-tab-group="input">
-					<div class="w100 flex items-center">
-						<div id="dropzone" class="w100 rounded flex flex-col items-center justify-center"></div>
-						<button id="recordButton" 
-							type="button" 
-							title="Click to start recording audio."
-							class="border-gray border-1 bg-gray-100 hover:bg-aime_blue active:bg-aime_red border-2 hover:border-aime_blue active:border-aime_red border-dashed focus:border-dashed hover:border-solid active:border-solid text-aime_darkblue hover:text-white font-bold py-2 px-2 ml-10 rounded-lg"
-							onclick=startStopRecording() >
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
-							</svg>							  
-						</button>
-					
-					</div>
-
 				</div>
 				
 				<p class="label mt-5">Settings</p>
