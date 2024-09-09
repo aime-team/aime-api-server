@@ -2,4 +2,4 @@
 #
 # This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
 
-__version__ = '0.8.5'
+__version__ = '0.8.6'
