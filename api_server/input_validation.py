@@ -205,7 +205,7 @@ class InputValidationHandler():
             for param_name, param_value in params.items():
                 target_param_value = self.validate_supported_values(param_value, param_name)
                 target_param_value = self.validate_numerical_attribute(target_param_value, param_name)
-                if param_name == MediaParams.SIZE:
+                if param_name == MediaParams.SIZE and param_value != (None, None):
                     target_param_value = self.validate_size(param_value, target_param_value)
                 valid_params[param_name] = target_param_value
             if self.param_type in ('image', 'video'):
