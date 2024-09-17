@@ -25,6 +25,8 @@ class ModelAPI {
         this.key = key;
         this.clientSessionAuthKey = null;
         this.defaultProgressIntervall = defaultProgressIntervall;
+        this.jobsCanceled = {};
+        this.progress_input_params = {};
     }
 
     /**
@@ -114,12 +116,11 @@ class ModelAPI {
         const url = `/${this.endpointName}`;
         console.log(`URL: ${url}`);
         console.log(`API Key: ${this.clientSessionAuthKey}`);
-        //console.log('progressStream: ', progressStream);
 
         params = await this.stringifyObjects(params)
         params.client_session_auth_key = this.clientSessionAuthKey;
         params.wait_for_result = !progressCallback;
-
+        // console.log('Params', params); // DEBUG output
         const response = await this.fetchAsync(url, params, true);
         // console.log('doAPIRequest response', response); // DEBUG output
 
@@ -136,7 +137,7 @@ class ModelAPI {
                 progressCallback(progressInfo, null); // Initial progress update
 
                 if (progressStream) {
-                    this.setupProgressStream(jobID, resultCallback, progressCallback);
+                    this.pollProgress(url, jobID, resultCallback, progressCallback, true);
                 } else {
                     this.pollProgress(url, jobID, resultCallback, progressCallback);
                 }
@@ -148,6 +149,7 @@ class ModelAPI {
         else {
             resultCallback(response);
         }
+        return response
     }
 
     /**
@@ -193,51 +195,103 @@ class ModelAPI {
      * @param {function} resultCallback - The callback after the request is completed.
      * @param {function} progressCallback - The callback for progress updates.
      */
-    async pollProgress(url, jobID, resultCallback, progressCallback) {
-        const progressURL = `/${this.endpointName}/progress?client_session_auth_key=${encodeURIComponent(this.clientSessionAuthKey)}&job_id=${encodeURIComponent(jobID)}`;
+    async pollProgress(url, jobID, resultCallback, progressCallback, stream = false) {
+        let fetchProgress;
+        let progressURL;
 
-        const fetchProgress = async (progressURL) => {
-            try {
-                const response = await fetch(progressURL);
-                return response.json();
-            } catch (error) {
-                console.error('Error fetching progress data:', error);
-                return {};
+        if (stream) {
+
+            progressURL = `/${this.endpointName}/progress_stream`;
+            fetchProgress = async (progressURL, params) => {
+                try {
+                    return await this.fetchAsync(progressURL, params, true);
+                } catch (error) {
+                    console.error('Error fetching progress data:', error);
+                    return {};
+                }
+            }
+        }
+        else {
+            progressURL = `/${this.endpointName}/progress?client_session_auth_key=${encodeURIComponent(this.clientSessionAuthKey)}&job_id=${encodeURIComponent(jobID)}`;
+
+            fetchProgress = async (progressURL, params) => {
+                try {
+                    const response = await fetch(progressURL);
+                    return response.json();
+                } catch (error) {
+                    console.error('Error fetching progress data:', error);
+                    return {};
+                }
             }
         }
 
+
         const checkProgress = async () => {
-            const result = await fetchProgress(progressURL);
+            let params = new Object();
+            if (jobID in this.progress_input_params) {
+                params.progress_input_params = this.progress_input_params[jobID];
+                
+            }
+            params.client_session_auth_key = this.clientSessionAuthKey;
+            params.job_id = jobID;
+            params.canceled = (jobID in this.jobsCanceled) ? this.jobsCanceled[jobID] : false;
+
+            const result = await fetchProgress(progressURL, params);
             // console.log(`Poll Progress: ${result.success}, job_state: ${result.job_state}`, result);
 
             if (result.success) {
-                if (result.job_state === 'done') {
-                    const jobResult = result.job_result;
-                    resultCallback(jobResult);
-                } else {
-                    const progress = result.progress;
-                    for (const progress_step of progress) { 
-                        console.log(progress_step)
-                        const progressInfo = {
-                            progress: progress_step.progress,
-                            queue_position: progress_step.queue_position,
-                            estimate: progress_step.estimate,
-                            num_workers_online: progress_step.num_workers_online
-                        };
+                delete this.progress_input_params[jobID];
+                if (params.canceled) {
+                    console.log('CANCELED')
+                    delete this.jobsCanceled[jobID];
+                }
+                else {
+                    if (result.job_state === 'done') {
+                        const jobResult = result.job_result;
+                        resultCallback(jobResult);
+                    } else {
+                        const progress = result.progress;
+                        if (progress) {
+                            for (const progress_step of progress) { 
+                                const progressInfo = {
+                                    job_id: jobID,
+                                    progress: progress_step.progress,
+                                    queue_position: progress_step.queue_position,
+                                    estimate: progress_step.estimate,
+                                    num_workers_online: progress_step.num_workers_online
+                                };
 
-                        progressCallback(progressInfo, progress_step.progress_data);
-                    }
-                    if (result.job_state === 'canceled') {
-                        // Do nothing
-                    }
-                    else {
-                        setTimeout(checkProgress.bind(this), this.defaultProgressIntervall);        
+                                progressCallback(progressInfo, progress_step.progress_data);
+                            }
+                        }
+                        if (result.job_state === 'canceled') {
+                            // Do nothing
+                        }
+                        else {
+                            setTimeout(checkProgress.bind(this), this.defaultProgressIntervall);        
+                        }
                     }
                 }
             }
         }
         checkProgress(this.defaultProgressIntervall);
     }
+
+    async cancelRequest(jobID = null) {
+        this.jobsCanceled[jobID] = true;
+    }
+
+    async append_progress_input_params(jobID, params) {
+        if (jobID in this.progress_input_params) {
+            this.progress_input_params[jobID].push(params)
+           
+        }
+        else {
+            this.progress_input_params[jobID] = [ params, ]
+        }
+    }
+    
+
     async stringifyObjects(params) {
         var transformedParams = new Object()
         for (let key in params) {

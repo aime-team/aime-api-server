@@ -35,7 +35,11 @@ let infoBox = document.getElementById('info_box');
 let readyToSendRequest = true;
 let audioOutputElement = new Audio();
 let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let bufferSources = [];
+let textQueue = [];
+let currentJobID;
 let lastEndTime = audioContext.currentTime; // Track when the last buffer should end
+let textInputLines;
 
 let mediaRecorder;
 let audioChunks = [];
@@ -45,8 +49,7 @@ const modelAPI = new ModelAPI('tts_tortoise', API_USER, API_KEY);
 
 function onSendAPIRequest() {
 
-    const textInput = document.getElementById('textInput').value;
-
+    textInputLines = document.getElementById('textInput').value.split(';');
 	let params = new Object();
 	params.language = document.getElementById('srcLang').value;
 	params.voice = document.getElementById('voice').value;
@@ -60,17 +63,13 @@ function onSendAPIRequest() {
     params.cvvp_amount = parseFloat(document.getElementById('cvvpAmount').value);
 
 
+    params.text = textInputLines.shift();
 
-    try {
-        params.text = textInput;
-        modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback)
-        .catch((error) => {
-            removeSpinner();
-            enableSendButton();
-        });
-    } catch (error) {
-        console.error('Problem while sending API request.');
-    }
+    response = modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback, true)
+    .catch((error) => {
+        removeSpinner();
+        enableSendButton();
+    });
 }
 
 function onResultCallback(data) {
@@ -92,7 +91,6 @@ function onResultCallback(data) {
         enableSendButton();
         removeSpinner();
 
-        document.getElementById('textOutput').textContent = data.text_output;
         infoBox.textContent = 'Total job duration: ' + data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + ' s';
 
         if (data.model_name) {              infoBox.textContent += '\nModel name: ' + data.model_name; }
@@ -102,19 +100,6 @@ function onResultCallback(data) {
         
         adjustTextareasHeight();
 
-        //let audioOutputContainer = document.getElementById('audioOutputContainer');
-        //let audioOutput = document.getElementById('audioPlayerOutput');
-        //audioOutputContainer.classList.remove('hidden');
-        
-        //if (data.audio_output) {
-        //    audioOutputElement.src = data.audio_output;
-        //    audioOutput.src = data.audio_output;
-        //    audioOutput.play();
-        //} else {
-        //    audioOutputElement.src = '';
-        //    audioOutput.src = '';
-        //    audioOutputContainer.classList.add('hidden');
-        //}
     }
 }
 
@@ -123,23 +108,34 @@ function onProgressCallback(progress_info, progress_data) {
     const queue_position = progress_info.queue_position;
     const estimate = progress_info.estimate;
     const num_workers_online = progress_info.num_workers_online;
+    currentJobID = progress_info.job_id
+    const new_text = textInputLines.shift();
+    if (new_text && currentJobID) {
+        progressParams = new Object();
+        progressParams.text_input = new_text;
+        modelAPI.append_progress_input_params(currentJobID, progressParams)
+    }
 
     document.getElementById('progress_label').innerText = 'Generated audio chunks: ' + progress;
     document.getElementById('tasks_to_wait_for').innerText = ' | Queue Position: ' + queue_position;
     document.getElementById('estimate').innerText = ' | Estimate time: ' + estimate;
     document.getElementById('num_workers_online').innerText = ' | Workers online: ' + num_workers_online;
-
-    console.log(progress_data)
-    if (progress_data?.audio_output) {
-        // Convert the base64-encoded chunk to an ArrayBuffer
+    if (progress_data?.text_output) {
+        textQueue.push(progress_data.text_output);
+        if (!document.getElementById('textOutput').textContent) {
+            document.getElementById('textOutput').textContent = textQueue.shift();
+        }
+    }
+    if (progress_data?.audio_output && !modelAPI.jobsCanceled[currentJobID]) {
         const audioChunkArrayBuffer = base64ToArrayBuffer(progress_data.audio_output);
 
-        // Decode the audio data
         audioContext.decodeAudioData(audioChunkArrayBuffer, (audioBuffer) => {
             schedulePlayback(audioBuffer);
         });
     }
 }
+
+
 
 function schedulePlayback(audioBuffer) {
     const bufferSource = audioContext.createBufferSource();
@@ -152,8 +148,12 @@ function schedulePlayback(audioBuffer) {
     bufferSource.start(startTime);
     lastEndTime = startTime + audioBuffer.duration;
     bufferSource.onended = () => {
-        bufferSource.disconnect();
+        if (textQueue.length > 0) {
+            document.getElementById('textOutput').textContent += textQueue.shift();
+        }
+        bufferSource?.disconnect();
     };
+    bufferSources.push(bufferSource);
 }
 
 function base64ToArrayBuffer(base64) {
@@ -413,7 +413,6 @@ function removeAudioPlayerIfAny() {
 }
 
 function createAudioPlayer(file) {
-    console.log('file', file);
     removeAudioPlayerIfAny();
 
     var audioPlayer = document.createElement('audio');
@@ -426,7 +425,6 @@ function createAudioPlayer(file) {
     audioContainer.appendChild(audioPlayer);
 
     audioPlayer.src = URL.createObjectURL(file);
-    console.log('src', audioPlayer.src);
 
     var audioFileInfo = document.getElementById('audio-fileinfo');
     audioFileInfo = document.createElement('p');
@@ -451,7 +449,7 @@ function onButtonClick() {
     if(readyToSendRequest) {
         infoBox.textContent = 'Request sent.\nWaiting for response...';
         document.getElementById('textOutput').textContent = '';
-        disableSendButton();
+        // disableSendButton();
         addSpinner();
 
         // set Tabs to output section
@@ -472,6 +470,17 @@ function onButtonClick() {
         onSendAPIRequest();
     }
 }
+
+function onCancelButtonClick() {
+    removeSpinner()
+    bufferSources.forEach(source => {
+        source.stop(0); // Stop immediately
+        source.disconnect();
+    });
+    bufferSources = []; // Clear the list
+    modelAPI.cancelRequest(currentJobID)
+}
+
 
 function refreshRangeInputLayout() {
     const selectLabelElements = document.querySelectorAll('p.select-label');

@@ -40,6 +40,7 @@ class APIServer(Sanic):
     job_states = {} # key: job_id
     job_result_futures = {} # key: job_id
     progress_states = {}    # key: job_id
+    progress_input_params = {} # key: job_id
     registered_client_sessions = {} # key: client_session_auth_key
     args = None
     static_routes = {}
@@ -243,10 +244,22 @@ class APIServer(Sanic):
                 return sanic_json(job_cmd) # Fast exit if worker is not authorized or wrong job type.
 
             if APIServer.job_result_futures.get(job_id):
-                if self.get_ep_progress_param_config(job_type).get('stream_buffer') and APIServer.progress_states.get(job_id):
-                    APIServer.progress_states[job_id] += [job_data]
+                
+                if APIServer.job_states[job_id] == JobState.CANCELED:
+                    job_cmd['canceled'] = True
                 else:
-                    APIServer.progress_states[job_id] = [job_data]
+                    job_cmd['canceled'] = False
+
+                    progress_input_params = self.progress_input_params.pop(job_id, [])
+
+                    if progress_input_params:
+                        APIServer.logger.debug(f'Progress input params sent to worker: {shorten_strings(progress_input_params)}')
+                        job_cmd['progress_input_params'] = progress_input_params
+                    if self.get_ep_progress_param_config(job_type).get('stream_buffer') and APIServer.progress_states.get(job_id):
+                        APIServer.logger.debug(f'Request on /worker_job_progress: {shorten_strings(req_json)}')
+                        APIServer.progress_states[job_id] += [job_data]
+                    else:
+                        APIServer.progress_states[job_id] = [job_data]
             else:
                 job_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
                 APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")

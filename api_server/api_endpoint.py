@@ -44,6 +44,7 @@ class APIEndpoint():
 
         app.add_route(self.api_request, "/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name)
         app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=self.http_methods, name=self.endpoint_name + "$progress")
+        app.add_route(self.api_progress_stream, "/" + self.endpoint_name + "/progress_stream", methods=self.http_methods, name=self.endpoint_name + "$progress_stream")
         app.add_route(self.client_login, "/" + self.endpoint_name + "/login", methods=self.http_methods, name=self.endpoint_name + "$login")
 
         self.add_static_routes(config_file)
@@ -133,6 +134,8 @@ class APIEndpoint():
         self.log_parameter_config('Input', ep_input_param_config)
         self.log_parameter_config('Output', ep_output_param_config)
         self.log_parameter_config('Progress output', ep_progress_param_config.get('OUTPUTS', {}), False)
+        self.log_parameter_config('Progress input', ep_progress_param_config.get('INPUTS', {}), False)
+
 
         return ep_input_param_config, ep_output_param_config, ep_progress_param_config, ep_session_param_config
 
@@ -222,7 +225,8 @@ class APIEndpoint():
             sanic.response.types.JSONResponse: Response to client with progress result and end result
         """        
         input_args = request.json if request.method == "POST" else request.args
-        job_id, validation_errors = self.validate_progress_request(input_args)
+        job_id = input_args.get('job_id')
+        input_args, validation_errors = self.validate_progress_request(input_args)
 
         if validation_errors:
             return self.handle_validation_errors(validation_errors)
@@ -241,6 +245,62 @@ class APIEndpoint():
         if job_state != JobState.DONE:
             response['progress'] = progress_state
         APIEndpoint.logger.debug(f'Progress response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
+        return sanic_json(response)
+
+
+    async def api_progress_stream(self, request):
+        """Client request on route /self.endpoint_name/progress_stream called periodically by the client interface 
+        to receive progress and end results if the input parameter 'wait_for_result' of the related api_request 
+        was False. Takes the progress results from APIServer.progress_states put there by 
+        APIServer.worker_job_progress() and sends it as response json to the client. When the job is finished the 
+        final job result is awaited and taken from the job queue in finalize_request() and sent as response json 
+        to the client. 
+
+        Args:
+            request (sanic.request.types.Request): Request with client_session_auth_key from client to 
+                receive progress and end result 
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client with progress result and end result
+        """        
+        input_args = request.json if request.method == "POST" else request.args
+        job_id = input_args.get('job_id')
+        input_args, validation_errors = self.validate_progress_request(input_args)
+        if input_args.pop(JobState.CANCELED.value, False):
+            self.app.job_states[job_id] = JobState.CANCELED
+            APIEndpoint.logger.info(f'Job {job_id} canceled.')
+            return sanic_json({"success": True, 'job_id': job_id, 'ep_version': self.version, 'job_state': JobState.CANCELED.value})
+
+        if not validation_errors and input_args.get('progress_input_params'):
+            for progress_input_params in input_args.get('progress_input_params'):
+                if progress_input_params:
+                    progress_input_params, validation_errors = await self.validate_progress_input_parameters(progress_input_params)
+                    if validation_errors:
+                        return self.handle_validation_errors(validation_errors)
+                    if self.app.progress_input_params.get(job_id):
+                        self.app.progress_input_params[job_id].append(progress_input_params)
+                    else:
+                        self.app.progress_input_params[job_id] = [progress_input_params]
+
+        if validation_errors:
+            return self.handle_validation_errors(validation_errors)
+
+        
+
+        response = {"success": True, 'job_id': job_id, 'ep_version': self.version}
+        progress_state = self.get_and_validate_progress_data(job_id)
+
+        job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
+        if job_state == JobState.PROCESSING:
+            job_future =  self.app.job_result_futures.get(job_id, None)
+            if job_future and job_future.done() and not progress_state:
+                response['job_result'] = await self.finalize_request(request, job_id, job_future)
+                job_state = self.app.job_states.get(job_id, job_state)       
+
+        response['job_state'] = job_state.value
+        if job_state != JobState.DONE:
+            response['progress'] = progress_state
+        APIEndpoint.logger.debug(f'Progress response to client on /{self.endpoint_name}/progress_stream: {str(shorten_strings(response))}')
         return sanic_json(response)
 
 
@@ -317,12 +377,12 @@ class APIEndpoint():
     def validate_progress_request(self, input_args):
         validation_errors = []
 
-        client_session_auth_key = input_args.get('client_session_auth_key', None)
+        client_session_auth_key = input_args.pop('client_session_auth_key', None)
 
         if not client_session_auth_key in self.app.registered_client_sessions:
             validation_errors.append(f'Client session authentication key not registered in API Server')
 
-        job_id = input_args.get('job_id', None)
+        job_id = input_args.pop('job_id', None)
         if not job_id:
             validation_errors.append(f'No job_id given')
 
@@ -330,7 +390,7 @@ class APIEndpoint():
         if job_state == JobState.UNKNOWN:
             validation_errors.append(f'Client has no active request with this job id')
 
-        return job_id, validation_errors
+        return input_args, validation_errors
 
 
     async def finalize_request(self, request, job_id, job_future):
@@ -379,6 +439,11 @@ class APIEndpoint():
         input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.input_param_config)
         return await input_validator.validate_input_parameters()
            
+    async def validate_progress_input_parameters(self, input_args):
+        """Check if worker input parameters received from client are as specified in the endpoint config file
+        """
+        input_validator = InputValidationHandler(input_args, self.ep_progress_param_config.get('INPUTS'), self.app.input_param_config)
+        return await input_validator.validate_input_parameters()
 
 
     def add_session_variables_to_job_data(self, request, job_data):
@@ -392,11 +457,11 @@ class APIEndpoint():
 
 
     def prepare_job_data(self, job_data, start_time):
+        APIEndpoint.logger.debug(f'Client api request on /{self.endpoint_name} with following input parameter: ')
+        APIEndpoint.logger.debug(str(shorten_strings(job_data)))
         job_data['job_id'] = self.app.job_queues[self.worker_job_type].get_next_job_id()
         job_data['endpoint_name'] = self.endpoint_name
         job_data['start_time'] = start_time
-        APIEndpoint.logger.debug(f'Client request on /{self.endpoint_name} with following input parameter: ')
-        APIEndpoint.logger.debug(str(shorten_strings(job_data)))
         return job_data
 
 
