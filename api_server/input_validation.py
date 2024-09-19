@@ -205,29 +205,16 @@ class InputValidationHandler():
             for param_name, param_value in params.items():
                 target_param_value = self.validate_supported_values(param_value, param_name)
                 target_param_value = self.validate_numerical_attribute(target_param_value, param_name)
-                if param_name == MediaParams.SIZE and param_value != (None, None):
+                if not self.param_type == 'audio' and param_name == MediaParams.SIZE:
                     target_param_value = self.validate_size(param_value, target_param_value)
                 valid_params[param_name] = target_param_value
-            if self.param_type in ('image', 'video'):
-                target_media_format = valid_params[MediaParams.FORMAT]
+            return self.correct_invalid_format_codec_combo(valid_params)
 
-                if valid_params.get(MediaParams.VIDEO_CODEC) != FORMAT_CODEC_DICT.get(target_media_format, target_media_format):
-                    valid_params[MediaParams.VIDEO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)
-                       
-            if self.param_type in ('audio', 'video'):
-                if valid_params.get(MediaParams.AUDIO_CODEC) is not FORMAT_CODEC_DICT.get(valid_params.get(MediaParams.FORMAT), valid_params.get(MediaParams.FORMAT)):
-                    target_media_format = valid_params[MediaParams.FORMAT]
-                    valid_params[MediaParams.AUDIO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)
-            if self.param_type in ('image', 'video'):
-                if valid_params.get(MediaParams.VIDEO_CODEC) is not FORMAT_CODEC_DICT.get(valid_params.get(MediaParams.FORMAT), valid_params.get(MediaParams.FORMAT)):
-                    target_media_format = valid_params[MediaParams.FORMAT]
-                    valid_params[MediaParams.VIDEO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)
-            return valid_params
 
     def validate_size(self, param_value, target_param_value):
-        if param_value in (None, (0,0)):
+        if param_value in (None, (0,0), (None, None)):
             self.validation_errors.append(f'Could not determine the {MediaParams.SIZE} of the parameter {self.ep_input_param_name}.')
-        elif self.param_config.get(MediaParams.SIZE).get('keep_aspect_ratio'):
+        elif self.param_config.get(MediaParams.SIZE, {}).get('keep_aspect_ratio'):
             width, height = param_value
             target_width, target_height = target_param_value
             if height and target_height:
@@ -240,6 +227,19 @@ class InputValidationHandler():
                 return self.validate_numerical_attribute((target_width, target_height), MediaParams.SIZE)
         else:
             return target_param_value
+
+
+    def correct_invalid_format_codec_combo(self, valid_params):
+        if self.param_type in ('image', 'video'):
+            target_media_format = valid_params[MediaParams.FORMAT]
+            if valid_params.get(MediaParams.VIDEO_CODEC) is not FORMAT_CODEC_DICT.get(target_media_format, target_media_format):
+                valid_params[MediaParams.VIDEO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)               
+        if self.param_type in ('audio', 'video'):
+            if valid_params.get(MediaParams.AUDIO_CODEC) is not FORMAT_CODEC_DICT.get(valid_params.get(MediaParams.FORMAT), valid_params.get(MediaParams.FORMAT)):
+                target_media_format = valid_params[MediaParams.FORMAT]
+                valid_params[MediaParams.AUDIO_CODEC] = FORMAT_CODEC_DICT.get(target_media_format, target_media_format)
+        return valid_params
+
 
     def validate_supported_values(self, param_value, param_name):
         
