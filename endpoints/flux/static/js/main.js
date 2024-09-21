@@ -5,7 +5,7 @@
 const API_USER = 'aime'
 const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67d3'
 
-const modelAPI = new ModelAPI('flux_dev', API_USER, API_KEY);
+const modelAPI = new ModelAPI('flux-dev', API_USER, API_KEY);
 
 let infoBox = document.getElementById('info_box');
 var inputBase64String = ''
