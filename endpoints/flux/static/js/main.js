@@ -12,14 +12,13 @@ var inputBase64String = ''
 
 function onSendAPIRequest() {
     params = new Object({
-        negative_prompt:        document.getElementById('negative_prompt_input').value, // out of frame, lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck, username, watermark, signature
         num_samples:            parseInt(document.getElementById('num_samples_range').value),
         seed:                   parseInt(document.getElementById('seed_range').value),
         height:                 parseInt(document.getElementById('height_range').value),
         width:                  parseInt(document.getElementById('width_range').value),
         steps:                  parseInt(document.getElementById('steps_range').value),
-        cfg_scale:              parseFloat(document.getElementById('cfg_scale_range').value),
-        denoise:              parseFloat(document.getElementById('denoise_range').value),
+        image2image_strength:   parseFloat(document.getElementById('cfg_scale_range').value),
+        guidance:               parseFloat(document.getElementById('denoise_range').value),
     });
     if (inputBase64String) {
         params.image = inputBase64String;

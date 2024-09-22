@@ -35,7 +35,6 @@
                                 placeholder="Enter your prompt..."
                                 onkeydown="handleKeyPress(event)" 
                     ></textarea>
-                    <textarea id="negative_prompt_input" class="form-input rounded" name="negative_prompt_input" placeholder="Enter negative prompt..." onkeydown="handleKeyPress(event)"></textarea>
                     <p class="label mt-5">Image to Image</p>
                     <div id="dropzone" class="w100 rounded flex flex-col items-center justify-center"></div> 
 
@@ -70,28 +69,25 @@
                 <div id="settings_container" class="w100">
                     <p class="label mt-5">Sampling Parameters</p>
                     <p class="select-label">Sampling Steps</p>
-                    <input type="range" min="1" max="64" value="28" class="slider w100" id="steps_range" oninput="document.getElementById('steps_label').innerHTML = this.value">
-                    <label for="steps_range" id="steps_label">28</label>
+                    <input type="range" min="1" max="50" value="50" class="slider w100" id="steps_range" oninput="document.getElementById('steps_label').innerHTML = this.value">
+                    <label for="steps_range" id="steps_label">50</label>
                                                 
-                    <p class="select-label">Classifier-Free Guidance (CFG) Scale</p>
-                    <input type="range" min="-1.0" max="10.0" value="5.0" class="slider w100" step="0.1" id="cfg_scale_range" oninput="document.getElementById('cfg_scale_label').innerHTML = this.value">
-                    <label for="cfg_scale_range" id="cfg_scale_label">5.0</label>
+                    <p class="select-label">Image2Image Strength</p>
+                    <input type="range" min="0.0" max="1.0" value="0.8" class="slider w100" step="0.05" id="cfg_scale_range" oninput="document.getElementById('cfg_scale_label').innerHTML = this.value">
+                    <label for="cfg_scale_range" id="cfg_scale_label">0.8</label>
 
-                    <p class="select-label">Denoise (For Image to Image)</p>
-                    <input type="range" min="0" max="1.0" value="0.6" class="slider w100" step="0.1" id="denoise_range" oninput="document.getElementById('denoise_label').innerHTML = this.value">
-                    <label for="denoise_range" id="denoise_label">0.6</label>
+                    <p class="select-label">Image2Image Guidance</p>
+                    <input type="range" min="1.0" max="10.0" value="3.5" class="slider w100" step="0.1" id="denoise_range" oninput="document.getElementById('denoise_label').innerHTML = this.value">
+                    <label for="denoise_range" id="denoise_label">3.5</label>
                                                 
                     <div class="slidecontainer w100">
                         <div id="radio-group">
                             <p class="label">Progress Images</p>
-                            <input type="radio" id="no_progress_images" name="provide_progress_images" value="None" class="form-checkbox rounded text-aime_blue">
+                            <input type="radio" id="no_progress_images" name="provide_progress_images" value="None" checked checked="checked" class="form-checkbox rounded text-aime_blue">
                             <label for="no_progress_images">No progress images</label><br>
                             
-                            <input type="radio" id="decoded_progress_images" name="provide_progress_images" value="decoded" class="form-checkbox rounded text-aime_blue">
+                            <input type="radio" id="decoded_progress_images" name="provide_progress_images" value="Decoded" class="form-checkbox rounded text-aime_blue">
                             <label for="decoded_progress_images">Decoded progress images (slower)</label><br>
-
-                            <input type="radio" id="latent_progress_images" name="provide_progress_images" value="latent" checked checked="checked" class="form-checkbox rounded text-aime_blue">
-                            <label for="latent_progress_images">Quick decoded progress images</label>
                         </div>
                         
                     </div>
@@ -153,7 +149,7 @@
             "orig_height":	1024,
             "orig_width":	1024,
             "prompt":	'Astronaut on Mars During sunset sitting on a giant rubber duck, ultra realistic, 8k, Mirrorless, 28mm lens, f/2.5 aperture, ISO 400, natural daylight',
-            "provide_progress_images":	"latent",
+            "provide_progress_images":	"None",
             "refine_discretization":	"EDMDiscretization",
             "refine_sampler":	"HeunEDMSampler",
             "refine_steps":	40,
