@@ -71,22 +71,22 @@
                     <p class="select-label">Sampling Steps</p>
                     <input type="range" min="1" max="50" value="50" class="slider w100" id="steps_range" oninput="document.getElementById('steps_label').innerHTML = this.value">
                     <label for="steps_range" id="steps_label">50</label>
+
+                    <p class="select-label">Guidance</p>
+                    <input type="range" min="1.0" max="10.0" value="3.5" class="slider w100" step="0.1" id="guidance_range" oninput="document.getElementById('guidance_label').innerHTML = this.value">
+                    <label for="guidance_range" id="guidance_label">3.5</label>
                                                 
                     <p class="select-label">Image2Image Strength</p>
                     <input type="range" min="0.0" max="1.0" value="0.8" class="slider w100" step="0.05" id="cfg_scale_range" oninput="document.getElementById('cfg_scale_label').innerHTML = this.value">
                     <label for="cfg_scale_range" id="cfg_scale_label">0.8</label>
-
-                    <p class="select-label">Image2Image Guidance</p>
-                    <input type="range" min="1.0" max="10.0" value="3.5" class="slider w100" step="0.1" id="denoise_range" oninput="document.getElementById('denoise_label').innerHTML = this.value">
-                    <label for="denoise_range" id="denoise_label">3.5</label>
                                                 
                     <div class="slidecontainer w100">
                         <div id="radio-group">
                             <p class="label">Progress Images</p>
-                            <input type="radio" id="no_progress_images" name="provide_progress_images" value="None" checked checked="checked" class="form-checkbox rounded text-aime_blue">
+                            <input type="radio" id="no_progress_images" name="provide_progress_images" value="none" checked checked="checked" class="form-checkbox rounded text-aime_blue">
                             <label for="no_progress_images">No progress images</label><br>
                             
-                            <input type="radio" id="decoded_progress_images" name="provide_progress_images" value="Decoded" class="form-checkbox rounded text-aime_blue">
+                            <input type="radio" id="decoded_progress_images" name="provide_progress_images" value="decoded" class="form-checkbox rounded text-aime_blue">
                             <label for="decoded_progress_images">Decoded progress images (slower)</label><br>
                         </div>
                         
@@ -132,10 +132,7 @@
                         <p class="select-label">API Call</p>
                         <pre><code class="info-field code language-json rounded">
         {
-            "aesthetic_score":	5,
-            "base_discretization":	"EDMDiscretization",
-            "base_sampler":	"EulerEDMSampler",
-            "base_steps":	40,
+            "steps":	50,
             "client_session_auth_key":	"f0aae4d5-abe5-49eb-a176-1129a14ec3a7",
             "crop_coords_left":	0,
             "crop_coords_top":	0,

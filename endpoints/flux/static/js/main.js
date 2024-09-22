@@ -18,7 +18,7 @@ function onSendAPIRequest() {
         width:                  parseInt(document.getElementById('width_range').value),
         steps:                  parseInt(document.getElementById('steps_range').value),
         image2image_strength:   parseFloat(document.getElementById('cfg_scale_range').value),
-        guidance:               parseFloat(document.getElementById('denoise_range').value),
+        guidance:               parseFloat(document.getElementById('guidance_range').value),
     });
     if (inputBase64String) {
         params.image = inputBase64String;
