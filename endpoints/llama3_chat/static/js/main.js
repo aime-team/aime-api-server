@@ -189,10 +189,11 @@ function onSendAPIRequest() {
     params.max_gen_tokens = parseFloat(document.getElementById('max_gen_tokens_range').value);
 
     console.log(params)
-	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback);
+	modelAPI.doAPIRequest(params, onResultCallback, onProgressCallback, true);
 }
 
 function onProgressCallback(progressInfo, progressData) {
+    console.log(progressData)
 	const queuePosition = progressInfo.queue_position;
 	const estimate = progressInfo.estimate;
 	const numWorkersOnline = progressInfo.num_workers_online;
@@ -439,6 +440,12 @@ function updateChatContextFromBubbles() {
             )
         }
     });
+}
+
+
+function onCancelButtonClick() {
+    modelAPI.cancelRequest()
+    enableSendButton();
 }
 
 function handleKeyPress(event) {

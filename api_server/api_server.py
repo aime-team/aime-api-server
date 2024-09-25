@@ -239,6 +239,7 @@ class APIServer(Sanic):
             job_type = job_data.get('job_type')
             
             job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(job_type), job_data)
+            job_cmd['job_id'] = job_id
             if job_cmd.get('cmd') not in ('ok'):
                 APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
                 return sanic_json(job_cmd) # Fast exit if worker is not authorized or wrong job type.

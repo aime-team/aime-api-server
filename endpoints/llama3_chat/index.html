@@ -63,9 +63,14 @@ This software may be used and distributed according to the terms of the MIT LICE
 								</svg>
 							</button>
 						</div>
-					</div>	
+					</div>
+				</div>	
+				<div>
+					<button id="cancelButton" 
+					type="button" 
+					class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" 
+					onclick="onCancelButtonClick();">Cancel</button>
 				</div>
-
 				<div class="flex justify-between items-center mt-1">
 					<a id="clear_chat_context" class="cursor-pointer text-xs font-medium text-gray-400 border-b border-transparent hover:border-gray-400 focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out no-print" onclick="clearChatContext()">Clear chat context</a>
 					<a id="print_chat" class="cursor-pointer text-xs font-medium text-gray-400 border-b border-transparent hover:border-gray-400 focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out no-print" onclick="window.print();">Print chat</a>

@@ -377,14 +377,14 @@ class APIEndpoint():
     def validate_progress_request(self, input_args):
         validation_errors = []
 
-        client_session_auth_key = input_args.pop('client_session_auth_key', None)
+        client_session_auth_key = input_args.get('client_session_auth_key')
+        del input_args['client_session_auth_key']
 
         if not client_session_auth_key in self.app.registered_client_sessions:
             validation_errors.append(f'Client session authentication key not registered in API Server')
 
-        job_id = input_args.pop('job_id', None)
-        if not job_id:
-            validation_errors.append(f'No job_id given')
+        job_id = input_args.get('job_id')
+        del input_args['job_id']
 
         job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
         if job_state == JobState.UNKNOWN:

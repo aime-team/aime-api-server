@@ -234,7 +234,9 @@ class ModelAPI {
             }
             params.client_session_auth_key = this.clientSessionAuthKey;
             params.job_id = jobID;
-            params.canceled = (jobID in this.jobsCanceled) ? this.jobsCanceled[jobID] : false;
+            params.canceled = (jobID in this.jobsCanceled) || (null in this.jobsCanceled) ? true : false;
+            delete this.jobsCanceled[jobID];
+            delete this.jobsCanceled[null];
 
             const result = await fetchProgress(progressURL, params);
             // console.log(`Poll Progress: ${result.success}, job_state: ${result.job_state}`, result);
