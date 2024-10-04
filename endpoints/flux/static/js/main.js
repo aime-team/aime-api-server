@@ -401,7 +401,7 @@ function downloadBase64File(base64Data, prompt, seed, indx) {
 
     let fileName = generateFileName(prompt);
     if(fileName === '') {
-        fileName = 'sd3_empty_prompt';
+        fileName = 'flux_empty_prompt';
     }
     fileName = fileName + '_' + seed + '_' + indx;
     downloadLink.download = fileName;
