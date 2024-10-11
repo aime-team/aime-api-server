@@ -118,6 +118,9 @@ class BenchmarkApiEndpoint():
         parser.add_argument(
             '-cff', '--context_from_file', type=str, required=False, help="Load context from text file"
         )
+        parser.add_argument(
+            '-nw', '--no_warmup', action='store_true', required=False, help="If not set, the first batch doesn't count for benchmark result."
+        )
         args = parser.parse_args()
         if not args.config_file:
             if args.endpoint_name == 'sdxl_txt2img':
@@ -210,7 +213,7 @@ class BenchmarkApiEndpoint():
             f'Estimated global batchsize of all workers: {self.jobs.max_num_running}',
             f'Number of generated {self.unit} per job: {self.progress_bars.num_generated_units}',
             *self.get_worker_and_endpoint_descriptions(),
-            f'{self.args.total_requests} requests with {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
+            f'{self.args.total_requests} requests with maximum {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
             self.make_server_benchmark_string(True),
             self.make_benchmark_result_string(),
             sep='\n'
@@ -242,8 +245,13 @@ class BenchmarkApiEndpoint():
                 if self.first_batch and progress_info.get('progress') and job_id not in self.jobs.first_batch_job_dict.keys(): # If progress_callback of second batch is called before result_callback of first batch
                     self.first_batch = False
                     self.start_time_second_batch = time.time()
-        elif progress_info.get('queue_position') == 0:
-            self.start_time = time.time()
+        elif progress_info.get('queue_position') == 0 and not self.start_time_second_batch:
+            if self.args.no_warmup:
+                self.first_batch = False
+                self.start_time_second_batch = time.time()
+            else:
+                self.start_time = time.time()
+            
 
 
     def update_title(self, result=None):
@@ -252,7 +260,7 @@ class BenchmarkApiEndpoint():
         title_lines = list()
         if result:
             self.update_worker_and_endpoint_data_in_title(result)
-        if not self.start_time:
+        if not self.start_time and not self.start_time_second_batch:
             title_lines.append(self.coloured_output('Waiting for available workers...', YELLOW))
         elif self.first_batch:
             first_line = self.coloured_output(f'Processing first batch for warmup! Results not taken into account for benchmark!', YELLOW)
@@ -271,10 +279,11 @@ class BenchmarkApiEndpoint():
                 line += f' | Maximum running jobs: {self.jobs.max_num_running}'
             title_lines.append(line)
         else:
-            title_lines.append(
-                f'Warmup stage with first batch containing {self.jobs.num_first_batch} jobs finished. ' \
-                f'Benchmark running for {tqdm.format_interval(time.time() - self.start_time_second_batch)}'
-            )
+            
+            line = f'Warmup stage with first batch containing {self.jobs.num_first_batch} jobs finished. ' if not self.args.no_warmup else 'No warmup batch! '
+            line += f'Benchmark running for {tqdm.format_interval(time.time() - self.start_time_second_batch)}'
+            title_lines.append(line)
+
             remaining_jobs = f'{self.jobs.num_first_batch + self.args.total_requests - self.jobs.num_finished} / {self.args.total_requests}'
             line = f'Remaining jobs: {self.coloured_output(remaining_jobs, GREEN)} | Current running jobs: {self.coloured_output(self.jobs.num_running, GREEN)}'
             if self.jobs.max_num_running:
@@ -362,7 +371,7 @@ class BenchmarkApiEndpoint():
             num_running_jobs = self.jobs.max_num_running if final else self.jobs.num_running
             return 'From ' + self.coloured_output('Server', YELLOW) + \
                 ': Mean duration per job: ' + self.coloured_output(f'{tqdm.format_sizeof(self.mean_duration_from_server)}s', YELLOW) + \
-                ' | Mean rate per worker: ' + self.coloured_output(f'{tqdm.format_sizeof(self.mean_rate_from_server)} {self.unit}/s', YELLOW) + \
+                ' | Mean rate per user: ' + self.coloured_output(f'{tqdm.format_sizeof(self.mean_rate_from_server)} {self.unit}/s', YELLOW) + \
                 ' | Mean rate: ' + self.coloured_output(f'{tqdm.format_sizeof(self.mean_rate_from_server * num_running_jobs)} {self.unit}/s', YELLOW)
             
 
