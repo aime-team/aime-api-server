@@ -89,6 +89,14 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 
 ### Implementation for following model endpoints are also available
 
+#### FLUX.1-Dev
+
+Create photo realistic images with Black Forest Labs FLUX.1-Dev
+
+* Local Endpoint: [FLUX.1-Dev](/flux/)
+* Worker Implementation: [https://github.com/aime-labs/flux](https://github.com/aime-labs/flux)
+
+
 #### Stable Diffusion 3
 
 Create photo realistic images with Stable Diffusion 3
