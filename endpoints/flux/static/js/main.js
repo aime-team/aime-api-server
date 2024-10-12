@@ -12,7 +12,6 @@ var inputBase64String = ''
 
 function onSendAPIRequest() {
     params = new Object({
-        num_samples:            parseInt(document.getElementById('num_samples_range').value),
         seed:                   parseInt(document.getElementById('seed_range').value),
         height:                 parseInt(document.getElementById('height_range').value),
         width:                  parseInt(document.getElementById('width_range').value),
@@ -88,9 +87,8 @@ function onResultCallback(data) {
         document.getElementById('progress_bar').value = 100;
         document.getElementById('progress_label').innerText = '';
 
-        num_images = parseInt(document.getElementById('num_samples_range').value);
         console.log(data)
-        imagesPerSec = num_images / data.total_duration
+        imagesPerSec = 1 / data.total_duration
         infoBox.textContent = 'Prompt: ' +  data.prompt + '\nSeed: ' + data.seed + '\nTotal job duration: ' + 
             data.total_duration + 's' + '\nCompute duration: ' + data.compute_duration + 's' + '\nImages per second: ' + imagesPerSec.toFixed(1);
         if (data.model_name) {
