@@ -525,7 +525,7 @@ window.addEventListener('load', function() {
     hljs.highlightAll();
 
     populateDropdowns();
-    initializeDropZone();
+    // initializeDropZone();
     updateWordCount();
 
     infoBox = document.getElementById('infoBox');
