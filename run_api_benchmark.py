@@ -169,7 +169,6 @@ class BenchmarkApiEndpoint():
         self.jobs.update(self.progress_bars.current_jobs)
         self.update_title()
         
-        
 
     async def result_callback(self, result):
         """Called when the final job result is received. Removes the job related progress bar, processes information 
@@ -179,6 +178,7 @@ class BenchmarkApiEndpoint():
             result (dict): The final job result like a generated text, audio or images.
         """
         if result.get('success'):
+
             self.progress_bars.remove(result.get('job_id'))
             if self.first_batch: # If result_callback of first batch is called before progress_callback of second batch
                 self.first_batch = False
@@ -188,7 +188,9 @@ class BenchmarkApiEndpoint():
             self.jobs.num_finished += 1
             self.update_mean_rate_and_time_per_request(result)
             self.update_title(result)
-            if self.jobs.final_job_finished:
+            if result.get('error'):
+                await self.finish_benchmark(result.get('error'))
+            elif self.jobs.final_job_finished:
                 await self.finish_benchmark()
         else:
             print(result)
@@ -197,37 +199,53 @@ class BenchmarkApiEndpoint():
             await self.model_api.close_session()
 
 
-    async def finish_benchmark(self):
+    async def finish_benchmark(self, error=None):
         """Printing the benchmark summary and the results.
         """
         for title_bar in self.title_bar_list:
+            title_bar.refresh()
             title_bar.close()
-        summary_string = '\n'.join((
-            '\n---------------------------------',
-            'Finished',
-            '---------------------------------\n',
-            'Result:',
-            f'Number of jobs in first batch: {self.jobs.num_first_batch}' if not self.args.no_warmup else '',
-            f'Estimated global batchsize of all workers: {self.jobs.max_num_running}',
-            f'Number of generated {self.unit} per job: {self.progress_bars.num_generated_units}',
-            *self.get_worker_and_endpoint_descriptions(),
-            f'{self.args.total_requests} requests with maximum {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
-            self.make_server_benchmark_string(True),
-            self.make_benchmark_result_string()
-        ))
+        for progress_bar in self.progress_bars.current_jobs.values():
+            progress_bar.clear()
+        if error:
+            summary_string = f'\nError: {error}'
+            await self.close_all_tasks()
+        else:
+            summary_string = '\n'.join((
+                '\n---------------------------------',
+                'Finished',
+                '---------------------------------\n',
+                'Result:',
+                f'Number of jobs in first batch: {self.jobs.num_first_batch}' if not self.args.no_warmup else '',
+                f'Estimated global batchsize of all workers: {self.jobs.max_num_running}',
+                f'Number of generated {self.unit} per job: {self.progress_bars.num_generated_units}',
+                *self.get_worker_and_endpoint_descriptions(),
+                f'{self.args.total_requests} requests with maximum {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
+                self.make_server_benchmark_string(True),
+                self.make_benchmark_result_string()
+            ))
         print(summary_string)
         self.show_cursor()
         await self.model_api.close_session()
         self.loop.stop()
+        self.add_to_logfile(summary_string)
+
+    def add_to_logfile(self, content):
         if self.args.log_file:
             log_file = Path(self.args.log_file)
             if not log_file.parent.is_dir():
                 log_file.parent.mkdir()
             with open(self.args.log_file, 'a') as f:
-                f.write(summary_string)
+                f.write(content)
 
 
 
+    async def close_all_tasks(self):
+        pending_tasks = [task for task in asyncio.all_tasks() if not task.done()]
+        pending_tasks.remove(asyncio.current_task())
+        for task in pending_tasks:
+            task.cancel()
+        await asyncio.gather(*pending_tasks, return_exceptions=True)
 
 
     async def handle_first_batch(self, progress_info):
@@ -261,7 +279,6 @@ class BenchmarkApiEndpoint():
                 self.start_time_second_batch = time.time()
             else:
                 self.start_time = time.time()
-            
 
 
     def update_title(self, result=None):
@@ -388,15 +405,20 @@ class BenchmarkApiEndpoint():
     def print_start_message(self):
         """Printing benchmark parameters at the start.
         """
-        print(
-            f'Starting Benchmark on {self.args.api_server}/{self.args.endpoint_name} with\n'
-            f'{self.args.total_requests} total requests\n'
+        start_message = \
+            f'\n\nStarting Benchmark on {self.args.api_server}/{self.args.endpoint_name} with\n' +\
+            f'{self.args.total_requests} total requests\n' +\
             f'{self.args.concurrent_requests} concurrent requests\n'
-            f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s\n' if not self.args.no_warmup else ''
-            f'Job parameters:'
-        )
+        start_message += f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s\n' if not self.args.no_warmup else ''
+        start_message += f'Job parameters:\n'
+        
         for key, value in self.params.items():
-            print(f'{key}: {value}')
+            if isinstance(value, str) and len(value) >= 40:
+                value = value[:40] + '...'
+            start_message += (f'{key}: {value}\n')
+        start_message += f'Number of characters in prompt: {len(self.params.get("text") or self.params.get("prompt_input"))}'
+        print(start_message)
+        self.add_to_logfile(start_message)
         if sys.version_info < (3, 10):
             print(self.coloured_output(f'WARNING! You are running python version {sys.version}. High numbers of --total_requests are supported only from Python version 3.10 onwards', YELLOW))
         else:
@@ -438,8 +460,6 @@ class BenchmarkApiEndpoint():
         return input_data
 
 
-
-
     def get_default_values_from_config(self):
         """Parsing the default job parameters from the related endpoint config file.
 
@@ -471,6 +491,7 @@ class BenchmarkApiEndpoint():
                 self.progress_callback,
                 self.request_error_callback
                 )
+
 
     @staticmethod
     def get_unit(args):
@@ -630,9 +651,9 @@ class ProgressBarHandler():
         current_progress_bar = self.current_jobs.get(job_id)     
         if current_progress_bar:
             current_progress_bar.close()
-            del self.current_jobs[job_id]
-            del self.current_rate_dict[job_id]
-            del self.last_progress_dict[job_id]
+            self.current_jobs.pop(job_id, None)
+            self.current_rate_dict.pop(job_id, None)
+            self.last_progress_dict.pop(job_id, None)
 
 
     def update_table_title(self, current_progress):
@@ -726,7 +747,7 @@ class PositionHandler():
 
     def release(self, job_id):
         self.vacant.append(self.get(job_id))
-        del self.running_jobs[job_id]
+        self.running_jobs.pop(job_id, None)
 
 
 class JobHandler():
@@ -775,8 +796,8 @@ def main():
                 progress_bar.clear()
             benchmark_api.show_cursor()
             print('\nKeyboardInterrupt')
-            if not benchmark_api.first_batch:
-                benchmark_api.print_benchmark_summary_string()
+            #if not benchmark_api.first_batch:
+            #    benchmark_api.finish_benchmark()
 
 
 if __name__ == "__main__":
