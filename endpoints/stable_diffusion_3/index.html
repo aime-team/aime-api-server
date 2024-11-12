@@ -84,7 +84,7 @@
                     <div class="slidecontainer w100">
                         <div id="radio-group">
                             <p class="label">Progress Images</p>
-                            <input type="radio" id="no_progress_images" name="provide_progress_images" value="None" class="form-checkbox rounded text-aime_blue">
+                            <input type="radio" id="no_progress_images" name="provide_progress_images" value="none" class="form-checkbox rounded text-aime_blue">
                             <label for="no_progress_images">No progress images</label><br>
                             
                             <input type="radio" id="decoded_progress_images" name="provide_progress_images" value="decoded" class="form-checkbox rounded text-aime_blue">
@@ -136,38 +136,17 @@
                         <p class="select-label">API Call</p>
                         <pre><code class="info-field code language-json rounded">
         {
-            "aesthetic_score":	5,
-            "base_discretization":	"EDMDiscretization",
-            "base_sampler":	"EulerEDMSampler",
-            "base_steps":	40,
             "client_session_auth_key":	"f0aae4d5-abe5-49eb-a176-1129a14ec3a7",
-            "crop_coords_left":	0,
-            "crop_coords_top":	0,
-            "eta":	1,
-            "height":	1024,
-            "img2img_strength":	0.15,
-            "negative_aesthetic_score":	5,
-            "negative_prompt":	"out of frame, lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck, username, watermark, signature",
-            "num_samples":	1,
-            "order":	4,
-            "orig_height":	1024,
-            "orig_width":	1024,
+            "negative_prompt":	"out of frame, lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers",
             "prompt":	'Astronaut on Mars During sunset sitting on a giant rubber duck, ultra realistic, 8k, Mirrorless, 28mm lens, f/2.5 aperture, ISO 400, natural daylight',
-            "provide_progress_images":	"latent",
-            "refine_discretization":	"EDMDiscretization",
-            "refine_sampler":	"HeunEDMSampler",
-            "refine_steps":	40,
-            "rho":	3,
-            "s_churn":	0,
-            "s_noise":	1,
-            "s_tmax":	999,
-            "s_tmin":	0,
-            "scale":	6,
-            "seed":	-1,
-            "sigma_max":	14.6146,
-            "sigma_min":	0.0292,
+            "height":   1024,
+            "width":    1024,            
+            "seed": -1,
+            "num_samples":  1,        
+            "steps":   30,
+            "cfg_scale":	5.0,            
+            "denoise": 0.6,
             "wait_for_result":	false,
-            "width":	1024,
         }
                         </code></pre>
                         <br/>
