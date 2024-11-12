@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!-- 
+Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+
+This software may be used and distributed according to the terms of the MIT LICENSE
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
+    <title>AIME WhisperX</title>
+
+    <link rel="stylesheet" href="/model_api/frontend/css/font.css">
+    <link rel="stylesheet" href="/whisperx/static/css/highlight.css">
+    <link rel="stylesheet" href="/whisperx/static/css/style.css">
+
+	<script src="/model_api/js/model_api.js"></script>
+	<script src="/whisperx/static/js/tailwind.js"></script>
+	<script src="/whisperx/static/js/highlight.js"></script>
+	<script src="/whisperx/static/js/main.js"></script>
+</head>
+
+<body>
+    <div class="pl-5 pr-5 max-w-7xl mx-auto min-h-screen">
+        <div id="top">
+            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: WhisperX</h2>
+        </div>
+		<div id="layout" class="columns flex flex-col md:flex-row">
+			<!-- LEFT COLUMN -->
+			<form class="column md:container input-col relative md:flex-1 pb-4 min-w-0" onsubmit="return false;">
+				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg">INPUT</h3>
+					<div class="flex">
+						<button id="tab_button_audio_input" class="tab-button active" data-tab="tab_audio_input" data-tab-group="input"><h3 class="text-lg pl-4">Audio</h3></button>
+					</div>
+					<div id="tab_audio_input" class="tab-content p-0 mt-5" data-tab-group="input">
+						<div class="w100 flex items-center">
+							<div id="dropzone" class="w100 rounded flex flex-col items-center justify-center"></div>
+							<button id="recordButton" 
+								type="button" 
+								title="Click to start recording audio."
+								class="border-gray border-1 bg-gray-100 hover:bg-aime_blue active:bg-aime_red border-2 hover:border-aime_blue active:border-aime_red border-dashed focus:border-dashed hover:border-solid active:border-solid text-aime_darkblue hover:text-white font-bold py-2 px-2 ml-10 rounded-lg"
+								onclick=startStopRecording() >
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+								</svg>							  
+							</button>
+						
+						</div>
+	
+					</div>
+				
+				
+				<div class="flex justify-end mb-10 mt-8 items-center">
+					<button id="sendButton" type="button" class="bg-aime_orange hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-4 rounded-lg" onclick="onButtonClick();">Transcribe</button>
+				</div>
+			</form> <!-- /END LEFT COLUMN -->
+
+			<!-- DIVIDER -->
+			<div class="column-divider" role="separator">
+				<div class="thin-line"></div>
+			</div><!-- /END DIVIDER -->
+
+			<!-- RIGHT COLUMN -->
+			<div id="output_section" class="column md:container output-col md:flex-1 pb-4 min-w-0">
+				<div class="flex">
+					<button id="tab_button_output" class="tab-button active" data-tab="tab_output"><h3 class="text-lg pr-4">OUTPUT</h3></button>
+				</div>
+				<div id="tab_output" class="tab-content">
+					<div id="progress_container" class="w100">
+						<p class="label">Progress</p>
+						<span id="progress_label" class="text-sm"></span>
+						<label id="tasks_to_wait_for" class="text-sm"></label>
+						<label id="estimate" class="text-sm"></label>
+						<label id="num_workers_online" class="text-sm"></label>
+					</div>
+
+					<div id="audioOutputContainer" class="w hidden">
+						<p class="label mt-5">Audio Output</p>
+						<div class="audio-controls-container flex items-center">
+							<audio id="audioPlayerOutput" controls class="rounded-lg w100">
+								Your browser does not support the audio element.
+							</audio>
+							<button id="downloadButton" type="button" alt="Click to download audio file" class="bg-white hover:bg-aime_blue active:bg-aime_darkblue text-aime_darkblue hover:text-white font-bold py-2 px-2 ml-2 rounded-lg" onclick="downloadHandler();">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v13.5m0 0L7.5 12m4.5 4.5l4.5-4.5M12 18.75V21M9.75 21H14.25"></path>
+								</svg>
+							</button>
+						</div>
+					</div>
+
+					<p class="label mt-5">Text Output</p>
+					<textarea readonly id="textOutput" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm"></textarea>
+
+					<p class="label mt-5">Console Output</p>
+					<textarea readonly id="infoBox" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm text-aime_blue">&gt;_</textarea>
+
+				</div>
+			</div><!-- /END RIGHT COLUMN -->
+		</div> <!-- /END #layout -->
+	</div> <!-- /END pl-5 -->
+
+	<div class="flex justify-end">
+		<button id="scrollToTopBtn" class="ml-auto bg-aime_green hover:bg-aime_blue active:bg-aime_blue mb-2 p-2 rounded-full cursor-pointer md:hidden">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+				<path fill-rule="evenodd" d="M11.47 10.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 12.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
+				<path fill-rule="evenodd" d="M11.47 4.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 6.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" />
+			</svg>
+		</button>
+	</div>
+</div>
+
+<footer class="text-xs p-4 mt-20 text-center">
+	<div class="flex items-center justify-center space-x-2">
+		<span>&copy; 2024 AIME GmbH | Powered by <a href="https://api.aime.info" target="_blank" class="text-aime_darkblue font-bold">AIME API</a> | <a href="https://www.aime.info/imprint" target="_blank" class="text-aime_darkblue font-bold">Imprint</a></span>
+	</div>
+	<div class="text-xs text-gray-400 p-5 leading-3 max-w-2xl mx-auto">Disclaimer: The content provided on this platform is for informational and educational purposes only, and its use is at your own risk. We do not assume any liability for the accuracy, completeness, or usefulness of the information provided. Viewer discretion is advised as the content may contain explicit material. This platform is intended for research and demonstration purposes only and should not be used as a substitute for professional advice. By accessing this platform, you agree to these terms and conditions.</div>
+</footer>
+
+</body>
+</html>
