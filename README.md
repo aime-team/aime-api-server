@@ -46,14 +46,14 @@ Clients, like web browsers, smartphones, desktop apps can easily integrating mod
 
 To illustrate the usage and capabilities of AIME API we currently run following GenAI (generative AI) demo api services:
 
-### Llama3 Instruct Chat
+### Llama 3.1 Instruct Chat
 
-[![AIME LlaMa3 Chat Demo](/docs/images/aime_api_demo-llm3-chat_banner.png "AIME LlaMa3 Chat Demo")](https://api.aime.info/llama3-chat/)
+[![AIME Llama 3.1 Chat Demo](/docs/images/aime_api_demo-llm31-chat_banner.png "AIME Llama 3.1 Chat Demo")](https://api.aime.info/llama3-1-chat/)
 
-Chat with 'Steve', our LlaMa 3 based instruct chat-bot.
+Chat with 'Steve', our Llama 3.1 based instruct chat-bot.
 
-* AIME Demo Server: [LLama3 Chat](https://api.aime.info/llama3-chat/)
-* Your Local Server: [LLama3 Chat](/llama3-chat/)
+* AIME Demo Server: [Llama 3.1 Chat](https://api.aime.info/llama3-1-chat/)
+* Your Local Server: [Llama 3.1 Chat](/llama3-1-chat/)
 * Source: [https://github.com/aime-labs/llama3_chat](https://github.com/aime-labs/llama3_chat)
 
 ### Mixtral 8x7B / 8x22B Instruct Chat
@@ -66,15 +66,26 @@ Chat with 'Chloe', our Mixtral 8x7B or 8X22B based instruct chat-bot.
 * Your Local Server: [Mixtral Chat](/mixtral-chat/)
 * Source: [https://github.com/aime-labs/mixtral_chat](https://github.com/aime-labs/mixtral_chat)
 
-### Stable Diffusion XL
+### FLUX.1-Dev
 
-[![AIME Stable Diffusion XL Demo](/docs/images/aime_api_demo-sdxl_banner.png "AIME Stable Diffusion XL Demo")](https://api.aime.info/sdxl-txt2img/)
+[![AIME FLUX.1-Dev Demo](/docs/images/aime_api_demo-flux_banner.png "AIME FLUX.1-Dev Demo")](https://api.aime.info/flux/)
 
-Create photo realistic images from text prompts.
+Create photo realistic images with Black Forest Labs FLUX.1-Dev.
 
-* AIME Demo Server: [Stable Diffusion XL](https://api.aime.info/sdxl-txt2img/)
-* Your Local Server: [Stable Diffusion XL](/sdxl-txt2img/)
-* Source: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl)
+* AIME Demo Server: [FLUX.1-Dev](https://api.aime.info/flux/)
+* Your Local Server: [FLUX.1-Dev](/flux/)
+* Source: [https://github.com/aime-labs/flux](https://github.com/aime-labs/flux)
+
+### Stable Diffusion 3
+
+[![AIME Stable Diffusion 3 Demo](/docs/images/aime_api_demo-sd3_banner.png "AIME Stable Diffusion 3 Demo")](https://api.aime.info/sd3/)
+
+Create photo realistic images with Stable Diffusion 3.
+
+* AIME Demo Server: [Stable Diffusion 3](https://api.aime.info/sd3/)
+* Your Local Server: [Stable Diffusion 3](/sd3/)
+* Source: [https://github.com/aime-labs/stable_diffusion_3](https://github.com/aime-labs/stable_diffusion_3)
+
 
 ### Seamless Communication
 
@@ -89,27 +100,19 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 
 ### Implementation for following model endpoints are also available
 
-#### FLUX.1-Dev
+#### Stable Diffusion XL
 
-Create photo realistic images with Black Forest Labs FLUX.1-Dev
+Create photo realistic images from text prompts.
 
-* Local Endpoint: [FLUX.1-Dev](/flux/)
-* Worker Implementation: [https://github.com/aime-labs/flux](https://github.com/aime-labs/flux)
+* Local Endpoint: [Stable Diffusion XL](/sdxl-txt2img/)
+* Worker Implementation: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl)
 
+#### Llama3 Chat
 
-#### Stable Diffusion 3
+Chat with 'Steve', the Llama3 based chat-bot. 
 
-Create photo realistic images with Stable Diffusion 3
-
-* Local Endpoint: [Stable Diffusion 3](/sd3/)
-* Worker Implementation: [https://github.com/aime-labs/stable_diffusion_3](https://github.com/aime-labs/stable_diffusion_3)
-
-#### Tortoise TTS
-
-Tortoise TTS: high quality Text-To-Speech Demo 
-
-* Local Endpoint: [Tortoise TTS](/tts-tortoise/)
-* Worker Implementation: [https://github.com/aime-labs/tortoise-tts](https://github.com/aime-labs/tortoise-tts)
+* Local Endpoint: [LLama3 Chat](/llama3-chat/)
+* Worker Implementation: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama3_chat)
 
 #### Llama2 Chat
 
@@ -117,6 +120,13 @@ Chat with 'Dave', the Llama2 based chat-bot.
 
 * Local Endpoint: [LLama2 Chat](/llama2-chat/)
 * Worker Implementation: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama2_chat)
+
+#### Tortoise TTS
+
+Tortoise TTS: high quality Text-To-Speech Demo 
+
+* Local Endpoint: [Tortoise TTS](/tts-tortoise/)
+* Worker Implementation: [https://github.com/aime-labs/tortoise-tts](https://github.com/aime-labs/tortoise-tts)
 
 
 ## How to setup and start the AIME API Server
