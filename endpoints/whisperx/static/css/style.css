@@ -54,6 +54,10 @@ textarea.form-input:focus {
     --tw-ring-color: transparent !important;
 }
 
+.highlight {
+    background-color: yellow;
+    font-weight: bold;
+}
 .tab-button {
     color: #ccc;
     border-bottom: 1px solid #ccc;
