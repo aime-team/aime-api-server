@@ -109,6 +109,14 @@ const languages = [
 	{ code: 'yue', name: 'Cantonese' }
 ];
 
+const subs = [
+    { code: 'srt', name: 'srt' },
+	{ code: 'vtt', name: 'vtt' },
+	{ code: 'txt', name: 'txt' },
+	{ code: 'tsv', name: 'tsv' },
+	{ code: 'json', name: 'json' },
+	{ code: 'aud', name: 'aud' },
+];
 
 let readyToSendRequest = true;
 let audioOutputElement = new Audio();
@@ -117,7 +125,6 @@ let mediaRecorder;
 let audioChunks = [];
 let timerInterval;
 let currentSubtitleIndex = 0;
-let subtitlesReady = false;
 let subtitles = [];
 
 const modelAPI = new ModelAPI('whisper_x', API_USER, API_KEY);
@@ -127,6 +134,7 @@ function onSendAPIRequest() {
 
     let params = {};
     params.src_lang = document.getElementById('srcLang').value;
+    params.subFile = document.getElementById('subFile').value;
     const chunkSizeInput = document.getElementById('chunk_size_slider');
     params.chunk_size = parseInt(chunkSizeInput.value);
 
@@ -194,10 +202,6 @@ function onResultCallback(data) {
 
         adjustTextareasHeight();
 
-        if (data.video_output) {
-            displayMedia('video', data.video_output);
-        }
-
         if (data.align_result) {
             const alignedData = JSON.parse(data.align_result);
             const vttContent = generateVTT(alignedData);
@@ -209,7 +213,7 @@ function onResultCallback(data) {
 
             loadSubtitles(alignedData);
 
-            // Dynamically assign the download function to the button
+            
             const downloadButton = document.getElementById('downloadButton');
             downloadButton.onclick = () => {
                 createVTTFile(vttContent);
@@ -264,14 +268,14 @@ function loadSubtitles(alignedData) {
 
     alignedData.segments.forEach(segment => {
         let sentence = {
-            text: "",  // Full sentence text
-            words: [], // Array to store the words
-            start: segment.start,  // Sentence start time
-            end: segment.end,      // Sentence end time
+            text: "",
+            words: [],
+            start: segment.start,
+            end: segment.end,
         };
 
         segment.words.forEach(word => {
-            sentence.text += word.word + " ";  // Add word to sentence
+            sentence.text += word.word + " ";
             sentence.words.push({
                 start: word.start,
                 end: word.end,
@@ -281,13 +285,11 @@ function loadSubtitles(alignedData) {
 
         subtitles.push(sentence);
     });
-
-    // Start syncing subtitles every 100ms
-    setInterval(syncSubtitles, 100);
+    setInterval(syncSubtitles, 50);
 }
 
 function generateVTT(alignedData) {
-    let vttContent = "WEBVTT\n\n"; // Header for WebVTT
+    let vttContent = "WEBVTT\n\n";
 
     alignedData.segments.forEach(segment => {
         segment.words.forEach(word => {
@@ -335,13 +337,11 @@ function downloadHandler() {
 }
 
 function clearSubtitleFile() {
-    // Get references to subtitle elements
     const subtitleTrack = document.getElementById('mediaSubtitles');
     const subtitleText = document.getElementById('subtitleText');
     const subtitlePlayer = document.getElementById('subtitlePlayer');
     const downloadButton = document.getElementById('downloadButton');
 
-    // document.getElementById('textOutput').textContent = '';
     subtitleTrack.src = '';
     subtitlePlayer.classList.add('hidden');
     subtitleText.textContent = '';
@@ -359,15 +359,15 @@ function populateDropdowns() {
 	});
     document.getElementById('srcLang').value = 'none';
 
-    batch_size.forEach((bsize) => {
-        for (const drpdwn of document.getElementsByClassName('batchselector')){
+    subs.forEach((sub) => {
+        for (const drpdwn of document.getElementsByClassName('subselector')){
             const option = document.createElement('option');
-            option.value = bsize.code;
-            option.text = bsize.name;
+            option.value = sub.code;
+            option.text = sub.name;
             drpdwn.add(option);
          }
 	});
-    document.getElementById('batch_size').value = '32';
+    document.getElementById('subFile').value = 'vtt';
 }
 
 function base64ToArrayBuffer(base64) {
@@ -481,10 +481,14 @@ async function startStopRecording() {
 
 
 function getMimeType() {
-    const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-    const isFirefox = typeof InstallTrigger !== 'undefined';
-    const isEdge = /Edg/.test(navigator.userAgent) && /Microsoft Corporation/.test(navigator.vendor);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const userAgent = navigator.userAgent || ''; 
+    const vendor = navigator.vendor || ''; 
+    const platform = navigator.platform || ''; 
+
+    const isChrome = /Chrome/.test(userAgent) && /Google Inc/.test(vendor);
+    const isFirefox = /Firefox/.test(userAgent);
+    const isEdge = /Edg/.test(userAgent) && /Microsoft/.test(vendor);
+    const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
 
     if (isChrome || isEdge) {
         return 'audio/webm';
@@ -496,6 +500,7 @@ function getMimeType() {
         return 'audio/wav';
     }
 }
+
 
 function adjustTextareasHeight() {
     var textarea = document.getElementById('textOutput');
@@ -614,6 +619,7 @@ function handleFileSelection(file) {
         const mediaPlayer = document.getElementById('mediaPlayerOutput');
         mediaPlayer.src = URL.createObjectURL(file);
         mediaPlayer.classList.remove('hidden');
+        createMediaPlayer(file);
     } else {
         alert('Sorry, only audio or video files of types ' + allowedFormats + ' are allowed!');
         audioInput.value = '';
@@ -638,46 +644,42 @@ function removeMediaPlayerIfAny() {
 }
 
 
-function displayMedia(type, src) {
-    const mediaPlayer = document.getElementById('mediaPlayerOutput');
-
-    // Hide media player initially
-    mediaPlayer.classList.add('hidden');
-
-    if (type === 'video') {
-        mediaPlayer.src = src;
-        mediaPlayer.classList.remove('hidden');
-        mediaPlayer.addEventListener('canplay', () => {
-            if (subtitlesReady) {
-                mediaPlayer.play();
-            } else {
-                console.log("Waiting for subtitles to be ready...");
-            }
-        });
-    }
-}
-
 function createMediaPlayer(file) {
     console.log('file:', file);
     removeMediaPlayerIfAny();
 
-    const mediaPlayer = document.createElement(file.type.startsWith('video') ? 'video' : 'audio');
-    mediaPlayer.id = 'media-player';
-    mediaPlayer.className = 'rounded-lg w100 mt-5';
-    mediaPlayer.setAttribute('controls', 'true');
-    mediaPlayer.textContent = 'Your browser does not support the media element.';
+    const type = file.type.startsWith('video') ? 'video' : 'audio';
+    const mediaSrc = URL.createObjectURL(file);
 
-    const mediaContainer = document.getElementById('tab_audio_input');
-    mediaContainer.appendChild(mediaPlayer);
+    displayMedia(type, mediaSrc, file);
+}
 
-    mediaPlayer.src = URL.createObjectURL(file);
-    console.log('src:', mediaPlayer.src);
 
-    const fileInfo = document.createElement('p');
-    fileInfo.id = 'media-fileinfo';
-    fileInfo.className = 'text-xs italic m-1 text-gray-700';
-    fileInfo.textContent = `${file.name} | Size: ${formatFileSize(file.size)}`;
-    mediaContainer.appendChild(fileInfo);
+function displayMedia(type, src, file = null) {
+    const mediaPlayer = document.getElementById('mediaPlayerOutput');
+    const mediaOutputContainer = document.getElementById('mediaOutputContainer');
+    const mediaControls = document.getElementById('media-controls');
+
+    mediaPlayer.classList.remove('hidden');
+    mediaPlayer.src = src;
+    mediaPlayer.type = type;
+    mediaPlayer.removeAttribute('disabled');
+
+    let mediaInfoSection = document.getElementById('media-fileinfo-section');
+    if (!mediaInfoSection) {
+        mediaInfoSection = document.createElement('div');
+        mediaInfoSection.id = 'media-fileinfo-section';
+        mediaInfoSection.className = 'mt-4';
+        mediaOutputContainer.appendChild(mediaInfoSection);
+    }
+
+    if (file) {
+        mediaInfoSection.innerHTML = `
+            <p class="text-sm text-gray-700 italic">
+                ${file.name || 'Recorded Media'} | Size: ${formatFileSize(file.size)}
+            </p>
+        `;
+    }
 }
 
 

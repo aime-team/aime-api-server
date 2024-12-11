@@ -59,6 +59,10 @@ This software may be used and distributed according to the terms of the MIT LICE
 						<label for="srcLang" class="select-label block">Source language:</label>
 						<select id="srcLang" name="srcLang" class="langselector form-select w-full rounded-md"></select>
 					</div>
+					<div class="w-full md:w-1/2">
+						<label for="subFile" class="select-label block">Subtitle file format:</label>
+						<select id="subFile" name="subFile" class="subselector form-select w-full rounded-md"></select>
+					</div>
 				</div>
 			
 				<div class="flex flex-col w-full">
@@ -105,12 +109,13 @@ This software may be used and distributed according to the terms of the MIT LICE
 
 					<div id="mediaOutputContainer" class="w">
 						<p class="label mt-5">Media Output</p>
-						<div class="media-controls-container flex items-center">
+						<div class="media-controls-container flex items-center" id = "media-controls">
 							<video id="mediaPlayerOutput" controls class="rounded-lg w100 hidden" disabled>
 								Your browser does not support the video element.
 								<track id="mediaSubtitles" kind="subtitles" srclang="en" label="English" default>
 							</video>
 					</div>
+					<div id="media-fileinfo-section" class="mt-4"></div>
 
 					<!-- Subtitle Player -->
 					<div id="subtitlePlayer" class="mt-4 w-full text-center text-sm font-mono text-black bg-white py-2 rounded-md hidden">
