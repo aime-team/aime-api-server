@@ -46,14 +46,14 @@ Clients, like web browsers, smartphones, desktop apps can easily integrating mod
 
 To illustrate the usage and capabilities of AIME API we currently run following GenAI (generative AI) demo api services:
 
-### Llama 3.1 Instruct Chat
+### Llama 3.3 Instruct Chat
 
-[![AIME Llama 3.1 Chat Demo](/docs/images/aime_api_demo-llm31-chat_banner.png "AIME Llama 3.1 Chat Demo")](https://api.aime.info/llama3-1-chat/)
+[![AIME Llama 3.3 Chat Demo](/docs/images/aime_api_demo-llm3-3-chat_banner.png "AIME Llama 3.3 Chat Demo")](https://api.aime.info/llama3-chat/)
 
-Chat with 'Steve', our Llama 3.1 based instruct chat-bot.
+Chat with 'Steve', our Llama 3.3 70B based instruct chat-bot.
 
-* AIME Demo Server: [Llama 3.1 Chat](https://api.aime.info/llama3-1-chat/)
-* Your Local Server: [Llama 3.1 Chat](/llama3-1-chat/)
+* AIME Demo Server: [Llama 3.3 Chat](https://api.aime.info/llama3-chat/)
+* Your Local Server: [Llama 3.3 Chat](/llama3-chat/)
 * Source: [https://github.com/aime-labs/llama3_chat](https://github.com/aime-labs/llama3_chat)
 
 ### Mixtral 8x7B / 8x22B Instruct Chat
