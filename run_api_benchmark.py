@@ -15,6 +15,7 @@ import statistics
 import re
 import sys
 import os
+from pathlib import Path
 
 
 if os.name == 'nt':
@@ -41,7 +42,7 @@ YELLOW = '\033[93m'
 RESET = '\033[0m'
 
 class BenchmarkApiEndpoint():
-    """Benchmark tool to measure and monitor the performance of GPUs with multiple asynchronous requests on llama2_chat and stable_diffusion_xl_txt2img endpoints.
+    """Benchmark tool to measure and monitor the performance of GPUs with multiple asynchronous requests on chat and stable_diffusion_xl_txt2img endpoints.
     """    
 
     def __init__(self):
@@ -54,7 +55,7 @@ class BenchmarkApiEndpoint():
             self.args.login_key
         )
         self.model_api.do_api_login()
-        self.params = self.get_default_values_from_config()
+        self.params = self.get_job_parameter()
         self.loop = asyncio.new_event_loop()
         self.semaphore = asyncio.Semaphore(self.args.concurrent_requests)
         self.title_bar_list = [tqdm(total=0, bar_format='{desc}', leave=False, position=i, colour='red', dynamic_ncols=True) for i in range(HEADER_HEIGHT)]
@@ -98,10 +99,10 @@ class BenchmarkApiEndpoint():
             '-cf', '--config_file', type=str, required=False, help='To change address of endpoint config file to get the default values of the job parameters'
         )
         parser.add_argument(
-            '-ep', '--endpoint_name', type=str, default='llama2_chat', required=False, help='Name of the endpoint'
+            '-ep', '--endpoint_name', type=str, default='llama3_chat', required=False, help='Name of the endpoint'
         )
         parser.add_argument(
-            '-ut', '--unit', type=str, required=False, help='Unit of the generated objects. Default: "tokens" if endpoint_name is "llama2_chat" else  "images"'
+            '-ut', '--unit', type=str, required=False, help='Unit of the generated objects. Default: "tokens" if endpoint_name contains "chat" else  "images"'
         )
         parser.add_argument(
             '-t', '--time_to_get_first_batch_jobs', type=int, default=4, required=False, help='Time in seconds after start to get the number of jobs in the first batch'
@@ -116,27 +117,28 @@ class BenchmarkApiEndpoint():
             '-nu', '--num_units', default=1, type=int, required=False, help='Number of units to generate. Images for stable_diffusion_xl_txt2img'
         )
         parser.add_argument(
-            '-cff', '--context_from_file', type=str, required=False, help="Load context from text file"
+            '-ml', '--max_tok_len', default=1024, type=int, required=False, help='Maximum length showed in the first batch.'
+        )
+        parser.add_argument(
+            '-i', '--prompt_input_from_files', type=str, required=False, help="Load prompt input from text files"
         )
         parser.add_argument(
             '-nw', '--no_warmup', action='store_true', required=False, help="If not set, the first batch doesn't count for benchmark result."
         )
+        parser.add_argument(
+            '-lf', '--log_file', type=str, required=False, help="Add results to given log file. Generates it if not existing."
+        )
+
         args = parser.parse_args()
         if not args.config_file:
             if args.endpoint_name == 'sdxl_txt2img':
                 args.endpoint_name = 'stable_diffusion_xl_txt2img'
             elif args.endpoint_name == 'stable_diffusion_xl_txt2img':
                 args.config_file = 'endpoints/stable_diffusion_xl/txt2img/aime_api_endpoint.cfg'
-            elif args.endpoint_name == 'llama2_chat' and args.num_units == 1:
-                args.num_units = args.max_gen_len
-                args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
-            elif args.endpoint_name == 'llama3_chat'  and args.num_units == 1:
-                args.num_units = 1024
-                args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
             else:
                 args.config_file = f'endpoints/{args.endpoint_name}/aime_api_endpoint.cfg'
-                if not args.endpoint_name == 'stable_diffusion_3' and args.num_units == 1:
-                    args.num_units = 500
+                if 'chat' in args.endpoint_name and args.num_units == 1:
+                    args.num_units = 1024
         return args
 
     
@@ -167,7 +169,6 @@ class BenchmarkApiEndpoint():
         self.jobs.update(self.progress_bars.current_jobs)
         self.update_title()
         
-        
 
     async def result_callback(self, result):
         """Called when the final job result is received. Removes the job related progress bar, processes information 
@@ -177,6 +178,7 @@ class BenchmarkApiEndpoint():
             result (dict): The final job result like a generated text, audio or images.
         """
         if result.get('success'):
+
             self.progress_bars.remove(result.get('job_id'))
             if self.first_batch: # If result_callback of first batch is called before progress_callback of second batch
                 self.first_batch = False
@@ -186,12 +188,10 @@ class BenchmarkApiEndpoint():
             self.jobs.num_finished += 1
             self.update_mean_rate_and_time_per_request(result)
             self.update_title(result)
-            
-            if self.jobs.final_job_finished:
-                self.print_benchmark_summary_string()
-                self.show_cursor()
-                await self.model_api.close_session()
-                self.loop.stop()
+            if result.get('error'):
+                await self.finish_benchmark(result.get('error'))
+            elif self.jobs.final_job_finished:
+                await self.finish_benchmark()
         else:
             print(result)
             self.show_cursor()
@@ -199,25 +199,53 @@ class BenchmarkApiEndpoint():
             await self.model_api.close_session()
 
 
-    def print_benchmark_summary_string(self):
+    async def finish_benchmark(self, error=None):
         """Printing the benchmark summary and the results.
         """
         for title_bar in self.title_bar_list:
+            title_bar.refresh()
             title_bar.close()
-        print(
-            '\n---------------------------------',
-            'Finished',
-            '---------------------------------\n',
-            'Result:',
-            f'Number of jobs in first batch: {self.jobs.num_first_batch}',
-            f'Estimated global batchsize of all workers: {self.jobs.max_num_running}',
-            f'Number of generated {self.unit} per job: {self.progress_bars.num_generated_units}',
-            *self.get_worker_and_endpoint_descriptions(),
-            f'{self.args.total_requests} requests with maximum {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
-            self.make_server_benchmark_string(True),
-            self.make_benchmark_result_string(),
-            sep='\n'
-        )
+        for progress_bar in self.progress_bars.current_jobs.values():
+            progress_bar.clear()
+        if error:
+            summary_string = f'\nError: {error}'
+            await self.close_all_tasks()
+        else:
+            summary_string = '\n'.join((
+                '\n---------------------------------',
+                'Finished',
+                '---------------------------------\n',
+                'Result:',
+                f'Number of jobs in first batch: {self.jobs.num_first_batch}' if not self.args.no_warmup else '',
+                f'Estimated global batchsize of all workers: {self.jobs.max_num_running}',
+                f'Number of generated {self.unit} per job: {self.progress_bars.num_generated_units}',
+                *self.get_worker_and_endpoint_descriptions(),
+                f'{self.args.total_requests} requests with maximum {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
+                self.make_server_benchmark_string(True),
+                self.make_benchmark_result_string()
+            ))
+        print(summary_string)
+        self.show_cursor()
+        await self.model_api.close_session()
+        self.loop.stop()
+        self.add_to_logfile(summary_string)
+
+    def add_to_logfile(self, content):
+        if self.args.log_file:
+            log_file = Path(self.args.log_file)
+            if not log_file.parent.is_dir():
+                log_file.parent.mkdir()
+            with open(self.args.log_file, 'a') as f:
+                f.write(content)
+
+
+
+    async def close_all_tasks(self):
+        pending_tasks = [task for task in asyncio.all_tasks() if not task.done()]
+        pending_tasks.remove(asyncio.current_task())
+        for task in pending_tasks:
+            task.cancel()
+        await asyncio.gather(*pending_tasks, return_exceptions=True)
 
 
     async def handle_first_batch(self, progress_info):
@@ -251,7 +279,6 @@ class BenchmarkApiEndpoint():
                 self.start_time_second_batch = time.time()
             else:
                 self.start_time = time.time()
-            
 
 
     def update_title(self, result=None):
@@ -316,7 +343,7 @@ class BenchmarkApiEndpoint():
     
 
     def get_worker_and_endpoint_descriptions(self):
-        unavailable = 'Available after first batch...' if self.first_batch else 'Missing! Maybe provide_worker_meta_data is set to False in endpoint config file'
+        unavailable = 'Available after first job result...' if self.first_batch else 'Missing! Maybe provide_worker_meta_data is set to False in endpoint config file'
         return [
             f'Number of detected workers: {len(self.worker_names) if self.worker_names else unavailable}',
             f'Worker names: {", ".join(self.worker_names) if self.worker_names else unavailable}',
@@ -377,20 +404,60 @@ class BenchmarkApiEndpoint():
 
     def print_start_message(self):
         """Printing benchmark parameters at the start.
-        """        
-        print(
-            f'Starting Benchmark on {self.args.api_server}/{self.args.endpoint_name} with\n'
-            f'{self.args.total_requests} total requests\n'
+        """
+        start_message = \
+            f'\n\nStarting Benchmark on {self.args.api_server}/{self.args.endpoint_name} with\n' +\
+            f'{self.args.total_requests} total requests\n' +\
             f'{self.args.concurrent_requests} concurrent requests\n'
-            f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s\n'
-            f'Job parameters:'
-        )
+        start_message += f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s\n' if not self.args.no_warmup else ''
+        start_message += f'Job parameters:\n'
+        
         for key, value in self.params.items():
-            print(f'{key}: {value}')
+            if isinstance(value, str) and len(value) >= 40:
+                value = value[:40] + '...'
+            start_message += (f'{key}: {value}\n')
+        start_message += f'Number of characters in prompt: {len(self.params.get("text") or self.params.get("prompt_input"))}'
+        print(start_message)
+        self.add_to_logfile(start_message)
         if sys.version_info < (3, 10):
             print(self.coloured_output(f'WARNING! You are running python version {sys.version}. High numbers of --total_requests are supported only from Python version 3.10 onwards', YELLOW))
         else:
             print()
+
+
+    def get_job_parameter(self):
+        params = self.get_default_values_from_config()
+        if params.get('seed'):
+            params['seed'] = 1
+        if params.get('top_k'):
+            params['top_k'] = 1
+            params['top_p'] = 1
+        if params.get('num_samples'):
+            params['num_samples'] = self.args.num_units
+        if params.get('max_gen_tokens'):
+            params['max_gen_tokens'] = self.args.num_units
+        for prompt_key in ('text', 'prompt_input'):
+            if params.get(prompt_key) is not None:
+                if self.args.prompt_input_from_files:
+                    params[prompt_key] = self.read_prompt_from_files()
+                else:
+                    params[prompt_key] = 'Tell a very long story with at least 500 words: Once upon a time'
+        return params
+
+    def read_prompt_from_files(self):
+
+        input_path = Path(self.args.prompt_input_from_files)
+        input_data = str()
+        if input_path.is_file():
+            with open(input_path, 'r', encoding='utf-8') as file:
+                input_data = file.read()
+        elif input_path.is_dir():
+            for file_path in input_path.rglob("*.txt"):
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    input_data += file.read()
+        else:
+            exit(f'Invalid input: {input_path}')
+        return input_data
 
 
     def get_default_values_from_config(self):
@@ -407,28 +474,6 @@ class BenchmarkApiEndpoint():
             for ep_input in ep_inputs:
                 if ep_inputs[ep_input].get('required') or ep_inputs[ep_input].get('default') is not None:
                     params[ep_input] = ep_inputs[ep_input].get('default')
-            if params.get('seed'):
-                params['seed'] = 1
-            if params.get('top_k'):
-                params['top_k'] = 1
-                params['top_p'] = 1
-            if params.get('num_samples'):
-                params['num_samples'] = self.args.num_units
-            if params.get('max_gen_tokens'):
-                params['max_gen_tokens'] = self.args.num_units
-            if params.get('text'):
-                if self.args.context_from_file:
-                    with open(self.args.context_from_file, 'r', encoding='latin-1') as file:
-                        params['text'] = file.read()
-                else:
-                    params['text'] = 'Tell a long story: Once upon a time'
-            if params.get('prompt_input') is not None:
-                if self.args.context_from_file:
-                    with open(self.args.context_from_file, 'r', encoding='latin-1') as file:
-                        params['prompt_input'] = file.read() 
-                else:
-                    params['prompt_input'] = 'Tell a very long story with at least 500 words: Once upon a time'
-
             return params
 
         except FileNotFoundError:
@@ -447,14 +492,15 @@ class BenchmarkApiEndpoint():
                 self.request_error_callback
                 )
 
+
     @staticmethod
     def get_unit(args):
-        """Getting the unit of the generated objects like 'tokens' for llama2_chat and 'images' image generators.
+        """Getting the unit of the generated objects like 'tokens' for llms and 'images' for image generators.
 
         Returns:
             str: The unit string of the generated objects
         """
-        if args.endpoint_name in ['llama2_chat', 'llama3_chat', 'mixtral_chat']:
+        if 'chat' in args.endpoint_name:
             return 'tokens', 1, 0    
         else:
             if args.unit:
@@ -583,7 +629,7 @@ class ProgressBarHandler():
         if current_progress_bar:
             self.positions.update(self.current_jobs)
             current_progress = progress_info.get('progress')
-            if self.args.endpoint_name in ['llama2_chat', 'llama3_chat', 'mixtral_chat']:
+            if 'chat'in self.args.endpoint_name:
                 if self.num_generated_units < current_progress:
                     current_progress_bar.total = current_progress
                 else:
@@ -605,9 +651,9 @@ class ProgressBarHandler():
         current_progress_bar = self.current_jobs.get(job_id)     
         if current_progress_bar:
             current_progress_bar.close()
-            del self.current_jobs[job_id]
-            del self.current_rate_dict[job_id]
-            del self.last_progress_dict[job_id]
+            self.current_jobs.pop(job_id, None)
+            self.current_rate_dict.pop(job_id, None)
+            self.last_progress_dict.pop(job_id, None)
 
 
     def update_table_title(self, current_progress):
@@ -701,7 +747,7 @@ class PositionHandler():
 
     def release(self, job_id):
         self.vacant.append(self.get(job_id))
-        del self.running_jobs[job_id]
+        self.running_jobs.pop(job_id, None)
 
 
 class JobHandler():
@@ -726,7 +772,7 @@ class JobHandler():
         self.num_running = sum([1 for progress_bar in progress_bar_dict.values() if 0 < progress_bar.n])
         if (time.time() - self.last_update_time) > 1:
             self.last_update_time = time.time()
-            if self.last_update_num_running == self.num_running:
+            if self.last_update_num_running == self.num_running and self.num_running > self.max_num_running:
                 self.max_num_running = self.num_running
             self.last_update_num_running = self.num_running
 
@@ -750,8 +796,8 @@ def main():
                 progress_bar.clear()
             benchmark_api.show_cursor()
             print('\nKeyboardInterrupt')
-            if not benchmark_api.first_batch:
-                benchmark_api.print_benchmark_summary_string()
+            #if not benchmark_api.first_batch:
+            #    benchmark_api.finish_benchmark()
 
 
 if __name__ == "__main__":
