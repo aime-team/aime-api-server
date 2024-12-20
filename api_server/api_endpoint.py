@@ -21,7 +21,6 @@ from .input_validation import InputValidationHandler
 
 TYPES_DICT = {'string': str, 'integer':int, 'float':float, 'bool':bool, 'image':str, 'audio':str}
 
-
 class APIEndpoint():
     """AIME API endpoint
 
@@ -234,6 +233,7 @@ class APIEndpoint():
         if job_state == JobState.PROCESSING:
             job_future =  self.app.job_result_futures.get(job_id, None)
             if job_future and job_future.done():
+
                 response['job_result'] = await self.finalize_request(request, job_id, job_future)
                 job_state = self.app.job_states.get(job_id, job_state)       
 
@@ -348,7 +348,6 @@ class APIEndpoint():
 
         response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
         result = await job_future
-
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
@@ -361,7 +360,22 @@ class APIEndpoint():
             else:
                 if ep_output_param_name != 'error':
                     APIEndpoint.logger.warn(f"missing output '{ep_output_param_name}' in job results")
-        meta_outputs = ['compute_duration', 'total_duration', 'auth', 'worker_interface_version']
+
+
+        meta_outputs = [
+            'compute_duration',
+            'total_duration',
+            'start_time',
+            'start_time_compute',
+            'auth',
+            'worker_interface_version',
+            'pending_duration',
+            'preprocessing_duration',
+            'arrival_time',
+            'finished_time',
+            'result_received_time'
+        ]
+        response['result_sent_time'] = time.time()
         queue = self.app.job_queues.get(self.worker_job_type)
         queue.update_mean_job_duration(result)
         if self.provide_worker_meta_data:
