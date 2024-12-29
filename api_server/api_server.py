@@ -189,8 +189,10 @@ class APIServer(Sanic):
         req_json = request.json
         APIServer.logger.debug(f'Request on /worker_job_result: {shorten_strings(req_json)}')
         job_id = req_json['job_id']
-        req_json['total_duration'] = round(time.time() - req_json.get('start_time'), 1)
-        req_json['compute_duration'] = round(time.time() - req_json.pop('start_time_compute'), 1)
+        now = time.time()
+        req_json['result_received_time'] = now
+        req_json['total_duration'] = round(now - req_json.get('start_time'), 1)
+        req_json['compute_duration'] = round(now - req_json.get('start_time_compute'), 1)
         queue = APIServer.job_queues.get(req_json.get('job_type'))
         worker = queue.registered_workers.get(req_json.get('auth'))
         if worker:
@@ -422,11 +424,11 @@ class APIServer(Sanic):
         job_batch_data = [job_data]
 
         # fill batch with already waiting jobs
-        if(max_job_batch > 1):
+        if max_job_batch > 1:
             fetch_waiting_jobs = True
-            while((len(job_batch_data) < max_job_batch) and fetch_waiting_jobs):
+            while (len(job_batch_data) < max_job_batch) and fetch_waiting_jobs:
                 job_data = queue.fetch_waiting_job()
-                if(job_data):
+                if job_data:
                     client_session_auth_key = job_data.pop('client_session_auth_key', '')
                     if not client_session_auth_key in self.registered_client_sessions:
                         APIServer.logger.warn(f"discarding job, client session auth key not valid anymore")
