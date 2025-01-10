@@ -178,7 +178,7 @@ class InputValidationHandler():
                     ffmpeg_media.media_params
             )
             if not self.validation_errors:
-                if target_media_params != ffmpeg_media.media_params:
+                if target_media_params != {key: value for key, value in ffmpeg_media.media_params.items() if key != "encoder"}:
                     await ffmpeg_media.convert(target_media_params)
                 return await ffmpeg_media.get_data()
 

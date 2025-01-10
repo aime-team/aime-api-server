@@ -27,6 +27,7 @@ class MediaParams(dict):
     SIZE: tuple  = 'size'
     AUDIO_BIT_RATE: int  = 'audio_bit_rate'
     VIDEO_BIT_RATE: int  = 'video_bit_rate'
+    ENCODER: str = 'encoder'
 
     def __init__(self):    
         super().__init__({
@@ -41,6 +42,7 @@ class MediaParams(dict):
             self.SIZE: None,
             self.AUDIO_BIT_RATE: None,
             self.VIDEO_BIT_RATE: None,
+            self.ENCODER: None
         })
 
 
@@ -76,13 +78,15 @@ FFPROBE_DICT = {
     MediaParams.SAMPLE_RATE: 'sample_rate',
     MediaParams.SAMPLE_BIT_DEPTH: 'sample_fmt',
     MediaParams.COLOR_SPACE: 'pix_fmt',                        
-    MediaParams.SIZE: ('width', 'height')
+    MediaParams.SIZE: ('width', 'height'),
+    MediaParams.ENCODER: 'encoder'
 }
 
 FORMAT_CODEC_DICT = {
     'ogg': 'libvorbis',
     'jpeg': 'mjpeg',
     'jpg': 'mjpeg',
+    'webm': 'libopus'
 }
 
 MIME_TYPE_DICT = {
@@ -99,7 +103,7 @@ MEDIA_ATTRIBUTE_DICT = {
         'png': ('png', 'image2'),
         'webp': ('webp', 'libwebp'),
         'image2': ('jpeg', 'png'),
-        'mp3': ('mp3', 'libmp3lame'),
+        'mp3': ('mp3', 'libmp3lame')
     },
     MediaParams.COLOR_SPACE: {
         'rgb': (
@@ -340,7 +344,7 @@ class FFmpeg():
 
     def convert_binary_to_base64_string(self):
         if self.media_binary and not self.errors:
-            media_format = self.media_params.get(MediaParams.FORMAT).split(',')[0]
+            media_format = self.media_params.get(MediaParams.FORMAT)
             return f'data:{self.arg_type}/{media_format};base64,' + base64.b64encode(self.media_binary).decode('utf-8')
         
 
@@ -356,8 +360,10 @@ class FFmpeg():
         if ffprobe_result:
             ffprobe_result_dict = json.loads(ffprobe_result.decode())
             format_header = ffprobe_result_dict.get('format', {})
+            format_header.update(format_header.pop('tags', {}))
             streams = ffprobe_result_dict.get('streams', [{}])
             existing_stream_codec_types = [stream.get('codec_type') for stream in streams]
+
             if format_header:
                 for param_name in self.media_params.keys():
                     if 'audio' in param_name or 'video' in param_name: # bit_rate from format header could be wrong, ogg files with dynamic bit rate show the estimated bit rate only in the format header, but only after creating a temp file
@@ -366,6 +372,7 @@ class FFmpeg():
                                 self.media_params[param_name] = self.__get_ffprobe_param(format_header, param_name) 
                     else:
                         self.media_params[param_name] = self.__get_ffprobe_param(format_header, param_name)
+
             for stream in streams:
                 codec_type = stream.get('codec_type')
                 for param_name in self.media_params.keys():
@@ -401,11 +408,16 @@ class FFmpeg():
                         f'media format measured by ffprobe "{self.media_params.get(MediaParams.FORMAT)}"!'
                     )
             auto_temp_file_condition = not self.arg_type == 'image' or self.media_params.get(MediaParams.FORMAT) == 'tiff' or self.base64_format == 'gif'
-            if not self.current_temp_file and (self.input_temp_file_config == 'yes' or (self.input_temp_file_config == 'auto' and auto_temp_file_condition)):
+            if not self.current_temp_file:
                 temp_dir = tempfile.gettempdir()
-                self.current_temp_file = f'{tempfile.gettempdir()}/{str(uuid.uuid4())[:8]}.{(self.media_params.get(MediaParams.FORMAT) or self.base64_format).split(",")[0]}'
-                async with aiofiles.open(self.current_temp_file, 'wb') as temp_file:
-                    await temp_file.write(self.media_binary)
+                self.current_temp_file = f'{tempfile.gettempdir()}/{str(uuid.uuid4())[:8]}.{self.media_params.get(MediaParams.FORMAT) or self.base64_format}'
+                if self.media_params.get(MediaParams.ENCODER) == 'Chrome':
+                    await self.remux_media_file()
+                elif self.input_temp_file_config == 'yes' or (self.input_temp_file_config == 'auto' and auto_temp_file_condition):
+                    async with aiofiles.open(self.current_temp_file, 'wb') as temp_file:
+                        await temp_file.write(self.media_binary)
+            
+
         if self.current_temp_file:
             ffprobe_process = await asyncio.create_subprocess_exec(*self.__make_ffprobe_command(self.current_temp_file), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
             ffprobe_result, _ = await ffprobe_process.communicate()
@@ -417,7 +429,6 @@ class FFmpeg():
 
     def __get_ffprobe_param(self, ffprobe_result_section, param_name):
         ffprobe_label = FFPROBE_DICT.get(param_name, param_name)
-
         if isinstance(ffprobe_label, tuple):
             return tuple(self.__get_ffprobe_param(ffprobe_result_section, sub_label) for sub_label in ffprobe_label)
         else:
@@ -425,8 +436,27 @@ class FFmpeg():
             try:
                 return round(float(value))
             except (TypeError, ValueError):
-                value = value.replace('_pipe', '') if param_name == MediaParams.FORMAT else value
+                value = value.replace('_pipe', '').replace('matroska,', '') if param_name == MediaParams.FORMAT else value
                 return value
+
+    async def remux_media_file(self):
+        cmd = [
+            'ffmpeg',
+            '-i',
+            'pipe:0',
+            '-c',
+            'copy',
+            self.current_temp_file
+        ]
+        remux_process = await asyncio.create_subprocess_exec(
+            *cmd, 
+            stdin=asyncio.subprocess.PIPE, 
+            stdout=asyncio.subprocess.PIPE, 
+            stderr=asyncio.subprocess.PIPE
+        )
+        _, remux_error = await remux_process.communicate(input=self.media_binary)
+        if remux_process.returncode != 0:
+            self.__handle_error(f'ffmpeg returned error code {remux_process.returncode} and the message {remux_error.decode()}', TypeError)
 
 
     def __make_ffmpeg_cmd(self, target_media_params):
@@ -509,7 +539,7 @@ class FFmpeg():
             'ffprobe',
             '-i', input_source,
             '-show_entries',
-            'format=format_name,duration,bit_rate:stream=codec_type,duration,bit_rate,codec_name,channels,sample_rate,sample_fmt,width,height,pix_fmt',
+            'format=format_name,duration,bit_rate:format_tags=encoder:stream=codec_type,duration,bit_rate,codec_name,channels,sample_rate,sample_fmt,width,height,pix_fmt',
             '-v', 'quiet',
             '-of', 'json'
         )
