@@ -45,6 +45,8 @@ function onSendAPIRequest() {
 }
         
 function onResultCallback(data) {
+    console.log(data)
+    console.log("Data: ")
     if (data.error) {
         if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
           modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
@@ -66,7 +68,7 @@ function onResultCallback(data) {
                     var image_data = images[i].trim();
                     if (image_data) {
                         var img = document.createElement('img');
-                        img.src = image_data;
+                        img.src = "data:image/png;base64," + image_data;
                         img.classList.add('generated_image');
                         img.style.marginBottom = '10px';
         
