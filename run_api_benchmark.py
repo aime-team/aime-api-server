@@ -168,6 +168,9 @@ class BenchmarkApiEndpoint():
         parser.add_argument(
             '-sw', '--serial_processing_worker', action='store_true', help='If the worker processes requests only serially.'
         )
+        parser.add_argument(
+            '-r', '--resolution', type=str, required=False, help='For Image Generators like SD: The target resolution of the generated image'
+        )
         
         args = parser.parse_args()
         if not args.config_file:
@@ -192,7 +195,7 @@ class BenchmarkApiEndpoint():
         self.loop.run_forever()
 
 
-    async def process_progress_result(self, progress_info, progress_data):
+    async def process_progress_result(self, result):
         """Called when job progress is received from the API Server. Initializes or updates the job related progress bar, 
         updates the title and measures the number of current running jobs.
 
@@ -200,14 +203,14 @@ class BenchmarkApiEndpoint():
             progress_info (dict): Job progress information containing the job_id and the progress state like number of generated tokens so far or percentage.
             progress_data (dict): The already generated content like tokens or interim images.
         """
-        job_id = progress_info.get('job_id')
-        await self.handle_first_batch(progress_info)
+        job_id = result.get('job_id')
+        await self.handle_first_batch(result)
         if not self.error:
             self.update_header()
-            if not self.progress_bars.get(job_id) and progress_info.get('queue_position') == 0:
+            if not self.progress_bars.get(job_id) and result.get('queue_position') == 0:
                 self.progress_bars.new(job_id)
             
-            self.progress_bars.update(progress_info)
+            self.progress_bars.update(result)
             self.jobs.update(self.progress_bars.current_jobs)
         
 
@@ -220,17 +223,18 @@ class BenchmarkApiEndpoint():
         """
         result_received_time = time.time()
         if result.get('success'):
+            result_data = result.get('result_data', {})
             self.progress_bars.remove(result.get('job_id'))
             if self.first_batch: # If job result of first batch arrived before progress result of second batch
                 self.first_batch = False
                 self.start_time_second_batch = result_received_time
-            if result.get('num_generated_tokens'):
-                self.progress_bars.num_generated_units = result.get('num_generated_tokens')
+            if result_data.get('num_generated_tokens'):
+                self.progress_bars.num_generated_units = result_data.get('num_generated_tokens')
             await self.jobs.finish(
-                result,
+                result_data,
                 finish_time=result_received_time
             )
-            self.update_header(result)
+            self.update_header(result_data)
             if self.args.debug:
                 async with aiofiles.open('debug_log.txt', 'a') as file:
                     await file.write(f'Job with ID {result.get("job_id")} finished\n')
@@ -556,6 +560,11 @@ class BenchmarkApiEndpoint():
                         params[prompt_key] = response.text
                 else:
                     params[prompt_key] = 'Tell a very long story with at least 500 words: Once upon a time'
+        if self.args.resolution:
+            width, height = self.args.resolution.split('x')
+            params['width'] = width
+            params['height'] = height
+        print(params)
         return params
 
 
@@ -603,12 +612,12 @@ class BenchmarkApiEndpoint():
             start_time = time.time()
             output_generator = self.model_api.get_api_request_generator(self.params)
             try:
-                async for progress_info, result in output_generator:
+                async for result in output_generator:
                     if result.get('job_state') == 'done':
-                        result['request_start_time'] = start_time
+                        result['result_data']['request_start_time'] = start_time
                         await self.process_job_result(result)
                     else:
-                        await self.process_progress_result(progress_info, result)
+                        await self.process_progress_result(result)
                         if self.error:
                             break
             except ConnectionError as error:
