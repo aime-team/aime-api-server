@@ -168,6 +168,9 @@ class BenchmarkApiEndpoint():
         parser.add_argument(
             '-sw', '--serial_processing_worker', action='store_true', help='If the worker processes requests only serially.'
         )
+        parser.add_argument(
+            '-r', '--resolution', type=str, required=False, help='For Image Generators like SD: The target resolution of the generated image'
+        )
         
         args = parser.parse_args()
         if not args.config_file:
@@ -557,6 +560,11 @@ class BenchmarkApiEndpoint():
                         params[prompt_key] = response.text
                 else:
                     params[prompt_key] = 'Tell a very long story with at least 500 words: Once upon a time'
+        if self.args.resolution:
+            width, height = self.args.resolution.split('x')
+            params['width'] = width
+            params['height'] = height
+        print(params)
         return params
 
 
