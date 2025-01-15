@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../">
 <head>
@@ -6,20 +8,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Documentation AIME API Client Interface &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/aime_override.css?v=56fc6846" />
 
   
     <link rel="shortcut icon" href="../../_static/AIME-API_logo.svg"/>
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=486e5634"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=486e5634"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -66,6 +64,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.do_api_login_async"><code class="docutils literal notranslate"><span class="pre">ModelAPI.do_api_login_async()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.do_api_login"><code class="docutils literal notranslate"><span class="pre">ModelAPI.do_api_login()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.do_api_request_async"><code class="docutils literal notranslate"><span class="pre">ModelAPI.do_api_request_async()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.get_api_request_generator"><code class="docutils literal notranslate"><span class="pre">ModelAPI.get_api_request_generator()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.do_api_request"><code class="docutils literal notranslate"><span class="pre">ModelAPI.do_api_request()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.setup_session"><code class="docutils literal notranslate"><span class="pre">ModelAPI.setup_session()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#aime_api_client_interface.ModelAPI.close_session"><code class="docutils literal notranslate"><span class="pre">ModelAPI.close_session()</span></code></a></li>
@@ -117,7 +116,7 @@
 <h1>Documentation AIME API Client Interface<a class="headerlink" href="#documentation-aime-api-client-interface" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aime_api_client_interface.</span></span><span class="sig-name descname"><span class="pre">ModelAPI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'base64'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">aime_api_client_interface.</span></span><span class="sig-name descname"><span class="pre">ModelAPI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'base64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'image'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI" title="Link to this definition"></a></dt>
 <dd><p>An interface for interacting with the AIME ML API server.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -223,6 +222,22 @@
     <span class="o">...</span>
     <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">close_session</span><span class="p">()</span>
 
+<span class="n">asynchio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Asynchronous generator:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">python_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">model_api</span> <span class="o">=</span> <span class="n">modelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="s1">&#39;user_name&#39;</span><span class="p">,</span> <span class="s1">&#39;user_key&#39;</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">model_api</span><span class="o">.</span><span class="n">do_api_login</span><span class="p">()</span>
+    <span class="n">output_generator</span> <span class="o">=</span> <span class="n">model_api</span><span class="o">.</span><span class="n">get_api_request_generator</span><span class="p">()</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">output_generator</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">output</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job_state&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;done&#39;</span><span class="p">:</span>
+            <span class="n">process_progress_data</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">process_job_result</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
 <span class="n">asynchio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </pre></div>
 </div>
@@ -342,6 +357,85 @@ Prevents ConnectionErrors during Transmitting. Defaults to None.</p></li>
 <span class="p">}</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="aime_api_client_interface.ModelAPI.get_api_request_generator">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_api_request_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'base64'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_client_interface.ModelAPI.get_api_request_generator" title="Link to this definition"></a></dt>
+<dd><p>Generator function to get request generator, yielding the results</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionary with parameters for the the API request.</p></li>
+<li><p><strong>progress_interval</strong> (<em>int</em><em>, </em><em>optional</em>) – Interval in seconds at which progress is checked. Defaults to DEFAULT_PROGRESS_INTERVAL.</p></li>
+<li><p><strong>session</strong> (<em>aiohttp.ClientSession</em>) – Give existing session to ModelApi API to make login request in given session. Defaults to None.</p></li>
+<li><p><strong>output_format</strong> (<em>str</em><em>, </em><em>optional</em>) – Define a different output_format. Defaults to ‘base64’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>dict</em> – Result dictionary containing job and progress results.</p>
+</dd>
+</dl>
+<p>Example usage:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">output_generator</span> <span class="o">=</span> <span class="n">model_api</span><span class="o">.</span><span class="n">get_api_request_generator</span><span class="p">()</span>
+<span class="k">async</span> <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">output_generator</span><span class="p">:</span>
+    <span class="n">process_output</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Example output:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID01&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s1">&#39;job_state&#39;</span><span class="p">:</span> <span class="s1">&#39;started&#39;</span>
+<span class="p">},</span>
+<span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID01&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s1">&#39;job_state&#39;</span><span class="p">:</span> <span class="s1">&#39;processing&#39;</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">55</span><span class="p">,</span>
+    <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;estimate&#39;</span><span class="p">:</span> <span class="mf">43.6</span>
+    <span class="s1">&#39;progress_data&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Example generated text&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;num_generated_tokens&#39;</span><span class="p">:</span> <span class="mi">55</span><span class="p">,</span>
+        <span class="s1">&#39;current_context_length&#39;</span><span class="p">:</span> <span class="mi">116</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">},</span>
+<span class="o">...</span>
+<span class="p">{</span>
+    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID01&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s1">&#39;job_state&#39;</span><span class="p">:</span> <span class="s1">&#39;done&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s1">&#39;result_data&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Example generated final text&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;num_generated_tokens&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="s1">&#39;current_context_length&#39;</span><span class="p">:</span> <span class="mi">116</span><span class="p">,</span>
+        <span class="s1">&#39;max_seq_len&#39;</span><span class="p">:</span> <span class="mi">8000</span><span class="p">,</span>
+        <span class="s1">&#39;prompt_length&#39;</span><span class="p">:</span> <span class="mi">17</span><span class="p">,</span>
+        <span class="s1">&#39;ep_version&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s1">&#39;model_name&#39;</span><span class="p">:</span> <span class="s1">&#39;Llama-3-1-70B-Instruct-fp8&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;auth&#39;</span><span class="p">:</span> <span class="s1">&#39;a4004-2409c89_NVIDIA H100 NVL_0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;worker_interface_version&#39;</span><span class="p">:</span> <span class="s1">&#39;AIME-API-Worker-Interface 0.8.5&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;result_sent_time&#39;</span><span class="p">:</span> <span class="mf">1736785517.1456308</span><span class="p">,</span>
+        <span class="s1">&#39;compute_duration&#39;</span><span class="p">:</span> <span class="mf">16.8</span><span class="p">,</span>
+        <span class="s1">&#39;total_duration&#39;</span><span class="p">:</span> <span class="mf">17.0</span><span class="p">,</span>
+        <span class="s1">&#39;start_time&#39;</span><span class="p">:</span> <span class="mf">1736785499.9088438</span><span class="p">,</span>
+        <span class="s1">&#39;start_time_compute&#39;</span><span class="p">:</span> <span class="mf">1736785500.1000788</span><span class="p">,</span>
+        <span class="s1">&#39;pending_duration&#39;</span><span class="p">:</span> <span class="mf">0.0004534721374511719</span><span class="p">,</span>
+        <span class="s1">&#39;preprocessing_duration&#39;</span><span class="p">:</span> <span class="mf">0.07061362266540527</span><span class="p">,</span>
+        <span class="s1">&#39;arrival_time&#39;</span><span class="p">:</span> <span class="mf">1736785500.1973228</span><span class="p">,</span>
+        <span class="s1">&#39;finished_time&#39;</span><span class="p">:</span> <span class="mf">1736785516.8741965</span><span class="p">,</span>
+        <span class="s1">&#39;result_received_time&#39;</span><span class="p">:</span> <span class="mf">1736785516.9283218</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py method">
