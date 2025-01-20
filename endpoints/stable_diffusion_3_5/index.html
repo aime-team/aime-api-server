@@ -53,15 +53,33 @@
                           <input type="number" min="-1" max="99999999" value="-1" class="form-input w-full mb-3" id="seed_range" />
                         </div>
                     </div>
-                      
+
                     <div id="size_container" class="flex space-x-4 items-center">
                         <div class="w-1/2">
                             <p class="select-label">Width</p>
-                            <input type="number"  min="128" max="2024" step="16" value="1024" class="form-input w-full" id="width_range" onblur="this.value = roundToNearestMultipleOf16(this.value);" />
+                            <input 
+                                type="number" 
+                                min="128" 
+                                max="2024" 
+                                step="1" 
+                                value="1024" 
+                                class="form-input w-full" 
+                                id="width_range" 
+                                oninput="validateSize()" 
+                            />
                         </div>
                         <div class="w-1/2">
                             <p class="select-label">Height</p>
-                            <input type="number"  min="128" max="2024" step="16" value="1024" class="form-input w-full" id="height_range" onblur="this.value = roundToNearestMultipleOf16(this.value);" />
+                            <input 
+                                type="number" 
+                                min="128" 
+                                max="2024" 
+                                step="1" 
+                                value="1024" 
+                                class="form-input w-full" 
+                                id="height_range" 
+                                oninput="validateSize()" 
+                            />
                         </div>
                     </div>
 
