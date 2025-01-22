@@ -171,13 +171,19 @@ button:focus {
     margin: 20px 0;
 }
 
-
+#progress_container {
+    
+}
 #progress_bar {
     width: 100%;
 }
 
 .slidecontainer {
     padding: 5px;
+}
+
+#image_container {
+    
 }
 
 .dropzone {
@@ -196,20 +202,6 @@ button:focus {
 .dropzone-content {
     transition: 0.5s height ease-in-out;
     height: auto;
-}
-
-.hover\:tooltip:hover::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    background: #333;
-    color: #fff;
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    white-space: nowrap;
-    transform: translateY(-100%);
-    z-index: 10;
 }
 
 progress[value]::-webkit-progress-bar {
@@ -256,6 +248,7 @@ progress[value]::-moz-progress-bar {
 
 input[type="range"] { 
     margin: auto;
+    -webkit-appearance: none;
     position: relative;
     overflow: hidden;
     height: 20px;

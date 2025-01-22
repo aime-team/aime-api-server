@@ -170,6 +170,23 @@ function onProgressCallback(progress_info, progress_data) {
     document.getElementById('progress_label').innerText = progress+'%';
 }
 
+function validateSize() {
+    const widthInput = document.getElementById('width_range');
+    const heightInput = document.getElementById('height_range');
+
+    let width = parseInt(widthInput.value, 10) || 128; // Default to 128 if invalid
+    let height = parseInt(heightInput.value, 10) || 128; // Default to 128 if invalid
+
+    if (width * height > 1000000) {
+        const maxHeight = Math.floor(1050000 / width);
+
+        if (height > maxHeight) {
+            height = maxHeight;
+            heightInput.value = height;
+        }
+    }
+}
+
 function addSpinner() {
     var spinner = document.createElement('div');
         spinner.id = 'process-spinner';

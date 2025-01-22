@@ -228,13 +228,13 @@ class BenchmarkApiEndpoint():
             if self.first_batch: # If job result of first batch arrived before progress result of second batch
                 self.first_batch = False
                 self.start_time_second_batch = result_received_time
-            if result_data.get('num_generated_tokens'):
-                self.progress_bars.num_generated_units = result_data.get('num_generated_tokens')
+            if result.get('num_generated_tokens'):
+                self.progress_bars.num_generated_units = result.get('num_generated_tokens')
             await self.jobs.finish(
-                result_data,
+                result,
                 finish_time=result_received_time
             )
-            self.update_header(result_data)
+            self.update_header(result)
             if self.args.debug:
                 async with aiofiles.open('debug_log.txt', 'a') as file:
                     await file.write(f'Job with ID {result.get("job_id")} finished\n')
