@@ -409,11 +409,11 @@ class FFmpeg():
                     )
             auto_temp_file_condition = not self.arg_type == 'image' or self.media_params.get(MediaParams.FORMAT) == 'tiff' or self.base64_format == 'gif'
             if not self.current_temp_file:
-                temp_dir = tempfile.gettempdir()
-                self.current_temp_file = f'{tempfile.gettempdir()}/{str(uuid.uuid4())[:8]}.{self.media_params.get(MediaParams.FORMAT) or self.base64_format}'
                 if self.media_params.get(MediaParams.ENCODER) == 'Chrome':
+                    self.current_temp_file = f'{tempfile.gettempdir()}/{str(uuid.uuid4())[:8]}.{self.media_params.get(MediaParams.FORMAT) or self.base64_format}'
                     await self.remux_media_file()
                 elif self.input_temp_file_config == 'yes' or (self.input_temp_file_config == 'auto' and auto_temp_file_condition):
+                    self.current_temp_file = f'{tempfile.gettempdir()}/{str(uuid.uuid4())[:8]}.{self.media_params.get(MediaParams.FORMAT) or self.base64_format}'
                     async with aiofiles.open(self.current_temp_file, 'wb') as temp_file:
                         await temp_file.write(self.media_binary)
             
