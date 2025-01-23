@@ -212,33 +212,7 @@ class APIServer(Sanic):
         """
         req_json = request.json
         APIServer.logger.debug(f'Request on /worker_job_progress: {shorten_strings(req_json)}')
-        ep_list = await APIServer.admin_be_interface.api_get_endpoint_list()
-        print('ep_list: ', ep_list)
-        if ep_list:
-            endpoint = ep_list[0]
-        status = await APIServer.admin_be_interface.api_endpoint_status(endpoint)
-        print('ep_status: ', status)
-        worker_list = await APIServer.admin_be_interface.api_get_worker_list()
-        print('worker_list: ', worker_list)
-        active_worker_list = await APIServer.admin_be_interface.api_get_active_worker_list()
-        print('active_worker_list: ', active_worker_list)
-        ep_config = await APIServer.admin_be_interface.api_get_endpoint_config(endpoint)
-        if active_worker_list:
-            worker_auth = active_worker_list[0]
-            worker_status = await APIServer.admin_be_interface.api_get_worker_status(worker_auth)
-            print('worker_status: ', worker_status)
 
-            print('Set Offine')
-            print(await APIServer.admin_be_interface.admin_set_worker_offline(worker_auth))
-            
-            print('worker_status: ', worker_status)
-            print('Set Online', await APIServer.admin_be_interface.admin_set_worker_online(worker_auth))
-            print('worker_status: ', worker_status)
-
-        print(
-            f'#######################: \n{status}'
-        )
-        
         if not isinstance(req_json, list): # compatibility fix: api_worker_interface < version 0.70
             req_json = [req_json]
         response_cmd_list = list()
