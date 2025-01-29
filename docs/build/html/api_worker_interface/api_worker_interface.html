@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -8,16 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Documentation AIME API Worker Interface &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/aime_override.css?v=56fc6846" />
 
   
     <link rel="shortcut icon" href="../_static/AIME-API_logo.svg"/>
-      <script src="../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=486e5634"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=486e5634"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -393,15 +395,15 @@ http response with :status_code == 503: as argument. Called when API server repl
 <dl class="py method">
 <dt class="sig sig-object py" id="aime_api_worker_interface.APIWorkerInterface.get_current_job_data">
 <span class="sig-name descname"><span class="pre">get_current_job_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#aime_api_worker_interface.APIWorkerInterface.get_current_job_data" title="Link to this definition"></a></dt>
-<dd><p>get the job_data of current job to be processed</p>
+<dd><p>Get the job_data of current job to be processed</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>job_id</strong> (<em>string</em><em>, </em><em>optional</em>) – For single job processing (max_job_batch=1) the job_id is not required.
 For batch job processing (max_job_batch&gt;1) the job_id is required to specify
-the job the data should be returned. Defaults to None.</p>
+the job and the job_data is going to be returned. Defaults to None.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the job_data of the current only job or the job with the given job_id</p>
+<dd class="field-even"><p>the job_data of the current only job or of the job with the given job_id</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>

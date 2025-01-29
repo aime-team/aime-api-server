@@ -105,7 +105,7 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 Create photo realistic images from text prompts.
 
 * Local Endpoint: [Stable Diffusion 3.5](/stable_diffusion_3_5/)
-* Worker Implementation: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/aime-api_stable_diffusion_3_5)
+* Worker Implementation: [https://github.com/aime-labs/aime-api_stable_diffusion_3_5](https://github.com/aime-labs/aime-api_stable_diffusion_3_5)
 
 #### Stable Diffusion XL
 
