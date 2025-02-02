@@ -103,7 +103,7 @@ class BenchmarkApiEndpoint():
         self.worker_interface_version = str()
         self.print_start_message()
         
-        self._header = self.init_header()
+        self.header = self.init_header()
         self.unit, _, _ = self.get_unit(self.args)
         self.progress_bars = ProgressBarHandler(self.args, self.header_height, self.lock)      
         
@@ -217,14 +217,14 @@ class BenchmarkApiEndpoint():
             progress_info (dict): Job progress information containing the job_id and the progress state like number of generated tokens so far or percentage.
             progress_data (dict): The already generated content like tokens or interim images.
         """
-        job_id = result.get('job_id')
-        await self.handle_first_batch(result)
         if not self.error_event.is_set():
+            job_id = result.get('job_id')
+            await self.handle_first_batch(result)
             await self.update_header()
             if not self.progress_bars.get(job_id) and result.get('queue_position') == 0:
-                await self.progress_bars.new(job_id)
+                await self.progress_bars.new(job_id, self.header_height)
             
-            await self.progress_bars.update(result)
+            await self.progress_bars.update(result, self.header_height)
             await self.jobs.update(self.progress_bars.current_jobs)
         
 
@@ -237,26 +237,29 @@ class BenchmarkApiEndpoint():
         """
         result_received_time = time.time()
 
-        if result.get('success') and not result.get('error'):
+        if result.get('success'):
             result_data = result.get('result_data', {})
             if result_data:
-                await self.progress_bars.remove(result.get('job_id'))
-                if self.first_batch: # If job result of first batch arrived before progress result of second batch
-                    self.first_batch = False
-                    self.start_time_second_batch = result_received_time
-                if result_data.get('num_generated_tokens'):
-                    self.progress_bars.num_generated_units = result_data.get('num_generated_tokens')
-                await self.jobs.finish(
-                    result_data,
-                    finish_time=result_received_time
-                )
-                await self.update_header(result_data)
+                if not result_data.get('error'):
+                    await self.progress_bars.remove(result.get('job_id'))
+                    if self.first_batch: # If job result of first batch arrived before progress result of second batch
+                        self.first_batch = False
+                        self.start_time_second_batch = result_received_time
+                    if result_data.get('num_generated_tokens'):
+                        self.progress_bars.num_generated_units = result_data.get('num_generated_tokens')
+                    await self.jobs.finish(
+                        result_data,
+                        finish_time=result_received_time
+                    )
+                    await self.update_header(result_data)
+                else:
+                    self.error = result_data.get('error')
+                    self.error_event.set()
             else:
                 print(result)
                 self.error = f'No result data in result: {result}'
                 self.error_event.set()
         else:
-            print(result)
             self.error = result.get('error')
             self.error_event.set()
 
@@ -317,6 +320,7 @@ class BenchmarkApiEndpoint():
             'num_jobs_first_batch': self.jobs.num_first_batch if not self.args.no_warmup else 0,
             'max_num_jobs_running': self.jobs.max_num_running,
             'num_units': self.progress_bars.num_generated_units,
+            'prompt_template': self.args.prompt_template,
             'num_workers': len(self.worker_names) if self.worker_names else None,
             'Worker names': ', '.join(self.worker_names) if self.worker_names else None,
             'worker_interface_version': self.worker_interface_version or None,
@@ -441,27 +445,34 @@ class BenchmarkApiEndpoint():
         if result_table:
             header += result_table
         async with self.lock:
-            if len(header) > self.header_height:
-                self.extend_header(len(header))
-
+            if len(header) != self.header_height:
+                header_changed = True
+                self.adjust_header(len(header))
+            else:
+                header_changed = False
             for idx, line in enumerate(header):
                 screen_width = self.header[idx].ncols
-                self.header[idx].clear()
-                self.header[idx].set_description_str(f'{self.align_coloured_string(line, screen_width)}')
-                self.header[idx].refresh()
+                description = f'{self.align_coloured_string(line, screen_width)}'
+                if self.header[idx].desc != description or header_changed:
+                    self.header[idx].clear()
+                    self.header[idx].set_description_str(description)
+                    self.header[idx].refresh()
 
 
-    def extend_header(self, height):
-        self.header += [
-            tqdm(
-                total=0,
-                bar_format='{desc}',
-                leave=False,
-                position=idx,
-                colour='red',
-                dynamic_ncols=True
-            ) for idx in range(self.header_height, height)
-        ]
+    def adjust_header(self, height):
+        if height > self.header_height:
+            self.header += [
+                tqdm(
+                    total=0,
+                    bar_format='{desc}',
+                    leave=False,
+                    position=idx,
+                    colour='red',
+                    dynamic_ncols=True
+                ) for idx in range(self.header_height, height)
+            ]
+        else:
+            self.header = self.header[:height]
   
 
     def get_worker_and_endpoint_descriptions(self, result={}):
@@ -548,8 +559,11 @@ class BenchmarkApiEndpoint():
         
         for key, value in self.params.items():
             if isinstance(value, str) and len(value) >= 40:
-                value = value[:40] + '...'
+                value = value[:40].replace('\n', '') + '...'
             start_message += (f'{key}: {value}\n')
+
+        if self.args.prompt_template:
+            start_message += f'Prompt length in tokens: {self.args.prompt_template}\n'
         prompt = self.params.get("text") or self.params.get("prompt_input")
         if prompt:
             start_message += f'Number of characters in prompt: {len(prompt)}'
@@ -637,8 +651,8 @@ class BenchmarkApiEndpoint():
         """
         async with self.semaphore:
             start_time = time.time()
-            output_generator = self.model_api.get_api_request_generator(self.params)
             try:
+                output_generator = self.model_api.get_api_request_generator(self.params)
                 async for result in output_generator:
                     if result.get('job_state') == 'done':
                         result['result_data']['request_start_time'] = start_time
@@ -647,6 +661,10 @@ class BenchmarkApiEndpoint():
                         await self.process_progress_result(result)
                     if self.error_event.is_set():
                         break
+            except AttributeError:
+                self.error = 'You need version >= 0.8.4 of AIME API Client Interface'
+                self.error_event.set()
+                self.all_jobs_done_event.set()
             except Exception as error:
                 self.error_event.set()
                 self.all_jobs_done_event.set()
@@ -654,22 +672,13 @@ class BenchmarkApiEndpoint():
                 if self.args.debug:
                     raise error
             finally:
-                if self.jobs.final_job_finished:
+                if self.jobs.final_job_finished or self.error_event.is_set():
                     self.all_jobs_done_event.set()
 
-    @property
-    def header(self):
-        return self._header
-
-    @header.setter
-    def header(self, new_header):
-        self._header = new_header
-        self.progress_bars.header_height = len(new_header)  # Update header_height in progress_bars
-        self.progress_bars.positions.header_height = len(new_header)
 
     @property
     def header_height(self):
-        return len(self._header)
+        return len(self.header)
 
 
     @staticmethod
@@ -795,15 +804,14 @@ class ProgressBarHandler():
     def __init__(self, args, header_height, lock):
         self.args = args
         self.num_generated_units = self.args.num_units
-        self.header_height = header_height
-        self.title_bar_list = self.init_table_title()
+        self.title_bar_list = self.init_table_title(header_height)
         self.positions = PositionHandler(header_height, lock)
         self.current_jobs = dict()
         self.last_progress_dict = dict()
         self.current_rate_dict = dict()
         self.unit, self.unit_scale, self.unit_precision = BenchmarkApiEndpoint.get_unit(self.args)
 
-    async def new(self, job_id):
+    async def new(self, job_id, current_header_height):
         """Initializing the progress bar of the job with the given job ID.
 
         Args:
@@ -812,7 +820,7 @@ class ProgressBarHandler():
         self.current_jobs[job_id] = tqdm(
             total=self.num_generated_units, # the unit_scale arg in tqdm shows wrong rate for sdxl
             unit=' ' + self.unit,
-            position=await self.positions.new(job_id) + self.header_height + 2,
+            position=await self.positions.new(job_id) + current_header_height + 2,
             desc=f'{job_id[:WIDTH_COLUMN_JOB_ID]:<{WIDTH_COLUMN_JOB_ID}}',
             leave=False,
             bar_format=f'{{desc}} | {{percentage:3.0f}}% {{bar}}| {{n:.{self.unit_precision}f}} / {{total:.{self.unit_precision}f}} |   {{elapsed}} < {{remaining}}  | ' '{rate_noinv_fmt} {postfix}',
@@ -824,7 +832,7 @@ class ProgressBarHandler():
         return self.current_jobs.get(job_id)
 
 
-    async def update(self, progress_info):
+    async def update(self, progress_info, current_header_height):
         """Updating the related progress bar with the given progress state.
 
         Args:
@@ -834,17 +842,18 @@ class ProgressBarHandler():
         
         current_progress_bar = self.current_jobs.get(job_id)
         if current_progress_bar:
-            await self.positions.update(self.current_jobs)
+            await self.positions.update(self.current_jobs, current_header_height)
             current_progress = progress_info.get('progress')
-            if current_progress:
+            if current_progress is not None:
                 if 'chat'in self.args.endpoint_name:
                     if self.num_generated_units < current_progress:
                         current_progress_bar.total = current_progress
                     else:
                         current_progress_bar.total = self.num_generated_units
                 current_progress_bar.n = current_progress * self.unit_scale
+
                 if self.positions.get(job_id) == 1:
-                    self.update_table_title(current_progress)
+                    self.update_table_title(current_progress, current_header_height)
                 self.measure_current_rate(progress_info)
                 current_progress_bar.refresh()
 
@@ -864,11 +873,20 @@ class ProgressBarHandler():
             self.last_progress_dict.pop(job_id, None)
 
 
-    def init_table_title(self):
-        return [tqdm(total=0, bar_format='{desc}', leave=False, position=idx, colour='red', dynamic_ncols=True) for idx in range(self.header_height+1, self.header_height+3)]
+    def init_table_title(self, header_height):
+        return [
+            tqdm(
+                total=0,
+                bar_format='{desc}',
+                leave=False,
+                position=idx,
+                colour='red',
+                dynamic_ncols=True
+            ) for idx in range(header_height+1, header_height+3)
+        ]
 
 
-    def update_table_title(self, current_progress):
+    def update_table_title(self, current_progress, current_header_height):
         """Setting the column descriptions and adjusting the position of the table title bar for the progress bar table.
         """
         if self.current_rate_dict:
@@ -878,23 +896,23 @@ class ProgressBarHandler():
         screen_width = self.title_bar_list[0].ncols
         column_title_job_id = 'JOB ID'
         column_title_job_id += ' ' * (WIDTH_COLUMN_JOB_ID - len(column_title_job_id))
-        
-        column_title_progress_unit = f'| {self.unit}'
-        column_title_progress_unit += ' ' * (
-            len(f'| {(current_progress * self.unit_scale):.{self.unit_precision}f} / {self.num_generated_units:.{self.unit_precision}f}') - len(column_title_progress_unit)
-        )
-        column_title_duration = ' | Elapsed < Remain | '
-        column_title_benchmark = 'Benchmark'
-        column_title_benchmark += ' ' * (len(f' {tqdm.format_sizeof(rate)} {self.unit}/s ') - len(column_title_benchmark))
+        length_column_progress_unit = len(f'| {(current_progress * self.unit_scale):.{self.unit_precision}f} / {self.num_generated_units:.{self.unit_precision}f}')
+        length_rate_column = len(f' {tqdm.format_sizeof(rate) + " " if current_progress else "?"}{self.unit}/s ')
+        column_title_progress_unit = f'{f"| {self.unit}":<{length_column_progress_unit}}'
+        column_title_duration = ' | Elapsed < Remain | ' if current_progress else ' | Elap. < Rem. | '
+        column_title_benchmark = f'{"Benchmark":<{length_rate_column}}'
         right_bar = column_title_progress_unit + column_title_duration + column_title_benchmark
         length_progress_bar = max(screen_width - len(column_title_job_id + right_bar), 9)
         column_title_progress_percentage = f'{" | Progress in percentage"[:length_progress_bar]:<{length_progress_bar}}'
         title_str = column_title_job_id + column_title_progress_percentage + right_bar
         for idx, description in enumerate(( title_str[:screen_width], '-' * screen_width )):
-            self.title_bar_list[idx].clear()
-            self.title_bar_list[idx].pos = self.header_height + idx + 1
-            self.title_bar_list[idx].set_description_str(description)
-            self.title_bar_list[idx].refresh()
+            position = current_header_height + idx + 1
+            if self.title_bar_list[idx].desc != description or self.title_bar_list[idx].pos != position:
+                
+                self.title_bar_list[idx].pos = position
+                self.title_bar_list[idx].clear()
+                self.title_bar_list[idx].set_description_str(description)
+                self.title_bar_list[idx].refresh()
 
 
     def measure_current_rate(self, progress_info, update_interval=1):
@@ -946,22 +964,31 @@ class PositionHandler():
     def get(self, job_id):
         return self.running_jobs.get(job_id)
 
+
     def set_position(self, current_position, target_position, job_id, progress_bar_dict):
         current_progress_bar = progress_bar_dict.get(job_id)
         current_progress_bar.clear()
         current_progress_bar.pos = target_position + self.header_height + 2
         self.running_jobs[job_id] = target_position
-        self.vacant.remove(target_position)
-        self.vacant.append(current_position)
+        if current_position != target_position:
+            self.vacant.remove(target_position)
+            self.vacant.append(current_position)
 
-    async def update(self, progress_bar_dict):
+
+    async def update(self, progress_bar_dict, current_header_height):
         running_jobs = self.running_jobs.copy()
         async with self.lock:
-            if self.vacant and min(self.vacant) < max(running_jobs.values()):     
+            header_changed = self.header_height != current_header_height
+            self.header_height = current_header_height
+            if self.vacant and min(self.vacant) < max(running_jobs.values()) or header_changed:     
                 for job_id, position in sorted(running_jobs.items()):
-                    min_vacant = min(self.vacant)
-                    if position > min_vacant:
-                        self.set_position(position, min_vacant, job_id, progress_bar_dict)
+                    if header_changed:
+                        self.set_position(position, position, job_id, progress_bar_dict)
+                    elif self.vacant:
+                        min_vacant = min(self.vacant)
+                        if position > min_vacant:
+                            self.set_position(position, min_vacant, job_id, progress_bar_dict)
+
 
     async def release(self, job_id):
         async with self.lock:
@@ -1015,8 +1042,8 @@ class JobHandler():
         num_input_units = result.get('prompt_length', 1)
         durations = {
             'total_job': finish_time - result.get('request_start_time', 0),
-            'worker_pending': result.get('pending_duration', 0),
-            'worker_preprocessing': result.get('preprocessing_duration', 0),
+            'worker_pending': result.get('pending_duration') or 0,
+            'worker_preprocessing': result.get('preprocessing_duration') or 0,
             'worker_compute': result.get('finished_time', 0) - result.get('arrival_time', 0),
             'transfer_client2server': result.get('start_time', 0) - result.get('request_start_time', 0),
             'transfer_server2worker': result.get('arrival_time', 0) - result.get('start_time_compute', 0),
