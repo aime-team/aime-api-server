@@ -11,22 +11,22 @@ This software may be used and distributed according to the terms of the MIT LICE
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
 
-    <title>AIME LLama 3.1 Chat API Example</title>
+    <title>AIME LLama 3 R1 Chat API Example</title>
 
     <link rel="stylesheet" href="/model_api/frontend/css/font.css">
-    <link rel="stylesheet" href="/llama3-1-chat/static/css/highlight.css">
-    <link rel="stylesheet" href="/llama3-1-chat/static/css/style.css">
+    <link rel="stylesheet" href="/llama3-r1-chat/static/css/highlight.css">
+    <link rel="stylesheet" href="/llama3-r1-chat/static/css/style.css">
 
     <script src="/model_api/js/model_api.js"></script>
-    <script src="/llama3-1-chat/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
-    <script src="/llama3-1-chat/static/js/highlight.js"></script>
-    <script src="/llama3-1-chat/static/js/main.js"></script>
+    <script src="/llama3-r1-chat/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
+    <script src="/llama3-r1-chat/static/js/highlight.js"></script>
+    <script src="/llama3-r1-chat/static/js/main.js"></script>
 </head>
 
 <body>
 	<div class="pl-5 pr-5 max-w-7xl mx-auto min-h-screen">
         <div id="top">
-            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: Llama 3.1 - Instruct Chat</h2>
+            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: Llama 3 R1 - Reasoning Chat</h2>
         </div>
 		<div id="layout" class="columns flex flex-col md:flex-row">
 			<!-- LEFT COLUMN -->
@@ -85,7 +85,7 @@ This software may be used and distributed according to the terms of the MIT LICE
 					<label for="temperature_range" id="temperature_label">0.8</label>
 
 					<p class="select-label">Maximum response length in tokens</p>
-					<input id="max_gen_tokens_range" class="slider w100" type="range" min="1" max="2000" value="500" oninput="document.getElementById('max_gen_tokens_label').innerHTML = this.value">
+					<input id="max_gen_tokens_range" class="slider w100" type="range" min="1" max="4000" value="2000" oninput="document.getElementById('max_gen_tokens_label').innerHTML = this.value">
 					<label for="max_gen_tokens_range" id="max_gen_tokens_label">500</label>
 
 				</div>

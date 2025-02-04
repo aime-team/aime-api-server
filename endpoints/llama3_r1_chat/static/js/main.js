@@ -6,7 +6,7 @@ const API_USER = 'aime'
 const API_KEY = '6a17e2a5b70603cb1a3294b4a1df67da'
 
 
-modelAPI = new ModelAPI('llama3_1_chat', API_USER, API_KEY);
+modelAPI = new ModelAPI('llama3_r1_chat', API_USER, API_KEY);
 
 let readyToSendRequest = true;
 let chatboxContentEl;

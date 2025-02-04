@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -8,16 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Documentation AIME API Benchmark &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/aime_override.css?v=56fc6846" />
 
   
     <link rel="shortcut icon" href="../_static/AIME-API_logo.svg"/>
-      <script src="../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=486e5634"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=486e5634"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -137,7 +139,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.process_progress_result">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">process_progress_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.process_progress_result" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">process_progress_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.process_progress_result" title="Link to this definition"></a></dt>
 <dd><p>Called when job progress is received from the API Server. Initializes or updates the job related progress bar,
 updates the title and measures the number of current running jobs.</p>
 <dl class="field-list simple">
@@ -164,7 +166,7 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.finish_benchmark">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finish_benchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.finish_benchmark" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finish_benchmark</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.finish_benchmark" title="Link to this definition"></a></dt>
 <dd><p>Printing the benchmark summary and the results.</p>
 </dd></dl>
 
@@ -181,7 +183,7 @@ about the server and the worker and updates the title.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="run_api_benchmark.BenchmarkApiEndpoint.update_header">
-<span class="sig-name descname"><span class="pre">update_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_header" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_api_benchmark.BenchmarkApiEndpoint.update_header" title="Link to this definition"></a></dt>
 <dd><p>Updating the title bars for the header containing information about the benchmark.</p>
 </dd></dl>
 

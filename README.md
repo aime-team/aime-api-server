@@ -46,14 +46,14 @@ Clients, like web browsers, smartphones, desktop apps can easily integrating mod
 
 To illustrate the usage and capabilities of AIME API we currently run following GenAI (generative AI) demo api services:
 
-### Llama 3.3 Instruct Chat
+### Llama 3.0 / 3.1 / 3.3 Instruct Chat
 
 [![AIME Llama 3.3 Chat Demo](/docs/images/aime_api_demo-llm3-3-chat_banner.png "AIME Llama 3.3 Chat Demo")](https://api.aime.info/llama3-chat/)
 
 Chat with 'Steve', our Llama 3.3 70B based instruct chat-bot.
 
 * AIME Demo Server: [Llama 3.3 Chat](https://api.aime.info/llama3-chat/)
-* Your Local Server: [Llama 3.3 Chat](/llama3-chat/)
+* Your Local Server: [Llama 3.x Chat](/llama3-chat/)
 * Source: [https://github.com/aime-labs/llama3_chat](https://github.com/aime-labs/llama3_chat)
 
 ### Mixtral 8x7B / 8x22B Instruct Chat
@@ -100,19 +100,19 @@ Translate between 36 languages in near realtime: Text-to-Text, Speech-to-Text, T
 
 ### Implementation for following model endpoints are also available
 
+#### Stable Diffusion 3.5
+
+Create photo realistic images from text prompts.
+
+* Local Endpoint: [Stable Diffusion 3.5](/stable_diffusion_3_5/)
+* Worker Implementation: [https://github.com/aime-labs/aime-api_stable_diffusion_3_5](https://github.com/aime-labs/aime-api_stable_diffusion_3_5)
+
 #### Stable Diffusion XL
 
 Create photo realistic images from text prompts.
 
 * Local Endpoint: [Stable Diffusion XL](/sdxl-txt2img/)
 * Worker Implementation: [https://github.com/aime-labs/stable_diffusion_xl](https://github.com/aime-labs/stable_diffusion_xl)
-
-#### Llama3 Chat
-
-Chat with 'Steve', the Llama3 based chat-bot. 
-
-* Local Endpoint: [LLama3 Chat](/llama3-chat/)
-* Worker Implementation: [https://github.com/aime-labs/llama2_chat](https://github.com/aime-labs/llama3_chat)
 
 #### Llama2 Chat
 
