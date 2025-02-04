@@ -345,9 +345,7 @@ class APIEndpoint():
         Returns:
             dict: Dictionary representation of the response.
         """        
-
-        job_result_futures = self.app.job_type_interface.get_result_future(job_id)
-        result = await job_result_futures
+        result = await self.app.job_type_interface.wait_for_job_result()
         response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
@@ -381,7 +379,7 @@ class APIEndpoint():
                 if meta_output in result:
                     response[meta_output] = result[meta_output]
         self.status_data['num_finished_requests'] += 1
-        await self.app.job_type_interface.finish_job(job_id)
+
         return response
 
 
@@ -391,7 +389,6 @@ class APIEndpoint():
         input_validator = InputValidationHandler(input_args, self.ep_input_param_config, self.app.input_param_config)
         return await input_validator.validate_input_parameters()
            
-
 
     def add_session_variables_to_job_data(self, request, job_data):
         for ep_session_param_name in self.ep_session_param_config:

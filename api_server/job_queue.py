@@ -84,12 +84,6 @@ class JobQueue(asyncio.Queue):
         return 0
 
 
-    def get_start_time_for_job_id(self, job_id):
-        for task in self._queue:
-            if task.get('job_id') == job_id:
-                return task.get('start_time')
-
-
     def __len__(self):
         return len(self._queue)
 
@@ -100,6 +94,94 @@ class JobTypeInterface():
         self.app = app
         self.job_types = self.init_all_job_types()
         self.lock = asyncio.Lock()
+
+
+    async def worker_job_request(self, req_json):
+        job_type = self.job_types.get(req_json.get('job_type'))
+        if job_type:
+            job_data = await job_type.worker_job_request(req_json)
+        else:
+            job_data = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
+            self.app.logger.warning(
+                f"Worker tried to send job request on unknown job_type {job_type}"
+            )
+        return job_data
+
+
+    async def worker_set_progress_state(self, req_json):
+        job_type = self.job_types.get(req_json.get('job_type'))
+        job_id = req_json.get('job_id')
+        if job_type:
+            if self.has_future(job_id):
+                response_cmd = await job_type.set_progress_state(req_json)
+            else:
+                response_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
+                self.app.logger.warning(
+                    f"Worker tried to send progress for job {job_id} with "
+                    f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
+                )
+        else:
+            response_cmd = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
+            self.app.logger.warning(
+                f"Worker tried to send progress for job {job_id} with "
+                f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
+            )
+        return response_cmd
+
+
+    async def worker_set_job_result(self, req_json):
+        self.app.logger.debug(f'Request on /worker_job_result: {shorten_strings(req_json)}')
+        job_id = req_json.get('job_id')
+        job_type = self.job_types.get(req_json.get('job_type'))
+        if job_type:
+            if self.has_future(job_id):
+                response_cmd = await job_type.set_job_result(req_json)
+                self.app.logger.info(f"Worker '{req_json.get('auth')}' processed job {job_id}")
+            else:
+                job_id = f'unknown job {job_id}'
+                response_cmd = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
+                self.app.logger.warning(
+                    f"Worker {req_json.get('auth')} tried to send progress for job {job_id} with "
+                    f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
+                )
+        else:
+            response_cmd = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
+            self.app.logger.warning(
+                f"Worker {req_json.get('auth')} tried  to send progress for job {job_id} with "
+                f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
+            )
+        return response_cmd
+
+            
+    async def new_job(self, job_data):
+        endpoint_name = job_data.get('endpoint_name')
+        endpoint = self.app.endpoints.get(endpoint_name)
+        if endpoint:
+            self.app.logger.debug(f'Client request on /{endpoint_name} with following input parameter: ')
+            self.app.logger.debug(str(shorten_strings(job_data)))
+            job_type = self.job_types.get(endpoint.worker_job_type)
+            job_id = await job_type.new_job(job_data)
+            self.app.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {job_id} into the '{endpoint.worker_job_type}' queue ... ")
+            return job_id
+
+
+    async def get_progress_state(self, job_id):
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            return await job_type.get_progress_state(job_id)
+
+    
+    async def wait_for_job_result(self, job_id):
+        result_future = job_type.get_result_future(job_id)
+        result = await result_future
+        await self.app.job_type_interface.finish_job(job_id)
+        return result
+    
+
+    async def finish_job(self, job_id):
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            await job_type.finish_job(job_id)
 
 
     def is_job_queued(self, job_id):
@@ -114,6 +196,9 @@ class JobTypeInterface():
             return job_type.get_job_state(job_id)
         else:
             return JobState.UNKNOWN
+
+
+
 
     def get_result_future(self, job_id):
         job_type = self.get_job_type(job_id)
@@ -132,7 +217,6 @@ class JobTypeInterface():
             job_type_name = endpoint.worker_job_type
             if job_type_name not in job_types:
                 job_types[job_type_name] = JobType(self.app, job_type_name, endpoint.worker_auth_key)
-                
         return job_types
 
 
@@ -155,19 +239,7 @@ class JobTypeInterface():
 
     def get_queue(self, job_type):
         return self.job_types.get(job_type).queue
-
-
-    async def job_request(self, req_json):
-        job_type = self.job_types.get(req_json.get('job_type'))
-        if job_type:
-            job_data = await job_type.job_request(req_json)
-        else:
-            job_data = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
-            self.app.logger.warning(
-                f"Worker tried to send job request on unknown job_type {job_type}"
-            )
-        return job_data
-            
+           
 
     async def job_request_timed_out(self, req_json):
         job_type = self.job_types.get(req_json.get('job_type'))
@@ -179,51 +251,6 @@ class JobTypeInterface():
         job_type = self.job_types.get(req_json.get('job_type'))
         if job_type:
             await job_type.start_job(job_id, req_json)
-
-
-    async def set_progress_state(self, req_json):
-        job_type = self.job_types.get(req_json.get('job_type'))
-        job_id = req_json.get('job_id')
-        if job_type:
-            if self.has_future(job_id):
-                response_cmd = await job_type.set_progress_state(req_json)
-            else:
-                response_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
-                self.app.logger.warning(
-                    f"Worker tried to send progress for job {job_id} with "
-                    f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
-                )
-        else:
-            response_cmd = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
-            self.app.logger.warning(
-                f"Worker tried to send progress for job {job_id} with "
-                f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
-            )
-        return response_cmd
-
-
-    async def set_job_result(self, req_json):
-        self.app.logger.debug(f'Request on /worker_job_result: {shorten_strings(req_json)}')
-        job_id = req_json.get('job_id')
-        job_type = self.job_types.get(req_json.get('job_type'))
-        if job_type:
-            if self.has_future(job_id):
-                response_cmd = await job_type.set_job_result(req_json)
-                self.app.logger.info(f"Worker '{req_json.get('auth')}' processed job {job_id}")
-            else:
-                job_id = f'unknown job {job_id}'
-                response_cmd = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
-                self.app.logger.warning(
-                    f"Worker {req_json.get('auth')} tried to send progress for job {job_id} with "
-                    f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
-                )
-        else:
-            response_cmd = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
-            self.app.logger.warning(
-                f"Worker {req_json.get('auth')} tried  to send progress for job {job_id} with "
-                f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
-            )
-        return response_cmd
 
 
     async def get_estimate_time(self, job_id):
@@ -264,13 +291,7 @@ class JobTypeInterface():
         job_type = self.get_job_type(job_id)
         if job_type:
             return job_type.get_rank(job_id)
-
-
-    def get_start_time(self, job_id):    
-        job_type = self.get_job_type(job_id)
-        if job_type:
-            return job_type.get_start_time_for_job_id(job_id)
-        
+       
 
     def is_job_future_done(self, job_id):
         job_type = self.get_job_type(job_id)
@@ -278,31 +299,6 @@ class JobTypeInterface():
             return job_type.is_job_future_done(job_id)
         else:
             return False
-
-            
-    async def new_job(self, job_data):
-        endpoint_name = job_data.get('endpoint_name')
-        endpoint = self.app.endpoints.get(endpoint_name)
-        if endpoint:
-            self.app.logger.debug(f'Client request on /{endpoint_name} with following input parameter: ')
-            self.app.logger.debug(str(shorten_strings(job_data)))
-            job_type = self.job_types.get(endpoint.worker_job_type)
-            job_id = await job_type.new_job(job_data)
-            self.app.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {job_id} into the '{endpoint.worker_job_type}' queue ... ")
-            return job_id
-
-
-    async def get_progress_state(self, job_id):
-        job_type = self.get_job_type(job_id)
-        if job_type:
-            return await job_type.get_progress_state(job_id)
-
-    
-
-    async def finish_job(self, job_id):
-        job_type = self.get_job_type(job_id)
-        if job_type:
-            await job_type.finish_job(job_id)
 
 
     async def activate_worker(self, worker_auth):
@@ -341,10 +337,6 @@ class JobType():
         return sum(worker.free_slots for worker in self.workers.values())
 
 
-    def get_num_running_jobs(self, endpoint_name=None):
-        return sum(worker.get_num_running_jobs(endpoint_name) for worker in self.workers.values())
-
-
     @property
     def mean_duration(self):
         if self.jobs:
@@ -354,32 +346,7 @@ class JobType():
         return 200
 
 
-    def is_job_queued(self, job_id):
-        job = self.jobs.get(job_id)
-        return job.state == JobState.QUEUED if job else False
-
-
-    def is_job_future_done(self, job_id):
-        job = self.jobs.get(job_id)
-        if job:
-            return job.result_future.done() if job.result_future else False
-
-
-    def get_result_future(self, job_id):
-        job = self.jobs.get(job_id)
-        if job:
-            return job.result_future
-
-
-    def get_job_state(self, job_id):
-        job = self.jobs.get(job_id)
-        if job:
-            return job.state
-        else:
-            return JobState.UNKNOWN
-
-
-    async def job_request(self, req_json):
+    async def worker_job_request(self, req_json):
 
         worker_auth = req_json.get('auth')
         if worker_auth:
@@ -415,41 +382,6 @@ class JobType():
             }
 
 
-    async def fill_job_batch_with_waiting_jobs(self, job_data, req_json):
-        job_batch_data = [job_data]
-        max_job_batch = req_json.get('max_job_batch')
-        if max_job_batch > 1:
-            while (len(job_batch_data) < max_job_batch):
-                job_data = self.fetch_waiting_job()
-                if job_data:
-                    if self.app.is_client_valid(job_data):
-                        job_id = job_data.get('job_id')
-                        if self.is_job_queued(job_id):
-                            job_batch_data.append(job_data)
-                            await self.start_job(job_id, req_json)
-                else:
-                    break
-        return job_batch_data
-        
-    def init_worker(self, auth, request_timeout=60):
-        worker = Worker(self.app, auth, self, request_timeout)
-        self.workers[auth] = worker
-        return worker
-
-
-    async def job_request_timed_out(self, req_json):
-        worker = self.workers.get(req_json.get('auth'))
-        if worker:
-            await worker.job_request_timed_out()
-
-
-    async def start_job(self, job_id, req_json):
-        job = self.jobs.get(job_id)
-        worker = self.workers.get(req_json.get('auth'))
-        if job and worker:        
-            await worker.start_job(job)
-
-
     async def set_progress_state(self, req_json):
         job = self.jobs.get(req_json.get('job_id'))
         if job:
@@ -463,13 +395,18 @@ class JobType():
             return {'cmd': 'error', 'msg': f'Job with job id {req_json.get("job_id")} not found in registered workers!'}
 
 
-    def validate_worker_request(self, req_json):
-        if self.worker_auth_key != req_json.get('auth_key'):
-            return { 'cmd': "error", 'msg': f"Worker not authorized!" }
-        else: 
-            return {'cmd': 'ok'}
+    async def set_job_result(self, req_json):
 
-    
+        job = self.jobs.get(req_json.get('job_id'))
+        worker = self.workers.get(req_json.get('auth'))
+        if job and worker:
+            if worker:
+                await job.set_job_result(req_json)
+                return await worker.set_job_result(req_json)
+            else:
+                return {'cmd': 'error', 'msg': f'Job with job id {req_json.get("job_id")} not found in registered workers!'}
+
+
     async def new_job(self, job_data):
         job_id = await JobType.id_counter.next()
         self.jobs[job_id] = Job(job_id, job_data.get('endpoint_name'), self.queue, self.app.loop)
@@ -489,6 +426,78 @@ class JobType():
             return job.progress_state
 
 
+    async def start_job(self, job_id, req_json):
+        job = self.jobs.get(job_id)
+        worker = self.workers.get(req_json.get('auth'))
+        if job and worker:        
+            await worker.start_job(job)
+
+
+    def get_num_running_jobs(self, endpoint_name=None):
+        return sum(worker.get_num_running_jobs(endpoint_name) for worker in self.workers.values())
+
+
+    def is_job_queued(self, job_id):
+        job = self.jobs.get(job_id)
+        return job.state == JobState.QUEUED if job else False
+
+
+    def is_job_future_done(self, job_id):
+        job = self.jobs.get(job_id)
+        if job:
+            return job.result_future.done() if job.result_future else False
+
+
+    def get_result_future(self, job_id):
+        job = self.jobs.get(job_id)
+        if job:
+            return job.result_future
+
+
+    def get_job_state(self, job_id):
+        job = self.jobs.get(job_id)
+        if job:
+            return job.state
+        else:
+            return JobState.UNKNOWN
+
+
+    async def fill_job_batch_with_waiting_jobs(self, job_data, req_json):
+        job_batch_data = [job_data]
+        max_job_batch = req_json.get('max_job_batch')
+        if max_job_batch > 1:
+            while (len(job_batch_data) < max_job_batch):
+                job_data = self.fetch_waiting_job()
+                if job_data:
+                    if self.app.is_client_valid(job_data):
+                        job_id = job_data.get('job_id')
+                        if self.is_job_queued(job_id):
+                            job_batch_data.append(job_data)
+                            await self.start_job(job_id, req_json)
+                else:
+                    break
+        return job_batch_data
+
+
+    def init_worker(self, auth, request_timeout=60):
+        worker = Worker(self.app, auth, self, request_timeout)
+        self.workers[auth] = worker
+        return worker
+
+
+    async def job_request_timed_out(self, req_json):
+        worker = self.workers.get(req_json.get('auth'))
+        if worker:
+            await worker.job_request_timed_out()
+
+
+    def validate_worker_request(self, req_json):
+        if self.worker_auth_key != req_json.get('auth_key'):
+            return { 'cmd': "error", 'msg': f"Worker not authorized!" }
+        else: 
+            return {'cmd': 'ok'}
+
+
     def fetch_waiting_job(self):
         if self.queue:
             return self.queue.fetch_waiting_job()
@@ -496,25 +505,9 @@ class JobType():
             return dict()
 
 
-    async def set_job_result(self, req_json):
-
-        job = self.jobs.get(req_json.get('job_id'))
-        worker = self.workers.get(req_json.get('auth'))
-        if job and worker:
-            if worker:
-                await job.set_job_result(req_json)
-                return await worker.set_job_result(req_json)
-            else:
-                return {'cmd': 'error', 'msg': f'Job with job id {req_json.get("job_id")} not found in registered workers!'}
-
-
     def get_rank(self, job_id):
         return self.queue.get_rank(job_id)
  
-
-    def get_start_time_for_job_id(self, job_id):
-        return self.queue.get_start_time_for_job_id(job_id)
-
 
     async def get_estimate_time(self, job_id):
         job = self.jobs.get(job_id)
@@ -601,6 +594,7 @@ class Worker():
     def get_num_running_jobs(self, endpoint_name):
         return sum(1 for job in self.running_jobs.values() if job.endpoint_name == endpoint_name)
 
+
     @property
     def mean_compute_duration(self):
         if self.job_type.jobs:
@@ -680,8 +674,8 @@ class Worker():
 
 
     async def get_estimate_time(self, job):
-        num_workers_online = await self.job_type.get_num_workers_online()
         if job.state == JobState.QUEUED:
+            num_workers_online = await self.job_type.get_num_workers_online()
             if num_workers_online and job.queue_position:                
                 return max(
                     calculate_estimate_time(

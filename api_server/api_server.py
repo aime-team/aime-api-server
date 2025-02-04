@@ -157,7 +157,7 @@ class APIServer(Sanic):
             )
             return sanic_json(response_cmd)
              
-        response_cmd = await APIServer.job_type_interface.job_request(req_json)
+        response_cmd = await APIServer.job_type_interface.worker_job_request(req_json)
         return sanic_json(response_cmd)
 
 
@@ -180,7 +180,7 @@ class APIServer(Sanic):
                 f"with job type {req_json.get('job_type')}, but following error occured: {response_cmd.get('msg')}"
             )
             return sanic_json(response_cmd)
-        response_cmd = await APIServer.job_type_interface.set_job_result(req_json)
+        response_cmd = await APIServer.job_type_interface.worker_set_job_result(req_json)
         return sanic_json(response_cmd)
     
 
@@ -224,7 +224,7 @@ class APIServer(Sanic):
                     f"with job type {progress_result.get('job_type')}, but following error occured: {response_cmd.get('msg')}"
                 )
                 return sanic_json(response_cmd) # Fast exit if worker is not authorized or wrong job type.
-            response_cmd = await APIServer.job_type_interface.set_progress_state(progress_result)
+            response_cmd = await APIServer.job_type_interface.worker_set_progress_state(progress_result)
             response_cmd_list.append(response_cmd)
        
         return sanic_json(response_cmd_list)
