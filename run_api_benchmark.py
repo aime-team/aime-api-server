@@ -971,17 +971,18 @@ class PositionHandler():
         current_progress_bar.pos = target_position + self.header_height + 2
         self.running_jobs[job_id] = target_position
         if current_position != target_position:
-            self.vacant.remove(target_position)
-            self.vacant.append(current_position)
+            if target_position in self.vacant:
+                self.vacant.remove(target_position)
+            if current_position not in self.vacant:
+                self.vacant.append(current_position)
 
 
     async def update(self, progress_bar_dict, current_header_height):
-        running_jobs = self.running_jobs.copy()
         async with self.lock:
             header_changed = self.header_height != current_header_height
             self.header_height = current_header_height
-            if self.vacant and min(self.vacant) < max(running_jobs.values()) or header_changed:     
-                for job_id, position in sorted(running_jobs.items()):
+            if self.vacant and min(self.vacant) < max(self.running_jobs.values()) or header_changed:     
+                for job_id, position in sorted(self.running_jobs.items()):
                     if header_changed:
                         self.set_position(position, position, job_id, progress_bar_dict)
                     elif self.vacant:
@@ -992,7 +993,9 @@ class PositionHandler():
 
     async def release(self, job_id):
         async with self.lock:
-            self.vacant.append(self.get(job_id))
+            current_position = self.get(job_id)
+            if current_position not in self.vacant:
+                self.vacant.append(current_position)
             self.running_jobs.pop(job_id, None)
 
 
