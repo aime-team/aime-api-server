@@ -14,7 +14,7 @@ from pathlib import Path
 import toml
 
 from .job_queue import JobState
-from .utils.misc import StaticRouteHandler, shorten_strings, generate_auth_key, calculate_estimate_time
+from .utils.misc import StaticRouteHandler, shorten_strings, generate_auth_key
 from .input_validation import InputValidationHandler
 
 
@@ -40,12 +40,25 @@ class APIEndpoint():
         self.ep_input_param_config['wait_for_result'] = { 'type': 'bool'}     # add implicit input 
         self.worker_job_type, self.worker_auth_key = self.get_worker_params()
         self.registered_client_session_auth_keys = dict()
+        self.lock = asyncio.Lock()
+        self.status_data = self.init_ep_status_data()
 
         app.add_route(self.api_request, "/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name)
         app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=self.http_methods, name=self.endpoint_name + "$progress")
         app.add_route(self.client_login, "/" + self.endpoint_name + "/login", methods=self.http_methods, name=self.endpoint_name + "$login")
 
         self.add_static_routes(config_file)
+
+
+    def init_ep_status_data(self):
+        return {
+            'last_request_time': None,
+            'num_requests': 0,
+            'num_finished_requests': 0,
+            'num_failed_requests': 0,
+            'num_unauthorized_requests': 0,
+            'num_canceled_requests': 0
+        }
 
        
     def get_config_from_file(self, config_file):
@@ -181,26 +194,28 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client
         """
-        start_time = time.time()   
+        self.status_data['last_request_time'] = time.time()
+        self.status_data['num_requests'] += 1
         input_args = request.json if request.method == "POST" else request.args
         validation_errors, error_code = self.validate_client(input_args)
 
         # fast exit if not authorized for request
         if validation_errors:
+            self.status_data['num_unauthorized_requests'] += 1
             return self.handle_validation_errors(validation_errors, error_code)
-
         job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
         if validation_errors:
+            self.status_data['num_failed_requests'] += 1
             return self.handle_validation_errors(validation_errors)
 
         job_data = self.add_session_variables_to_job_data(request, job_data)
-        job_data = self.prepare_job_data(job_data, start_time)
-        job_future = await self.init_future_and_put_job_in_worker_queue(job_data)
+        job_data['endpoint_name'] = self.endpoint_name
+        job_id = await self.app.job_type_interface.new_job(job_data)
 
         if input_args.get('wait_for_result', True):
-            response = await self.finalize_request(request, job_data.get('job_id'), job_future) 
+            response = await self.finalize_request(request, job_id) 
         else:
-            response = {'success': True, 'job_id': job_data.get('job_id'), 'ep_version': self.version}
+            response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
         APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
         return sanic_json(response)
 
@@ -208,7 +223,7 @@ class APIEndpoint():
     async def api_progress(self, request):
         """Client request on route /self.endpoint_name/progress called periodically by the client interface 
         to receive progress and end results if the input parameter 'wait_for_result' of the related api_request 
-        was False. Takes the progress results from APIServer.progress_states put there by 
+        was False. Takes the progress results from APIServer.job_type_interface.progress_states put there by 
         APIServer.worker_job_progress() and sends it as response json to the client. When the job is finished the 
         final job result is awaited and taken from the job queue in finalize_request() and sent as response json 
         to the client. 
@@ -220,7 +235,6 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client with progress result and end result
         """        
-
         input_args = request.json if request.method == "POST" else request.args
         job_id, validation_errors = self.validate_progress_request(input_args)
 
@@ -228,18 +242,16 @@ class APIEndpoint():
             return self.handle_validation_errors(validation_errors)
 
         response = {"success": True, 'job_id': job_id, 'ep_version': self.version}
-        progress_state = self.get_and_validate_progress_data(job_id)
-        job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
+        job_state = self.app.job_type_interface.get_job_state(job_id)
+        
         if job_state == JobState.PROCESSING:
-            job_future =  self.app.job_result_futures.get(job_id, None)
-            if job_future and job_future.done():
-
-                response['job_result'] = await self.finalize_request(request, job_id, job_future)
-                job_state = self.app.job_states.get(job_id, job_state)       
-
+            if self.app.job_type_interface.is_job_future_done(job_id):
+                response['job_result'] = await self.finalize_request(request, job_id)
+                APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
+                job_state = self.app.job_type_interface.get_job_state(job_id)
         response['job_state'] = job_state.value
         if job_state != JobState.DONE:
-            response['progress'] = progress_state
+            response['progress'] = await self.get_and_validate_progress_data(job_id)
         APIEndpoint.logger.debug(f'Progress response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
         return sanic_json(response)
 
@@ -297,17 +309,6 @@ class APIEndpoint():
         return sanic_json(response)
 
 
-    async def init_future_and_put_job_in_worker_queue(self, job_data):
-        job_id = job_data.get('job_id')
-        APIEndpoint.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {job_id} into the '{self.worker_job_type}' queue ... ")       
-        self.app.job_states[job_id] = JobState.QUEUED
-        job_future = asyncio.Future(loop=self.app.loop)
-        self.app.job_result_futures[job_id] = job_future
-
-        await self.app.job_queues.get(self.worker_job_type).put(job_data)
-        return job_future
-
-
     def handle_validation_errors(self, validation_errors, error_code=400):
         response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
         APIEndpoint.logger.warning(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
@@ -326,14 +327,13 @@ class APIEndpoint():
         if not job_id:
             validation_errors.append(f'No job_id given')
 
-        job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
-        if job_state == JobState.UNKNOWN:
+        if self.app.job_type_interface.get_job_state(job_id) == JobState.UNKNOWN:
             validation_errors.append(f'Client has no active request with this job id')
 
         return job_id, validation_errors
 
 
-    async def finalize_request(self, request, job_id, job_future):
+    async def finalize_request(self, request, job_id):
         """Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future 
         initialized in api_request() to get the results.
 
@@ -346,8 +346,9 @@ class APIEndpoint():
             dict: Dictionary representation of the response.
         """        
 
+        job_result_futures = self.app.job_type_interface.get_result_future(job_id)
+        result = await job_result_futures
         response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
-        result = await job_future
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
@@ -360,7 +361,6 @@ class APIEndpoint():
             else:
                 if ep_output_param_name != 'error':
                     APIEndpoint.logger.warn(f"missing output '{ep_output_param_name}' in job results")
-
 
         meta_outputs = [
             'compute_duration',
@@ -376,15 +376,12 @@ class APIEndpoint():
             'result_received_time'
         ]
         response['result_sent_time'] = time.time()
-        queue = self.app.job_queues.get(self.worker_job_type)
-        queue.update_mean_job_duration(result)
         if self.provide_worker_meta_data:
             for meta_output in meta_outputs:
                 if meta_output in result:
                     response[meta_output] = result[meta_output]
-
-        self.app.job_states[job_id] = JobState.DONE
-        self.app.progress_states[job_id] = {}
+        self.status_data['num_finished_requests'] += 1
+        await self.app.job_type_interface.finish_job(job_id)
         return response
 
 
@@ -406,15 +403,6 @@ class APIEndpoint():
         return job_data
 
 
-    def prepare_job_data(self, job_data, start_time):
-        job_data['job_id'] = self.app.job_queues[self.worker_job_type].get_next_job_id()
-        job_data['endpoint_name'] = self.endpoint_name
-        job_data['start_time'] = start_time
-        APIEndpoint.logger.debug(f'Client request on /{self.endpoint_name} with following input parameter: ')
-        APIEndpoint.logger.debug(str(shorten_strings(job_data)))
-        return job_data
-
-
     def validate_client(self, input_args):
         client_session_auth_key = input_args.get('client_session_auth_key')
         error_code = None
@@ -430,9 +418,8 @@ class APIEndpoint():
         return validation_errors, error_code
 
 
-    def get_and_validate_progress_data(self, job_id):
-        progress_state = self.app.progress_states.get(job_id, {})
-        queue = self.app.job_queues.get(self.worker_job_type)
+    async def get_and_validate_progress_data(self, job_id):
+        progress_state = await self.app.job_type_interface.get_progress_state(job_id)
         if progress_state:          
             progress_data_validated = dict()
             progress_data = progress_state.get('progress_data', None)
@@ -441,46 +428,6 @@ class APIEndpoint():
                     if ep_progress_output_param_name in progress_data:
                         progress_data_validated[ep_progress_output_param_name] = progress_data[ep_progress_output_param_name]
             progress_state['progress_data'] = progress_data_validated
-        else:
-            progress_state['progress'] = 0
 
-        queue_position, estimate, num_workers_online = self.get_queue_parameters(job_id, queue, progress_state)
-        progress_state['estimate'] = estimate
-        progress_state['queue_position'] = queue_position
-        progress_state['num_workers_online'] = num_workers_online
         return progress_state
 
-
-    def get_queue_parameters(self, job_id, queue, progress_state):
-                
-        job_state = self.app.job_states.get(job_id, JobState.UNKNOWN)
-        queue_position = 0
-        queue.update_worker_status()
-        num_workers_online = sum(1 for worker in queue.registered_workers.values() if worker.get('status') in ('waiting', 'processing', f'finished job {job_id}'))
-        if progress_state['progress'] == 100:
-            estimate = 0
-        elif job_state == JobState.QUEUED:
-            queue_position = queue.get_rank_for_job_id(job_id)
-            if num_workers_online and queue_position:                
-                estimate = max(
-                    calculate_estimate_time(
-                        queue.mean_job_duration['compute_duration'] * (queue_position + 1) / num_workers_online,
-                        queue.get_start_time_for_job_id(job_id)
-                    ),
-                    calculate_estimate_time(
-                        queue.mean_job_duration['total_duration'], 
-                        queue.get_start_time_for_job_id(job_id))
-                )
-            else:
-                estimate = -1
-        elif job_state == JobState.PROCESSING and progress_state and progress_state.get('start_time_compute'):
-            estimate = max(
-                0,
-                calculate_estimate_time(
-                    queue.mean_job_duration['compute_duration'], 
-                    progress_state.get('start_time_compute'))
-            )
-        else:
-            estimate = queue.mean_job_duration['compute_duration']
-
-        return queue_position, estimate, num_workers_online

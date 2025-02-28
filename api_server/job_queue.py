@@ -7,73 +7,57 @@ import threading
 from enum import Enum
 import statistics
 import time
+from .utils.misc import shorten_strings
+from .__version import __version__
 
 
 class JobState(Enum):
-    UNKNOWN = "unknown"
-    QUEUED = "queued"
-    PROCESSING = "processing"
-    DONE = "done"
-    CANCELED = "canceled"
+    UNKNOWN = 'unknown'
+    QUEUED = 'queued'
+    PROCESSING = 'processing'
+    DONE = 'done'
+    CANCELED = 'canceled'
+
+
+class WorkerState(Enum):
+    PROCESSING = 'processing'
+    WAITING = 'waiting'
+    OFFLINE = 'offline'
+    DISABLED = 'disabled'
 
 
 class AtomicCounter():
     def __init__(self):
         self._counter = 0
-        self._lock = threading.Lock()
+        self._lock = asyncio.Lock()
         
-    def next(self):
+    async def next(self):
         job_id = 0
-        with self._lock:
+        async with self._lock:
             self._counter += 1
             job_id = self._counter
-        return "JID" + str(job_id)
+        return 'JID' + str(job_id)
 
 
-class JobQueue():
+class JobQueue(asyncio.Queue):
     """Job queue to manage jobs for the given job type. Assignes jobs offered from client on APIEndpoint.api_request 
     via route /endpoint_name with a job_id and collects the job_data. The workers asking for jobs on worker_job_request_json get
     the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.
 
-    Args:
-        job_type (str): Job type
-        worker_auth_key (str): Key for worker authorization
     """    
-    job_id = AtomicCounter()    # this has to be an atomic counter
-
-    def __init__(self, job_type, worker_auth_key):
-        """_summary_
-
-        Args:
-            job_type (_type_): _description_
-            worker_auth_key (_type_): _description_
-        """        
-        self.job_type = job_type
-        self.worker_auth_key = worker_auth_key
-        self.queue = asyncio.Queue()
-        self.job_durations = {
-            'total_duration': [], 
-            'compute_duration':[]
-        }
-        self.mean_job_duration = {
-            'total_duration': 200,        
-            'compute_duration': 7.5
-        }
-        self.registered_workers = dict()
+    def __init__(self):
+        super().__init__()
 
 
-    def get_next_job_id(self):
-        
-        return JobQueue.job_id.next()
-
-
-    async def get(self, job_timeout=60):
-        """Get job data of the next job in the queue. Timeout after self.job_timeout
+    async def get(self, timeout=60):
+        """Get job data of the next job in the queue. Timeout after self.job_request_timeout
 
         Returns:
             dict: Job data of the next job in the queue
         """        
-        return await asyncio.wait_for(self.queue.get(), timeout=job_timeout)
+                        
+        return await asyncio.wait_for(super().get(), timeout=timeout)
+
 
     def fetch_waiting_job(self):
         """Get job data of the next waiting job in the queue. Returns None if no job is waiting
@@ -82,104 +66,730 @@ class JobQueue():
             dict: Job data of the next job in the queue, None if no job available
         """        
         try:
-            job_data = self.queue.get_nowait()
-            self.queue.task_done()
+            job_data = self.get_nowait()
+            self.task_done()
+            return job_data
         except asyncio.QueueEmpty:
-            job_data = None
-        return job_data
-
-
-    def task_done(self):
-        return self.queue.task_done()
-
-
-    async def put(self, job_data):
-        """Put job_data from the client job offer to the job_queue.
-
-        Args:
-            job_data (dict): Job data of the job
-
-        Returns:
-            _type_: _description_
-        """        
-        return await self.queue.put(job_data)
+            return dict()
 
 
     def get_queue(self):
-        return self.queue._queue
+        return self._queue
 
 
-    def get_rank_for_job_id(self, job_id):
-        queue = self.get_queue()
-        for rank, task in enumerate(queue):
+    def get_rank(self, job_id):
+        for rank, task in enumerate(self._queue):
             if task.get('job_id') == job_id:
                 return rank +1
+        return 0
 
- 
 
     def get_start_time_for_job_id(self, job_id):
-        queue = self.get_queue()
-        for task in queue:
+        for task in self._queue:
             if task.get('job_id') == job_id:
                 return task.get('start_time')
 
 
-    def get_num_jobs_for_client(self, client_session_auth_key):
-        num_jobs = 0
-        queue = self.get_queue()
-        if client_session_auth_key:
-            for task in enumerate(queue):
-                if task.get('client_session_auth_key') == client_session_auth_key:
-                    num_jobs += 1
-        return num_jobs
+    def __len__(self):
+        return len(self._queue)
 
 
-    def update_mean_job_duration_weighted_mean(
-        self,
-        result,
-        update_interval=1,
-        weight=10
-        ):
+class JobTypeInterface():
+
+    def __init__(self, app):
+        self.app = app
+        self.job_types = self.init_all_job_types()
+        self.lock = asyncio.Lock()
+
+
+    def is_job_queued(self, job_id):
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            return job_type.is_job_queued(job_id)
+
+
+    def get_job_state(self, job_id):
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            return job_type.get_job_state(job_id)
+        else:
+            return JobState.UNKNOWN
+
+    def get_result_future(self, job_id):
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            return job_type.get_result_future(job_id)
+
+
+    def has_future(self, job_id):
+        return bool(self.get_result_future(job_id))
+
+
+    def init_all_job_types(self):
+        self.app.logger.info('--- creating job queues')
+        job_types = dict()
+        for endpoint in self.app.endpoints.values():
+            job_type_name = endpoint.worker_job_type
+            if job_type_name not in job_types:
+                job_types[job_type_name] = JobType(self.app, job_type_name, endpoint.worker_auth_key)
+                
+        return job_types
+
+
+    def get_job_type(self, job_id):
+        for job_type_name, job_type in self.job_types.items():
+            if job_id in job_type.jobs:
+                return job_type
+
+
+    def validate_worker_request(self, req_json):
+        job_type = self.job_types.get(req_json.get('job_type'))
+        if job_type is None:
+            if self.app.args.dev:
+                return { 'cmd': "error", 'msg': f"No job queue for job_type: {job_type}" }
+            else:
+                return { 'cmd': "warning", 'msg': f"No job queue for job_type: {job_type}" }
+        else:
+            return job_type.validate_worker_request(req_json)
+
+
+    def get_queue(self, job_type):
+        return self.job_types.get(job_type).queue
+
+
+    async def job_request(self, req_json):
+        job_type = self.job_types.get(req_json.get('job_type'))
+        if job_type:
+            job_data = await job_type.job_request(req_json)
+        else:
+            job_data = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
+            self.app.logger.warning(
+                f"Worker tried to send job request on unknown job_type {job_type}"
+            )
+        return job_data
+            
+
+    async def job_request_timed_out(self, req_json):
+        job_type = self.job_types.get(req_json.get('job_type'))
+        if job_type:
+            await job_type.job_request_timed_out(req_json)
+
+
+    async def start_job(self, job_id, req_json):
+        job_type = self.job_types.get(req_json.get('job_type'))
+        if job_type:
+            await job_type.start_job(job_id, req_json)
+
+
+    async def set_progress_state(self, req_json):
+        job_type = self.job_types.get(req_json.get('job_type'))
+        job_id = req_json.get('job_id')
+        if job_type:
+            if self.has_future(job_id):
+                response_cmd = await job_type.set_progress_state(req_json)
+            else:
+                response_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
+                self.app.logger.warning(
+                    f"Worker tried to send progress for job {job_id} with "
+                    f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
+                )
+        else:
+            response_cmd = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
+            self.app.logger.warning(
+                f"Worker tried to send progress for job {job_id} with "
+                f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
+            )
+        return response_cmd
+
+
+    async def set_job_result(self, req_json):
+        self.app.logger.debug(f'Request on /worker_job_result: {shorten_strings(req_json)}')
+        job_id = req_json.get('job_id')
+        job_type = self.job_types.get(req_json.get('job_type'))
+        if job_type:
+            if self.has_future(job_id):
+                response_cmd = await job_type.set_job_result(req_json)
+                self.app.logger.info(f"Worker '{req_json.get('auth')}' processed job {job_id}")
+            else:
+                job_id = f'unknown job {job_id}'
+                response_cmd = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
+                self.app.logger.warning(
+                    f"Worker {req_json.get('auth')} tried to send progress for job {job_id} with "
+                    f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
+                )
+        else:
+            response_cmd = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
+            self.app.logger.warning(
+                f"Worker {req_json.get('auth')} tried  to send progress for job {job_id} with "
+                f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
+            )
+        return response_cmd
+
+
+    async def get_estimate_time(self, job_id):
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            return await job_type.get_estimate_time(job_id)
+
+
+    async def get_num_workers_online(self, job_type_name):
+        job_type = self.job_types.get(job_type_name)
+        if job_type:
+            return await job_type.get_num_workers_online()
+
+
+    async def get_all_workers(self, job_type_name=None):
+        if job_type_name:
+            job_type = self.job_types.get(job_type_name)
+            return await job_type.get_all_active_workers()
+        else:
+            return [worker for job_type in self.job_types.values() for worker in await job_type.get_all_workers()]
+
+
+    async def get_all_active_workers(self, job_type_name=None):
+        if job_type_name:
+            job_type = self.job_types.get(job_type_name)
+            return await job_type.get_all_active_workers()
+        else:
+            return [worker for job_type in self.job_types.values() for worker in await job_type.get_all_active_workers()]
+
+
+    async def get_worker_state(self, worker_auth):
+        for job_type in self.job_types.values():
+            if worker_auth in job_type.workers:
+                return await job_type.get_worker_state(worker_auth)
+
+
+    def get_rank(self, job_id):    
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            return job_type.get_rank(job_id)
+
+
+    def get_start_time(self, job_id):    
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            return job_type.get_start_time_for_job_id(job_id)
         
 
-        for key, parameter in result.items():
-            if key in self.job_durations:
-                job_durations = self.job_durations[key]
-                job_durations.append(result[key])
+    def is_job_future_done(self, job_id):
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            return job_type.is_job_future_done(job_id)
+        else:
+            return False
 
-                if len(job_durations) >= update_interval:
-                    job_durations.insert(0, self.mean_job_duration[key])
-                    weigths = [1 if idx != 0 else weight for idx in range(update_interval + 1) ]
-                    self.mean_job_duration[key] =  weighted_average(job_durations, weights)
-                    job_durations.clear()
+            
+    async def new_job(self, job_data):
+        endpoint_name = job_data.get('endpoint_name')
+        endpoint = self.app.endpoints.get(endpoint_name)
+        if endpoint:
+            self.app.logger.debug(f'Client request on /{endpoint_name} with following input parameter: ')
+            self.app.logger.debug(str(shorten_strings(job_data)))
+            job_type = self.job_types.get(endpoint.worker_job_type)
+            job_id = await job_type.new_job(job_data)
+            self.app.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {job_id} into the '{endpoint.worker_job_type}' queue ... ")
+            return job_id
 
-                self.job_durations[key] = job_durations
+
+    async def get_progress_state(self, job_id):
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            return await job_type.get_progress_state(job_id)
+
+    
+
+    async def finish_job(self, job_id):
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            await job_type.finish_job(job_id)
 
 
-    def update_mean_job_duration(
-        self,
-        result,
-        update_interval=1,
-        length=100,
-        ):
+    async def activate_worker(self, worker_auth):
+        for job_type in self.job_types.values():
+            if worker_auth in job_type.workers:
+                worker = job_type.workers.get(worker_auth)
+                await worker.activate()
+                return True
+        return False
 
-        for key, parameter in result.items():
-            if key in self.job_durations:
-                job_durations = self.job_durations[key]
-                job_durations.append(result[key])
 
-                if len(job_durations) % update_interval == 0:
-                    self.mean_job_duration[key] = round(statistics.mean(job_durations), 2)
-                    if len(job_durations) > length:
-                        job_durations = job_durations[update_interval:]
-                self.job_durations[key] = job_durations
+    async def deactivate_worker(self, worker_auth):
+        for job_type in self.job_types.values():
+            if worker_auth in job_type.workers:
+                worker = job_type.workers.get(worker_auth)
+                await worker.deactivate()
+                return True
+        return False
 
-    def update_worker_status(self):
-        for worker in self.registered_workers.values():
-            last_request_time_limit = max(2 * worker.get('job_timeout', 54) + self.mean_job_duration.get('compute_duration'), 60)
-            if (time.time() - worker.get('last_request')) > last_request_time_limit:
-                worker['status'] = 'offline'
 
+class JobType():
+    id_counter = AtomicCounter()
+
+    def __init__(self, app, job_type_name, worker_auth_key):
+        self.app = app
+        self.job_type_name = job_type_name
+        self.queue = JobQueue()
+        self.app.logger.info(f'Queue for job type: {job_type_name} initialized')
+        self.worker_auth_key = worker_auth_key
+        self.workers = dict() # key worker_auth
+        self.jobs = dict() # key: job_id
+
+
+    @property
+    def free_slots(self):
+        return sum(worker.free_slots for worker in self.workers.values())
+
+
+    def get_num_running_jobs(self, endpoint_name=None):
+        return sum(worker.get_num_running_jobs(endpoint_name) for worker in self.workers.values())
+
+
+    @property
+    def mean_duration(self):
+        if self.jobs:
+            durations = [job.duration for job in self.jobs.values() if job.duration]
+            if durations:
+                return round(statistics.mean(durations), 2)
+        return 200
+
+
+    def is_job_queued(self, job_id):
+        job = self.jobs.get(job_id)
+        return job.state == JobState.QUEUED if job else False
+
+
+    def is_job_future_done(self, job_id):
+        job = self.jobs.get(job_id)
+        if job:
+            return job.result_future.done() if job.result_future else False
+
+
+    def get_result_future(self, job_id):
+        job = self.jobs.get(job_id)
+        if job:
+            return job.result_future
+
+
+    def get_job_state(self, job_id):
+        job = self.jobs.get(job_id)
+        if job:
+            return job.state
+        else:
+            return JobState.UNKNOWN
+
+
+    async def job_request(self, req_json):
+
+        worker_auth = req_json.get('auth')
+        if worker_auth:
+            worker = self.workers.get(worker_auth) or self.init_worker(worker_auth, req_json.get('request_timeout'))
+            await worker.register_job_request(req_json)
+            job_id = None
+            got_valid_job = False
+            max_job_batch = req_json.get('max_job_batch', 1)
+            while not got_valid_job:
+                try:
+                    job_data = await self.queue.get(timeout=req_json.get('request_timeout', 54) * 0.9)    # wait on queue for job
+                    self.queue.task_done()   # take it out of the queue
+                except asyncio.TimeoutError:
+                    await self.job_request_timed_out(req_json)
+                    return {'cmd': 'no_job'}
+
+                job_id = job_data.get('job_id')
+                if self.app.is_client_valid(job_data):
+                    got_valid_job = self.is_job_queued(job_id)
+            await self.start_job(job_id, req_json)
+
+            job_batch_data = await self.fill_job_batch_with_waiting_jobs(job_data, req_json)
+
+            endpoint_name = job_data.pop('endpoint_name', '')          
+            endpoint = self.app.endpoints.get(endpoint_name)
+            return {
+                'cmd': 'job',
+                'api_server_version': __version__,
+                'endpoint_name': endpoint_name,
+                'progress_output_descriptions': endpoint.ep_progress_param_config.get('OUTPUTS'),
+                'final_output_descriptions': endpoint.ep_output_param_config,
+                'job_data': job_batch_data
+            }
+
+
+    async def fill_job_batch_with_waiting_jobs(self, job_data, req_json):
+        job_batch_data = [job_data]
+        max_job_batch = req_json.get('max_job_batch')
+        if max_job_batch > 1:
+            while (len(job_batch_data) < max_job_batch):
+                job_data = self.fetch_waiting_job()
+                if job_data:
+                    if self.app.is_client_valid(job_data):
+                        job_id = job_data.get('job_id')
+                        if self.is_job_queued(job_id):
+                            job_batch_data.append(job_data)
+                            await self.start_job(job_id, req_json)
+                else:
+                    break
+        return job_batch_data
+        
+    def init_worker(self, auth, request_timeout=60):
+        worker = Worker(self.app, auth, self, request_timeout)
+        self.workers[auth] = worker
+        return worker
+
+
+    async def job_request_timed_out(self, req_json):
+        worker = self.workers.get(req_json.get('auth'))
+        if worker:
+            await worker.job_request_timed_out()
+
+
+    async def start_job(self, job_id, req_json):
+        job = self.jobs.get(job_id)
+        worker = self.workers.get(req_json.get('auth'))
+        if job and worker:        
+            await worker.start_job(job)
+
+
+    async def set_progress_state(self, req_json):
+        job = self.jobs.get(req_json.get('job_id'))
+        if job:
+            await job.set_progress_state(req_json)
+            worker = self.workers.get(job.worker_auth)
+            if worker:
+                return await worker.set_progress_state(req_json)
+            else:
+                return {'cmd': 'error', 'msg': f'Job with job id {req_json.get("job_id")} not found in registered workers!'}
+        else:
+            return {'cmd': 'error', 'msg': f'Job with job id {req_json.get("job_id")} not found in registered workers!'}
+
+
+    def validate_worker_request(self, req_json):
+        if self.worker_auth_key != req_json.get('auth_key'):
+            return { 'cmd': "error", 'msg': f"Worker not authorized!" }
+        else: 
+            return {'cmd': 'ok'}
+
+    
+    async def new_job(self, job_data):
+        job_id = await JobType.id_counter.next()
+        self.jobs[job_id] = Job(job_id, job_data.get('endpoint_name'), self.queue, self.app.loop)
+        job_data['job_id'] = job_id
+        await self.queue.put(job_data)
+        return job_id
+
+
+    async def get_progress_state(self, job_id):
+        job = self.jobs.get(job_id)
+        if job:
+            job.progress_state['queue_position'] = job.queue_position
+            job.progress_state['estimate'] = await self.get_estimate_time(job_id)
+            job.progress_state['num_workers_online'] = await self.get_num_workers_online()
+            if not job.progress_state.get('progress'):
+                job.progress_state['progress'] = 0
+            return job.progress_state
+
+
+    def fetch_waiting_job(self):
+        if self.queue:
+            return self.queue.fetch_waiting_job()
+        else:
+            return dict()
+
+
+    async def set_job_result(self, req_json):
+
+        job = self.jobs.get(req_json.get('job_id'))
+        worker = self.workers.get(req_json.get('auth'))
+        if job and worker:
+            if worker:
+                await job.set_job_result(req_json)
+                return await worker.set_job_result(req_json)
+            else:
+                return {'cmd': 'error', 'msg': f'Job with job id {req_json.get("job_id")} not found in registered workers!'}
+
+
+    def get_rank(self, job_id):
+        return self.queue.get_rank(job_id)
+ 
+
+    def get_start_time_for_job_id(self, job_id):
+        return self.queue.get_start_time_for_job_id(job_id)
+
+
+    async def get_estimate_time(self, job_id):
+        job = self.jobs.get(job_id)
+        if job:
+            worker = self.workers.get(job.worker_auth)
+            if not worker:
+                if self.workers:
+                    worker = next(iter(self.workers.values()))
+                else:
+                    return -1
+            return await worker.get_estimate_time(job)
+
+
+    async def get_num_workers_online(self):
+        await self.update_offline_workers_state()
+        return sum(worker.state is not WorkerState.OFFLINE for worker in self.workers.values())
+       
+
+    async def update_offline_workers_state(self):
+        for worker in self.workers.values():
+            await worker.update_offline_state()
+
+
+    async def get_all_workers(self):
+        await self.update_offline_workers_state()
+        return [worker.auth for worker in self.workers.values()]
+
+
+    async def get_all_active_workers(self):
+        await self.update_offline_workers_state()
+        return [worker.auth for worker in self.workers.values() if not worker.state == WorkerState.OFFLINE]
+
+
+    async def get_worker_state(self, worker_auth):
+        worker = self.workers.get(worker_auth)
+        if worker:
+            return worker.state
+
+
+    async def finish_job(self, job_id):
+        job = self.jobs.get(job_id)
+        if job:
+            await job.finish()
+
+
+    async def activate(self, worker_auth):
+        worker = self.workers.get(worker_auth)
+        if worker:
+            await worker.activate()
+
+
+    async def deactivate(self, worker_auth):
+        worker = self.workers.get(worker_auth)
+        if worker:
+            await worker.deactivate()
+
+
+class Worker():
+    
+    def __init__(self, app, auth, job_type, job_request_timeout=60):
+        self.app = app
+        self.auth = auth
+        self.job_type = job_type
+        self.lock = asyncio.Lock()
+        self.state = WorkerState.WAITING
+        self.num_finished_jobs = 0
+        self.num_timed_out_jobs = 0
+        self.retry = False
+        self.free_slots = 0
+        self.last_request_time = time.time()
+        self.job_request_timeout = job_request_timeout
+        self.running_jobs = dict() # key job_id
+
+
+    async def activate(self):
+        self.state = WorkerState.WAITING
+        await self.update_offline_state()
+
+
+    async def deactivate(self):
+        self.state = WorkerState.DISABLED
+
+
+    def get_num_running_jobs(self, endpoint_name):
+        return sum(1 for job in self.running_jobs.values() if job.endpoint_name == endpoint_name)
+
+    @property
+    def mean_compute_duration(self):
+        if self.job_type.jobs:
+            durations = [job.compute_duration for job in self.job_type.jobs.values() if self.auth == job.worker_auth and job.compute_duration]
+            if durations:
+                return round(statistics.mean(durations), 2)
+        return 7.5
+
+
+    async def register_job_request(self, req_json):
+        logger_string = (
+            f"Worker '{req_json.get('auth')}' in version {req_json.get('worker_version')} "
+            f"with {req_json.get('version')} waiting on '{req_json.get('job_type')}' queue for a job ..."
+        )
+        async with self.lock:
+            if not self.retry:
+                self.app.logger.info(logger_string)
+            else:
+                self.app.logger.debug(logger_string)
+                self.retry = False
+            self.check_and_update_state()
+            self.free_slots = req_json.get('max_job_batch', 1)
+            self.job_request_timeout = req_json.get('request_timeout', 60)
+
+
+    async def job_request_timed_out(self):
+        async with self.lock:
+            self.retry = True
+
+
+    async def start_job(self, job):
+        await job.start(self.auth, 2 * self.job_request_timeout)
+        self.app.logger.info(f"Worker '{self.auth}' got job {job.id}")
+        async with self.lock:
+            self.free_slots += -1
+            self.check_and_update_state()
+            self.state = WorkerState.PROCESSING
+            self.running_jobs[job.id] = job
+
+
+    async def set_progress_state(self, req_json):
+
+        job_id = req_json.get('job_id')
+        response_cmd = dict()
+        async with self.lock:
+            if job_id:
+                job = self.running_jobs.get(job_id)
+                if job:
+                    self.state = WorkerState.PROCESSING
+                    response_cmd = {'cmd': 'ok'}
+            self.check_and_update_state()
+        return response_cmd
+
+
+    async def set_job_result(self, req_json):
+        async with self.lock:
+            self.num_finished_jobs += 1
+            self.running_jobs.pop(req_json.get('job_id'), None)
+            self.check_and_update_state()
+        return {'cmd': 'ok'}
+
+
+    def check_and_update_state(self):
+        self.last_request_time = time.time()
+        for job_id, job in self.running_jobs.copy().items():
+            if not job.is_alive():
+                self.running_jobs.pop(job_id)
+                self.num_timed_out_jobs += 1
+        if not self.running_jobs and not self.state == WorkerState.DISABLED:
+            self.state = WorkerState.WAITING
+
+
+    async def update_offline_state(self):
+        async with self.lock:
+            if time.time() - self.last_request_time > 2 * self.job_request_timeout and not self.state == WorkerState.DISABLED:
+                self.state = WorkerState.OFFLINE
+
+
+    async def get_estimate_time(self, job):
+        num_workers_online = await self.job_type.get_num_workers_online()
+        if job.state == JobState.QUEUED:
+            if num_workers_online and job.queue_position:                
+                return max(
+                    calculate_estimate_time(
+                        self.mean_compute_duration * (job.queue_position + 1) / num_workers_online,
+                        job.start_time
+                    ),
+                    calculate_estimate_time(
+                        self.job_type.mean_duration,
+                        job.start_time
+                    )
+                )
+            else:
+                return -1
+
+        elif job.state == JobState.PROCESSING:
+            return max(
+                0,
+                calculate_estimate_time(
+                    self.mean_compute_duration, 
+                    job.start_time_compute
+                )
+            )
+
+        elif job.state == JobState.DONE:
+            return 0
+        else:
+            return -1
+
+
+class Job():
+
+
+    def __init__(self, job_id, endpoint_name, queue, loop):
+
+        self.id = job_id
+        self.endpoint_name = endpoint_name
+        self.queue = queue
+        self.worker_auth = str()
+        self.timeout = int()
+        self.last_update = time.time()
+        self.state = JobState.QUEUED
+        self.progress_state = dict()
+        self.lock = asyncio.Lock()
+        self.result_future = asyncio.Future(loop=loop)
+        self.start_time = time.time()
+        self.start_time_compute = None
+        self.result_received_time = None
+        self.duration = None
+        self.compute_duration = None
+        self.pending_duration = None
+
+
+    @property
+    def queue_position(self):
+        return self.queue.get_rank(self.id)
+
+
+    async def set_progress_state(self, req_json):
+        async with self.lock:
+            self.timeout = 2 * req_json.get('request_timeout', 60)
+            self.progress_state = req_json
+            self.last_update = time.time()
+            self.state = JobState.PROCESSING
+
+
+    async def set_job_result(self, req_json):
+        async with self.lock:
+            self.result_received_time = time.time()
+            self.duration = self.result_received_time - self.start_time
+            self.compute_duration = self.result_received_time - self.start_time_compute
+            self.pending_duration = self.start_time - self.start_time_compute
+            self.result_future.set_result(self.add_meta_data(req_json))
+            
+
+
+    async def start(self, worker_auth, timeout):
+        
+        async with self.lock:
+            self.worker_auth = worker_auth
+            self.timeout = timeout
+            self.state = JobState.PROCESSING
+            self.start_time_compute = time.time()
+
+
+    async def finish(self):
+        async with self.lock:
+            self.state = JobState.DONE
+            self.progress_state.clear()
+
+
+    def is_alive(self):
+        return False if time.time() - self.last_update > self.timeout else True
+
+
+    def add_meta_data(self, req_json):
+        if req_json:
+            req_json['start_time'] = self.start_time
+            req_json['start_time_compute'] = self.start_time_compute
+            req_json['result_received_time'] = self.result_received_time
+            req_json['total_duration'] = self.duration
+            req_json['compute_duration'] = self.compute_duration
+            if req_json.get('version'):
+                req_json['worker_interface_version'] = req_json.pop('version')
+        return req_json
+
+
+def calculate_estimate_time(estimate_duration, start_time):
+    return round(estimate_duration - (time.time() - start_time), 1)
 
 
 def weighted_average(nums, weights):

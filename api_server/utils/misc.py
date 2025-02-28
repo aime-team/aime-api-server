@@ -79,6 +79,18 @@ class StaticRouteHandler:
         self.app.logger.info(f'Static: {slug} -> {(self.config_file_path / route_path).resolve()}{compile_str}')
 
 
+class EndpointStatus():
+
+    def __init__(self, endpoint_name):
+        self.endpoint_name = endpoint_name
+        self.last_request_time = None
+        self.num_finished_requests = 0
+        self.num_failed_requests = 0
+        self.num_aborted_requests = 0
+
+
+    def get(self):
+        pass
 
 
 class CustomFormatter(logging.Formatter):
@@ -109,11 +121,6 @@ class CustomFormatter(logging.Formatter):
         log_fmt = self.FORMATS.get(record.levelno) if not self.no_colour else self.desc_format
         formatter = logging.Formatter(log_fmt, datefmt = '%Y-%m-%d %H:%M:%S')
         return formatter.format(record)
-
-
-
-def calculate_estimate_time(estimate_duration, start_time):
-    return round(estimate_duration - (time.time() - start_time), 1)
 
 
 async def run_in_executor(func, *args, **kwargs):
