@@ -20,7 +20,6 @@ import asyncio
 
 from .api_endpoint import APIEndpoint
 from .job_queue import JobState, JobTypeInterface
-from .admin_interface import AdminInterface
 from .flags import Flags
 from .utils.misc import StaticRouteHandler, shorten_strings, CustomFormatter
 from .utils.ffmpeg import FFmpeg
@@ -406,7 +405,6 @@ class APIServer(Sanic):
         self.register_listener(self.setup_static_routes, 'before_server_start')
         self.register_listener(self.init_all_endpoints, 'before_server_start')
         self.register_listener(self.init_job_type_interface, 'after_server_start')
-        self.register_listener(self.init_admin_be_interface, 'after_server_start')
         self.register_listener(FFmpeg.is_ffmpeg_installed, 'after_server_start')
 
 
@@ -417,8 +415,6 @@ class APIServer(Sanic):
         self.add_route(self.worker_check_server_status, "/worker_check_server_status", methods=["POST"])
         self.add_route(self.stream_progress_to_client ,"/stream_progress", methods=["POST", "GET"], stream=True)
 
-    def init_admin_be_interface(self, app, loop):
-        APIServer.admin_be_interface = AdminInterface(app, APIServer.args, APIServer.server_config)
 
     def setup_static_routes(self, app):
         app.logger.info("--- setup static routes")
