@@ -172,10 +172,12 @@ class JobTypeInterface():
 
     
     async def wait_for_job_result(self, job_id):
-        result_future = job_type.get_result_future(job_id)
-        result = await result_future
-        await self.app.job_type_interface.finish_job(job_id)
-        return result
+        job_type = self.get_job_type(job_id)
+        if job_type:
+            result_future = job_type.get_result_future(job_id)
+            result = await result_future
+            await self.finish_job(job_id)
+            return result
     
 
     async def finish_job(self, job_id):

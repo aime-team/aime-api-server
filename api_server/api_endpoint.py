@@ -345,7 +345,7 @@ class APIEndpoint():
         Returns:
             dict: Dictionary representation of the response.
         """        
-        result = await self.app.job_type_interface.wait_for_job_result()
+        result = await self.app.job_type_interface.wait_for_job_result(job_id)
         response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
