@@ -7,7 +7,8 @@ import threading
 from enum import Enum
 import statistics
 import time
-from .utils.misc import shorten_strings
+from .utils.misc import shorten_strings, get_job_counter_id
+import uuid
 from .__version import __version__
 
 
@@ -31,12 +32,11 @@ class AtomicCounter():
         self._counter = 0
         self._lock = asyncio.Lock()
         
+
     async def next(self):
-        job_id = 0
         async with self._lock:
             self._counter += 1
-            job_id = self._counter
-        return 'JID' + str(job_id)
+            return self._counter
 
 
 class JobQueue(asyncio.Queue):
@@ -136,7 +136,7 @@ class JobTypeInterface():
         if job_type:
             if self.has_future(job_id):
                 response_cmd = await job_type.set_job_result(req_json)
-                self.app.logger.info(f"Worker '{req_json.get('auth')}' processed job {job_id}")
+                self.app.logger.info(f"Worker '{req_json.get('auth')}' processed job {get_job_counter_id(job_id)}")
             else:
                 job_id = f'unknown job {job_id}'
                 response_cmd = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
@@ -160,9 +160,7 @@ class JobTypeInterface():
             self.app.logger.debug(f'Client request on /{endpoint_name} with following input parameter: ')
             self.app.logger.debug(str(shorten_strings(job_data)))
             job_type = self.job_types.get(endpoint.worker_job_type)
-            job_id = await job_type.new_job(job_data)
-            self.app.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {job_id} into the '{endpoint.worker_job_type}' queue ... ")
-            return job_id
+            return await job_type.new_job(job_data)
 
 
     async def get_progress_state(self, job_id):
@@ -322,13 +320,11 @@ class JobTypeInterface():
 
 
 class JobType():
-    id_counter = AtomicCounter()
-
-    def __init__(self, app, job_type_name, worker_auth_key):
+    def __init__(self, app, name, worker_auth_key):
         self.app = app
-        self.job_type_name = job_type_name
+        self.name = name
         self.queue = JobQueue()
-        self.app.logger.info(f'Queue for job type: {job_type_name} initialized')
+        self.app.logger.info(f'Queue for job type: {name} initialized')
         self.worker_auth_key = worker_auth_key
         self.workers = dict() # key worker_auth
         self.jobs = dict() # key: job_id
@@ -410,11 +406,12 @@ class JobType():
 
 
     async def new_job(self, job_data):
-        job_id = await JobType.id_counter.next()
-        self.jobs[job_id] = Job(job_id, job_data.get('endpoint_name'), self.queue, self.app.loop)
-        job_data['job_id'] = job_id
+        job = await Job.new(job_data.get('endpoint_name'), self.queue, self.app.loop)
+        self.jobs[job.id] = job 
+        job_data['job_id'] = job.id
+        self.app.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {get_job_counter_id(job.id)} into the '{self.name}' queue ... ")
         await self.queue.put(job_data)
-        return job_id
+        return job
 
 
     async def get_progress_state(self, job_id):
@@ -629,7 +626,7 @@ class Worker():
 
     async def start_job(self, job):
         await job.start(self.auth, 2 * self.job_request_timeout)
-        self.app.logger.info(f"Worker '{self.auth}' got job {job.id}")
+        self.app.logger.info(f"Worker '{self.auth}' got job {get_job_counter_id(job.id)}")
         async with self.lock:
             self.free_slots += -1
             self.check_and_update_state()
@@ -709,6 +706,7 @@ class Worker():
 
 class Job():
 
+    id_counter = AtomicCounter()
 
     def __init__(self, job_id, endpoint_name, queue, loop):
 
@@ -730,9 +728,21 @@ class Job():
         self.pending_duration = None
 
 
+    @classmethod
+    async def new(cls, endpoint_name, queue, loop):
+        job_id = await cls.generate_new_job_id()
+        return cls(job_id, endpoint_name, queue, loop)
+
+
+    @classmethod
+    async def generate_new_job_id(cls):
+        counter = await cls.id_counter.next()
+        return f'{uuid.uuid4()}#{counter}'
+
     @property
     def queue_position(self):
         return self.queue.get_rank(self.id)
+
 
 
     async def set_progress_state(self, req_json):

@@ -170,4 +170,6 @@ def copy_js_client_interface_to_frontend_folder():
         logger.info(f'Subrepository "AIME API Client Interfaces" folder in {js_client_interface_folder.parent.resolve()} is present. Javascript client interface {js_client_interface_filename} is copied from {js_client_interface_folder.resolve()} to {frontend_folder.resolve()}.')
         shutil.copy(js_client_interface_folder / js_client_interface_filename, frontend_folder / js_client_interface_filename)
 
+def get_job_counter_id(job_id):
+    return '#' + job_id.split('#')[-1]
 

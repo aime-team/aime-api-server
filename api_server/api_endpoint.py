@@ -210,12 +210,12 @@ class APIEndpoint():
 
         job_data = self.add_session_variables_to_job_data(request, job_data)
         job_data['endpoint_name'] = self.endpoint_name
-        job_id = await self.app.job_type_interface.new_job(job_data)
+        job = await self.app.job_type_interface.new_job(job_data)
 
         if input_args.get('wait_for_result', True):
-            response = await self.finalize_request(request, job_id) 
+            response = await self.finalize_request(request, job.id) 
         else:
-            response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
+            response = {'success': True, 'job_id': job.id, 'ep_version': self.version}
         APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
         return sanic_json(response)
 
