@@ -197,7 +197,16 @@ class JobTypeInterface():
         else:
             return JobState.UNKNOWN
 
-
+    async def get_job_type_status(self, job_type_name):
+        job_type = self.job_types.get(job_type_name)
+        if job_type:
+            return {
+                'num_workers_online': await job_type.get_num_workers_online(),
+                'num_processing_requests': job_type.get_num_running_jobs(),
+                'num_pending_requests': len(job_type.queue),
+                'mean_request_duration': job_type.mean_duration,
+                'num_free_slots': job_type.free_slots
+            }
 
 
     def get_result_future(self, job_id):
@@ -605,7 +614,7 @@ class Worker():
 
 
     def get_num_running_jobs(self, endpoint_name):
-        return sum(1 for job in self.running_jobs.values() if job.endpoint_name == endpoint_name)
+        return sum(1 for job in self.running_jobs.values() if not endpoint_name or job.endpoint_name == endpoint_name)
 
 
     @property

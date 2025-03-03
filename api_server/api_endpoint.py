@@ -41,7 +41,7 @@ class APIEndpoint():
         self.worker_job_type, self.worker_auth_key = self.get_worker_params()
         self.registered_client_session_auth_keys = dict()
         self.lock = asyncio.Lock()
-        self.status_data = self.init_ep_status_data()
+        self.__status_data = self.init_ep_status_data()
 
         app.add_route(self.api_request, "/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name)
         app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=self.http_methods, name=self.endpoint_name + "$progress")
@@ -50,18 +50,6 @@ class APIEndpoint():
         self.add_static_routes(config_file)
 
 
-    def init_ep_status_data(self):
-        return {
-            'last_request_time': None,
-            'num_requests': 0,
-            'num_finished_requests': 0,
-            'num_failed_requests': 0,
-            'num_unauthorized_requests': 0,
-            'num_canceled_requests': 0,
-            'enabled': False
-        }
-
-       
     def get_config_from_file(self, config_file):
         with open(config_file, 'r') as file:
             return toml.load(file)
@@ -195,19 +183,19 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client
         """
-        if self.status_data.get('enabled'):
-            self.status_data['last_request_time'] = time.time()
-            self.status_data['num_requests'] += 1
+        if self.__status_data.get('enabled'):
+            self.__status_data['last_request_time'] = time.time()
+            self.__status_data['num_requests'] += 1
             input_args = request.json if request.method == "POST" else request.args
             validation_errors, error_code = self.validate_client(input_args)
 
             # fast exit if not authorized for request
             if validation_errors:
-                self.status_data['num_unauthorized_requests'] += 1
+                self.__status_data['num_unauthorized_requests'] += 1
                 return self.handle_validation_errors(validation_errors, error_code)
             job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
             if validation_errors:
-                self.status_data['num_failed_requests'] += 1
+                self.__status_data['num_failed_requests'] += 1
                 return self.handle_validation_errors(validation_errors)
 
             job_data = self.add_session_variables_to_job_data(request, job_data)
@@ -382,7 +370,7 @@ class APIEndpoint():
             for meta_output in meta_outputs:
                 if meta_output in result:
                     response[meta_output] = result[meta_output]
-        self.status_data['num_finished_requests'] += 1
+        self.__status_data['num_finished_requests'] += 1
 
         return response
 
@@ -433,10 +421,29 @@ class APIEndpoint():
         return progress_state
 
 
+    def init_ep_status_data(self):
+        status_data = {
+            'last_request_time': None,
+            'num_requests': 0,
+            'num_finished_requests': 0,
+            'num_failed_requests': 0,
+            'num_unauthorized_requests': 0,
+            'num_canceled_requests': 0,
+            'enabled': True
+        }
+        return status_data
+
+
+    @property
+    async def status_data(self):
+        self.__status_data.update(await self.app.job_type_interface.get_job_type_status(self.worker_job_type))
+        return self.__status_data
+
+
     def enable(self):
-        self.status_data['enabled'] = True
+        self.__status_data['enabled'] = True
 
 
     def disable(self):
-        self.status_data['enabled'] = False
+        self.__status_data['enabled'] = False
 
