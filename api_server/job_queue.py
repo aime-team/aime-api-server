@@ -462,6 +462,7 @@ class JobType():
 
 
     async def fill_job_batch_with_waiting_jobs(self, job_data, req_json):
+        job_data = self.add_start_times(job_data) # backward compatibility for awi < 0.9.7. To be removed in future versions
         job_batch_data = [job_data]
         max_job_batch = req_json.get('max_job_batch')
         if max_job_batch > 1:
@@ -471,6 +472,7 @@ class JobType():
                     if self.app.is_client_valid(job_data):
                         job_id = job_data.get('job_id')
                         if self.is_job_queued(job_id):
+                            job_data = self.add_start_times(job_data) # backward compatibility for awi < 0.9.7. To be removed in future versions
                             job_batch_data.append(job_data)
                             await self.start_job(job_id, req_json)
                 else:
@@ -562,6 +564,18 @@ class JobType():
         worker = self.workers.get(worker_auth)
         if worker:
             await worker.deactivate()
+
+
+    def add_start_times(self, job_data):
+        """Add start_time and start_time_compute for API Worker Interface < 0.9.7. To be removed in future versions.
+
+        Args:
+            job_data (dict): Job parameters
+        """
+        job = self.jobs.get(job_data.get('job_id'))
+        job_data['start_time'] = job.start_time
+        job_data['start_time_compute'] = job.start_time_compute
+        return job_data
 
 
 class Worker():
