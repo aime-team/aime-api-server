@@ -57,7 +57,8 @@ class APIEndpoint():
             'num_finished_requests': 0,
             'num_failed_requests': 0,
             'num_unauthorized_requests': 0,
-            'num_canceled_requests': 0
+            'num_canceled_requests': 0,
+            'enabled': False
         }
 
        
@@ -194,29 +195,32 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client
         """
-        self.status_data['last_request_time'] = time.time()
-        self.status_data['num_requests'] += 1
-        input_args = request.json if request.method == "POST" else request.args
-        validation_errors, error_code = self.validate_client(input_args)
+        if self.status_data.get('enabled'):
+            self.status_data['last_request_time'] = time.time()
+            self.status_data['num_requests'] += 1
+            input_args = request.json if request.method == "POST" else request.args
+            validation_errors, error_code = self.validate_client(input_args)
 
-        # fast exit if not authorized for request
-        if validation_errors:
-            self.status_data['num_unauthorized_requests'] += 1
-            return self.handle_validation_errors(validation_errors, error_code)
-        job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
-        if validation_errors:
-            self.status_data['num_failed_requests'] += 1
-            return self.handle_validation_errors(validation_errors)
+            # fast exit if not authorized for request
+            if validation_errors:
+                self.status_data['num_unauthorized_requests'] += 1
+                return self.handle_validation_errors(validation_errors, error_code)
+            job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
+            if validation_errors:
+                self.status_data['num_failed_requests'] += 1
+                return self.handle_validation_errors(validation_errors)
 
-        job_data = self.add_session_variables_to_job_data(request, job_data)
-        job_data['endpoint_name'] = self.endpoint_name
-        job = await self.app.job_type_interface.new_job(job_data)
+            job_data = self.add_session_variables_to_job_data(request, job_data)
+            job_data['endpoint_name'] = self.endpoint_name
+            job = await self.app.job_type_interface.new_job(job_data)
 
-        if input_args.get('wait_for_result', True):
-            response = await self.finalize_request(request, job.id) 
+            if input_args.get('wait_for_result', True):
+                response = await self.finalize_request(request, job.id) 
+            else:
+                response = {'success': True, 'job_id': job.id, 'ep_version': self.version}
+            APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
         else:
-            response = {'success': True, 'job_id': job.id, 'ep_version': self.version}
-        APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
+            response = {'success': False, 'error': 'Endpoint disabled'}
         return sanic_json(response)
 
 
@@ -427,4 +431,12 @@ class APIEndpoint():
             progress_state['progress_data'] = progress_data_validated
 
         return progress_state
+
+
+    def enable(self):
+        self.status_data['enabled'] = True
+
+
+    def disable(self):
+        self.status_data['enabled'] = False
 
