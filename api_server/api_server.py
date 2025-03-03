@@ -19,6 +19,7 @@ import json
 import asyncio
 
 from .api_endpoint import APIEndpoint
+from .openai import OpenAI
 from .job_queue import JobQueue, JobState
 from .flags import Flags
 from .utils.misc import StaticRouteHandler, shorten_strings, CustomFormatter
@@ -41,9 +42,11 @@ class APIServer(Sanic):
     job_result_futures = {} # key: job_id
     progress_states = {}    # key: job_id
     registered_client_sessions = {} # key: client_session_auth_key
+    openai = None
     args = None
     static_routes = {}
     worker_config = {}
+    openai_config = {}
     input_param_config = {}
     default_authentification = "None"
     default_authorization = "None"
@@ -318,6 +321,7 @@ class APIServer(Sanic):
         APIServer.input_param_config = server_config.get('INPUTS', {})
         APIServer.static_routes = server_config.get('STATIC', {})
         APIServer.worker_config = server_config.get('WORKERS', {})
+        APIServer.openai_config = server_config.get('OPENAI', {})
 
 
     def set_server_clients_config(self, server_config):
@@ -336,7 +340,6 @@ class APIServer(Sanic):
         APIServer.endpoints[name] = APIEndpoint(self, config_file)
 
     def init_all_endpoints(self, app, loop):
-
         config_dir = APIServer.args.ep_config
         APIServer.logger.info(f'--- Searching endpoints configurations in {config_dir}')
         if Path(config_dir).is_dir():
@@ -350,6 +353,9 @@ class APIServer(Sanic):
         else:
             APIServer.logger.error("!!! No Endpoint Configuration found, please specify where to load ml_api_endpoing.cfg with the --ep_config argument")
 
+
+    def init_openai(self, app, loop):
+        OpenAI(self)
 
     async def validate_worker_queue(self, queue, req_json):
         job_type = req_json.get('job_type')
@@ -511,13 +517,13 @@ class APIServer(Sanic):
         return sanic_response.ResponseStream(stream_sse, headers=headers)
 
 
-    def init(self, args):
-        
+    def init(self, args):        
         self.__setup_worker_interface() # has to be done before app.run() is called
         self.register_listener(self.load_server_configuration, 'before_server_start') # maybe better without listener to have config in every main and worker process?
         self.register_listener(self.setup_static_routes, 'before_server_start')
         self.register_listener(self.init_all_endpoints, 'before_server_start')
-        self.register_listener(self.create_job_queues, "after_server_start")
+        self.register_listener(self.init_openai, 'before_server_start')
+        self.register_listener(self.create_job_queues, 'after_server_start')
         self.register_listener(FFmpeg.is_ffmpeg_installed, 'after_server_start')
 
 
