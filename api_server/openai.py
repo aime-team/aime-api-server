@@ -24,12 +24,23 @@ class OpenAI():
         app.add_route(self.v1_chat, "/v1/chat/completions", methods=["POST", "GET"], name="v1_chat_completions")
 
 
+    def response_error(self, code, message):
+        response = {}
+        response["error"] = {
+            "message": message,
+            "type": "invalid_request_error",
+            "param": None,
+            "code": code,
+          }
+        return response
+
+
     def check_authorization(self, slug, headers):
         authorization = headers.get('authorization', None)
 
         OpenAI.logger.info(f'OpenAI {str(slug)}')
         if not authorization:
-            return "missing bearer"
+            return self.response_error('invalid_api_key', "Incorrect or no API key provided. You can get your API key at https://api.aime.info.")
 
         return None
 
@@ -45,9 +56,9 @@ class OpenAI():
         """
         failed = self.check_authorization("/v1/models", request.headers)
         if failed:
-            response = {'success': False, 'reason': 'Not authorized - '+failed}
-        else:
-            response = {'success': True}        
+            return sanic_json(failed)
+
+        response = {'success': True}        
         return sanic_json(response)
 
 
@@ -63,8 +74,8 @@ class OpenAI():
         """
         failed = self.check_authorization("/v1/chat/", request.headers)
         if failed:
-            response = {'success': False, 'reason': 'Not authorized - '+failed}
-        else:
-            response = {'success': True}
+            return sanic_json(failed)
+
+        response = {'success': True}
         return sanic_json(response)
 
