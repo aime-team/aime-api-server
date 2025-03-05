@@ -200,7 +200,7 @@ class APIEndpoint():
 
             job_data = self.add_session_variables_to_job_data(request, job_data)
             job_data['endpoint_name'] = self.endpoint_name
-            job = await self.app.job_type_interface.new_job(job_data)
+            job = await self.app.job_handler.endpoint_new_job(job_data)
 
             if input_args.get('wait_for_result', True):
                 response = await self.finalize_request(request, job.id) 
@@ -215,7 +215,7 @@ class APIEndpoint():
     async def api_progress(self, request):
         """Client request on route /self.endpoint_name/progress called periodically by the client interface 
         to receive progress and end results if the input parameter 'wait_for_result' of the related api_request 
-        was False. Takes the progress results from APIServer.job_type_interface.progress_states put there by 
+        was False. Takes the progress results from APIServer.job_handler.progress_states put there by 
         APIServer.worker_job_progress() and sends it as response json to the client. When the job is finished the 
         final job result is awaited and taken from the job queue in finalize_request() and sent as response json 
         to the client. 
@@ -234,13 +234,13 @@ class APIEndpoint():
             return self.handle_validation_errors(validation_errors)
 
         response = {"success": True, 'job_id': job_id, 'ep_version': self.version}
-        job_state = self.app.job_type_interface.get_job_state(job_id)
+        job_state = self.app.job_handler.get_job_state(job_id)
         
         if job_state == JobState.PROCESSING:
-            if self.app.job_type_interface.is_job_future_done(job_id):
+            if self.app.job_handler.is_job_future_done(job_id):
                 response['job_result'] = await self.finalize_request(request, job_id)
                 APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
-                job_state = self.app.job_type_interface.get_job_state(job_id)
+                job_state = self.app.job_handler.get_job_state(job_id)
         response['job_state'] = job_state.value
         if job_state != JobState.DONE:
             response['progress'] = await self.get_and_validate_progress_data(job_id)
@@ -319,7 +319,7 @@ class APIEndpoint():
         if not job_id:
             validation_errors.append(f'No job_id given')
 
-        if self.app.job_type_interface.get_job_state(job_id) == JobState.UNKNOWN:
+        if self.app.job_handler.get_job_state(job_id) == JobState.UNKNOWN:
             validation_errors.append(f'Client has no active request with this job id')
 
         return job_id, validation_errors
@@ -337,7 +337,7 @@ class APIEndpoint():
         Returns:
             dict: Dictionary representation of the response.
         """        
-        result = await self.app.job_type_interface.wait_for_job_result(job_id)
+        result = await self.app.job_handler.endpoint_wait_for_job_result(job_id)
         response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
@@ -408,7 +408,7 @@ class APIEndpoint():
 
 
     async def get_and_validate_progress_data(self, job_id):
-        progress_state = await self.app.job_type_interface.get_progress_state(job_id)
+        progress_state = await self.app.job_handler.endpoint_get_progress_state(job_id)
         if progress_state:          
             progress_data_validated = dict()
             progress_data = progress_state.get('progress_data', None)
@@ -436,7 +436,7 @@ class APIEndpoint():
 
     @property
     async def status_data(self):
-        self.__status_data.update(await self.app.job_type_interface.get_job_type_status(self.worker_job_type))
+        self.__status_data.update(await self.app.job_handler.get_job_type_status(self.worker_job_type))
         return self.__status_data
 
 

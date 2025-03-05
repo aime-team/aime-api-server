@@ -49,6 +49,7 @@ class JobQueue(asyncio.Queue):
         super().__init__()
 
 
+
     async def get(self, timeout=60):
         """Get job data of the next job in the queue. Timeout after self.job_request_timeout
 
@@ -88,7 +89,7 @@ class JobQueue(asyncio.Queue):
         return len(self._queue)
 
 
-class JobTypeInterface():
+class JobHandler():
 
     def __init__(self, app):
         self.app = app
@@ -108,7 +109,7 @@ class JobTypeInterface():
         return job_data
 
 
-    async def worker_set_progress_state(self, req_json):
+    async def worker_update_progress_state(self, req_json):
         job_type = self.job_types.get(req_json.get('job_type'))
         job_id = req_json.get('job_id')
         if job_type:
@@ -152,8 +153,8 @@ class JobTypeInterface():
             )
         return response_cmd
 
-            
-    async def new_job(self, job_data):
+    
+    async def endpoint_new_job(self, job_data):
         endpoint_name = job_data.get('endpoint_name')
         endpoint = self.app.endpoints.get(endpoint_name)
         if endpoint:
@@ -162,14 +163,14 @@ class JobTypeInterface():
             job_type = self.job_types.get(endpoint.worker_job_type)
             return await job_type.new_job(job_data)
 
-
-    async def get_progress_state(self, job_id):
+    
+    async def endpoint_get_progress_state(self, job_id):
         job_type = self.get_job_type(job_id)
         if job_type:
             return await job_type.get_progress_state(job_id)
 
-    
-    async def wait_for_job_result(self, job_id):
+
+    async def endpoint_wait_for_job_result(self, job_id):
         job_type = self.get_job_type(job_id)
         if job_type:
             result_future = job_type.get_result_future(job_id)
@@ -336,7 +337,8 @@ class JobType():
         self.app.logger.info(f'Queue for job type: {name} initialized')
         self.worker_auth_key = worker_auth_key
         self.workers = dict() # key worker_auth
-        self.jobs = dict() # key: job_id
+        #TODO delete finished jobs after certain time
+        self.jobs = dict() # key: job_id 
 
 
     @property
