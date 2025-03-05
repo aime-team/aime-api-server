@@ -70,7 +70,7 @@ class AdminInterface():
         """        
 
         endpoint = self.sanic.endpoints.get(endpoint_name)
-        job_type = self.sanic.job_type_interface.job_types.get(endpoint.worker_job_type)
+        job_type = self.sanic.job_handler.job_types.get(endpoint.worker_job_type)
         if job_type and endpoint:
             ep_status = endpoint.status_data
             ep_status.update({
@@ -145,22 +145,22 @@ class AdminInterface():
 
 
     async def api_get_worker_list(self):
-        return await self.sanic.job_type_interface.get_all_workers()
+        return await self.sanic.job_handler.get_all_workers()
 
 
     async def api_get_active_worker_list(self):
-        return await self.sanic.job_type_interface.get_all_active_workers()
+        return await self.sanic.job_handler.get_all_active_workers()
 
 
     async def api_get_worker_status(self, worker_auth):
-        status = await self.sanic.job_type_interface.get_worker_state(worker_auth)
+        status = await self.sanic.job_handler.get_worker_state(worker_auth)
         if status:
             return status.value
 
 
     async def admin_set_worker_online(self, worker_auth):
-        return await self.sanic.job_type_interface.activate_worker(worker_auth)
+        return await self.sanic.job_handler.activate_worker(worker_auth)
 
 
     async def admin_set_worker_offline(self, worker_auth):
-        return await self.sanic.job_type_interface.deactivate_worker(worker_auth)
+        return await self.sanic.job_handler.deactivate_worker(worker_auth)
