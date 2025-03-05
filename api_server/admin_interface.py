@@ -111,8 +111,14 @@ class AdminInterface():
 
 
     async def api_set_endpoint_enable(self, endpoint_name):
-        # Implemented by API Server
-        pass
+        endpoint = self.sanic.endpoints.get(endpoint_name)
+        if endpoint:
+            endpoint.enable()
+
+    async def api_set_endpoint_disable(self, endpoint_name):
+        endpoint = self.sanic.endpoints.get(endpoint_name)
+        if endpoint:
+            endpoint.disable()
 
 
     async def api_get_endpoint_config(self, endpoint_name):
