@@ -33,7 +33,7 @@ class APIEndpoint():
     def __init__(self, app, config_file):
         self.app = app
         self.config = self.get_config_from_file(config_file)
-        self.title, self.endpoint_name, self.description, self.http_methods, self.version = self.get_endpoint_description()
+        self.title, self.endpoint_name, self.description, self.http_methods, self.version, self.max_queue_length = self.get_endpoint_description()
         self.client_request_limit, self.provide_worker_meta_data, self.authentication, self.authorization, self.authorization_keys = self.get_clients_config()
         self.ep_input_param_config, self.ep_output_param_config, self.ep_progress_param_config, self.ep_session_param_config = self.get_param_config()
         self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
@@ -77,8 +77,9 @@ class APIEndpoint():
 
         http_methods = self.get_http_methods(ep_config)
         version = ep_config.get('version')
+        max_queue_length = ep_config.get('max_queue_length')
         APIEndpoint.logger.info(f'----------- {title} - {name} {http_methods}')
-        return title, name, description, http_methods, version
+        return title, name, description, http_methods, version, max_queue_length
 
 
     def get_clients_config(self):
@@ -185,30 +186,36 @@ class APIEndpoint():
         """
         if self.__status_data.get('enabled'):
             self.__status_data['last_request_time'] = time.time()
-            self.__status_data['num_requests'] += 1
-            input_args = request.json if request.method == "POST" else request.args
-            validation_errors, error_code = self.validate_client(input_args)
+            if self.app.job_handler.get_free_queue_slots(self.endpoint_name):
+                self.__status_data['num_requests'] += 1
+                input_args = request.json if request.method == "POST" else request.args
+                validation_errors, error_code = self.validate_client(input_args)
 
-            # fast exit if not authorized for request
-            if validation_errors:
-                self.__status_data['num_unauthorized_requests'] += 1
-                return self.handle_validation_errors(validation_errors, error_code)
-            job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
-            if validation_errors:
-                self.__status_data['num_failed_requests'] += 1
-                return self.handle_validation_errors(validation_errors)
+                # fast exit if not authorized for request
+                if validation_errors:
+                    self.__status_data['num_unauthorized_requests'] += 1
+                    return self.handle_validation_errors(validation_errors, error_code)
+                job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
+                if validation_errors:
+                    self.__status_data['num_failed_requests'] += 1
+                    return self.handle_validation_errors(validation_errors)
 
-            job_data = self.add_session_variables_to_job_data(request, job_data)
-            job_data['endpoint_name'] = self.endpoint_name
-            job = await self.app.job_handler.endpoint_new_job(job_data)
+                job_data = self.add_session_variables_to_job_data(request, job_data)
+                job_data['endpoint_name'] = self.endpoint_name
+                job = await self.app.job_handler.endpoint_new_job(job_data)
 
-            if input_args.get('wait_for_result', True):
-                response = await self.finalize_request(request, job.id) 
+                if input_args.get('wait_for_result', True):
+                    response = await self.finalize_request(request, job.id) 
+                else:
+                    response = {'success': True, 'job_id': job.id, 'ep_version': self.version}
+                APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
             else:
-                response = {'success': True, 'job_id': job.id, 'ep_version': self.version}
-            APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
+                response = {
+                    'success': False,
+                    'error': f'Job queue reached max length {self.max_queue_length}!'
+                }
         else:
-            response = {'success': False, 'error': 'Endpoint disabled'}
+            response = {'success': False, 'error': 'Endpoint disabled!'}
         return sanic_json(response)
 
 

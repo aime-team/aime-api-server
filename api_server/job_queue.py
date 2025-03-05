@@ -45,9 +45,14 @@ class JobQueue(asyncio.Queue):
     the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.
 
     """    
-    def __init__(self):
-        super().__init__()
+    def __init__(self, max_length):
+        super().__init__(maxsize=max_length)
+        self.max_length = max_length
 
+
+    @property
+    def free_slots(self):
+        return self.max_length - len(self)
 
 
     async def get(self, timeout=60):
@@ -56,7 +61,6 @@ class JobQueue(asyncio.Queue):
         Returns:
             dict: Job data of the next job in the queue
         """        
-                        
         return await asyncio.wait_for(super().get(), timeout=timeout)
 
 
@@ -153,14 +157,13 @@ class JobHandler():
             )
         return response_cmd
 
-    
+
     async def endpoint_new_job(self, job_data):
         endpoint_name = job_data.get('endpoint_name')
-        endpoint = self.app.endpoints.get(endpoint_name)
-        if endpoint:
+        job_type = self.get_job_type(endpoint_name=endpoint_name)
+        if job_type:
             self.app.logger.debug(f'Client request on /{endpoint_name} with following input parameter: ')
             self.app.logger.debug(str(shorten_strings(job_data)))
-            job_type = self.job_types.get(endpoint.worker_job_type)
             return await job_type.new_job(job_data)
 
     
@@ -219,6 +222,12 @@ class JobHandler():
     def has_future(self, job_id):
         return bool(self.get_result_future(job_id))
 
+    
+    def get_free_queue_slots(self, endpoint_name):
+        job_type = self.get_job_type(endpoint_name=endpoint_name)
+        if job_type:
+            return job_type.free_queue_slots
+
 
     def init_all_job_types(self):
         self.app.logger.info('--- creating job queues')
@@ -226,14 +235,19 @@ class JobHandler():
         for endpoint in self.app.endpoints.values():
             job_type_name = endpoint.worker_job_type
             if job_type_name not in job_types:
-                job_types[job_type_name] = JobType(self.app, job_type_name, endpoint.worker_auth_key)
+                job_types[job_type_name] = JobType(self.app, job_type_name, endpoint.worker_auth_key, endpoint.max_queue_length)
         return job_types
 
 
-    def get_job_type(self, job_id):
-        for job_type_name, job_type in self.job_types.items():
-            if job_id in job_type.jobs:
-                return job_type
+    def get_job_type(self, job_id=None, endpoint_name=None):
+        if job_id:
+            for job_type_name, job_type in self.job_types.items():
+                if job_id in job_type.jobs:
+                    return job_type
+        elif endpoint_name:
+            endpoint = self.app.endpoints.get(endpoint_name)
+            if endpoint:
+                return self.job_types.get(endpoint.worker_job_type)
 
 
     def validate_worker_request(self, req_json):
@@ -330,10 +344,11 @@ class JobHandler():
 
 
 class JobType():
-    def __init__(self, app, name, worker_auth_key):
+    def __init__(self, app, name, worker_auth_key, max_queue_length):
         self.app = app
         self.name = name
-        self.queue = JobQueue()
+        self.max_queue_length = max_queue_length
+        self.queue = JobQueue(max_queue_length)
         self.app.logger.info(f'Queue for job type: {name} initialized')
         self.worker_auth_key = worker_auth_key
         self.workers = dict() # key worker_auth
@@ -344,6 +359,10 @@ class JobType():
     @property
     def free_slots(self):
         return sum(worker.free_slots for worker in self.workers.values())
+
+    @property
+    def free_queue_slots(self):
+        return self.queue.free_slots
 
 
     @property
