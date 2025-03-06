@@ -460,6 +460,10 @@ class APIEndpoint():
         return self.__status_data
 
 
+    @property
+    def status_data_sync(self):
+        return self.__status_data
+
     def enable(self):
         self.__status_data['enabled'] = True
 
