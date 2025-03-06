@@ -52,7 +52,33 @@ class APIEndpoint():
 
     def get_config_from_file(self, config_file):
         with open(config_file, 'r') as file:
-            return toml.load(file)
+            endpoint_config = toml.load(file)
+        return self.fill_missing_config_with_server_default_config(endpoint_config)
+
+
+    def fill_missing_config_with_server_default_config(self, endpoint_config):
+        for server_config_section_name, server_config_section in self.app.server_config.items():
+            default_values = {
+                config_name.replace('default_', ''): config_value
+                for config_name, config_value in server_config_section.items()
+                if config_name.startswith('default_')
+            }
+            if default_values:
+                print('DEFAULT: ', default_values)
+                if server_config_section_name not in endpoint_config and server_config_section_name == 'CLIENTS':
+                    endpoint_config[server_config_section_name] = dict()
+                elif server_config_section_name[:-1] not in endpoint_config and not server_config_section_name == 'CLIENTS':
+                    endpoint_config[server_config_section_name[:-1]] = dict()
+
+                endpoint_config_section = endpoint_config.get(
+                    server_config_section_name,
+                    endpoint_config.get(server_config_section_name[:-1])
+                )
+                for config_name, config_value in default_values.items():
+                    if config_name not in endpoint_config_section:
+                        endpoint_config_section[config_name] = config_value
+       
+        return endpoint_config
 
 
     def add_static_routes(self, config_file):
@@ -84,20 +110,7 @@ class APIEndpoint():
 
     def get_clients_config(self):
         clients_config = self.config.get('CLIENTS', {})
-        if not 'client_request_limit' in clients_config:
-            clients_config['client_request_limit'] = self.app.default_client_request_limit
-
-        if not 'provide_worker_meta_data' in clients_config:
-            clients_config['provide_worker_meta_data'] = self.app.default_provide_worker_meta_data
-
-        if not 'authentication' in clients_config:
-            clients_config['authentication'] = self.app.default_authentication
-
-        if not 'authorization' in clients_config:
-            clients_config['authorization'] = self.app.default_authorization
-
-        if not 'authorization_keys' in clients_config:
-            clients_config['authorization_keys'] = self.app.default_authorization_keys
+        print(self.config)
         return clients_config['client_request_limit'], clients_config['provide_worker_meta_data'], clients_config['authentication'], clients_config['authorization'], clients_config['authorization_keys']
    
    
@@ -165,7 +178,7 @@ class APIEndpoint():
             APIEndpoint.logger.error("No job_type for worker configured!")
         else:
             APIEndpoint.logger.info("Worker job type: " + job_type)
-        worker_auth_key = worker_config.get('auth_key', self.app.worker_config.get('default_auth_key'))
+        worker_auth_key = worker_config.get('auth_key')
         return job_type, worker_auth_key   
 
 

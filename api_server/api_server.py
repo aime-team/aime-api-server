@@ -45,9 +45,6 @@ class APIServer(Sanic):
     static_routes = {}
     worker_config = {}
     input_param_config = {}
-    default_authentification = "None"
-    default_authorization = "None"
-    default_authorization_keys = {}
     logger = logging.getLogger('API')
     host = None
     port = None
@@ -287,22 +284,12 @@ class APIServer(Sanic):
         with open(config_file, "r") as f:
             APIServer.server_config = toml.load(f)
           
-        self.set_server_clients_config(APIServer.server_config)
         self.set_server_sanic_config(APIServer.server_config, app)
         if not self.args.ep_config:
             self.args.ep_config = APIServer.server_config.get('SERVER').get('endpoint_configs', './endpoints')
         APIServer.input_param_config = APIServer.server_config.get('INPUTS', {})
         APIServer.static_routes = APIServer.server_config.get('STATIC', {})
         APIServer.worker_config = APIServer.server_config.get('WORKERS', {})
-
-
-    def set_server_clients_config(self, server_config):
-        server_clients_config = server_config.get('CLIENTS', {})
-        APIServer.default_authentication = server_clients_config.get("default_authentication", "User")
-        APIServer.default_authorization = server_clients_config.get("default_authorization", "Key")
-        APIServer.default_authorization_keys = server_clients_config.get("default_authorization_keys", {})
-        APIServer.default_client_request_limit = server_clients_config.get("default_client_request_limit", 0)
-        APIServer.default_provide_worker_meta_data = server_clients_config.get("default_provide_worker_meta_data", False)
 
 
     def init_endpoint(self, config_file):
