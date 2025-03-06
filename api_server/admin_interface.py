@@ -123,7 +123,17 @@ class AdminInterface():
 
     # request statistics
     #
-    async def admin_log_request_start(self, endpoint_name, user, job_id):
+    async def admin_log_request_start(
+        self,
+        ip_address,
+        job_hash_key,
+        job_id,
+        user_email,
+        endpoint_name,
+        request_header,
+        start_time,
+        start_time_compute
+        ):
         # Implemented by Admin BE
         pass
 
@@ -133,7 +143,12 @@ class AdminInterface():
         pass
 
 
-    async def admin_log_request_end(self, endpoint_name, user, job_id, request_status):
+    async def admin_log_request_end(
+        self,
+        job_id,
+        request_status,
+        end_datetime
+        ):
         # Implemented by Admin BE
         # request_status: "error", "success"
         pass
