@@ -69,21 +69,9 @@ class AdminInterface():
         Returns:
             dict: Dictionary with endpoint status
         """        
-
         endpoint = self.app.endpoints.get(endpoint_name)
-        job_type = self.app.job_handler.job_types.get(endpoint.worker_job_type)
-        if job_type and endpoint:
-            ep_status = endpoint.status_data_sync
-            ep_status.update({
-                'num_workers_online': await job_type.get_num_workers_online(),
-                'num_processing_requests': job_type.get_num_running_jobs(endpoint_name),
-                'num_pending_requests': len(job_type.queue),
-                'mean_request_duration': job_type.mean_duration,
-                'num_free_slots': job_type.free_slots,
-                'version': __version__
-
-            })
-            return ep_status
+        if endpoint:
+            return await endpoint.status_data
             # Implemented by API Server
             ## return dictonary with:
             # enable / disable
