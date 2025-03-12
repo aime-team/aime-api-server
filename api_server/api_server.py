@@ -39,8 +39,7 @@ class APIServer(Sanic):
     """
     endpoints = {}  # key: endpoint_name
     job_handler = None
-    admin_be_interface = None
-    registered_client_sessions = {} # key: client_session_auth_key
+    registered_client_sessions = list()
     args = None
     static_routes = {}
     worker_config = {}
@@ -48,6 +47,7 @@ class APIServer(Sanic):
     logger = logging.getLogger('API')
     host = None
     port = None
+    admin_backend = None
 
     def __init__(self, api_name):
         """Constructor
@@ -60,8 +60,12 @@ class APIServer(Sanic):
         APIServer.host, APIServer.port = APIServer.get_host_and_port()
         self.configure_logger()
         super().__init__(api_name, configure_logging=False)
-        
         self.init(APIServer.args)
+
+
+    @classmethod
+    def connect_admin_backend(cls, admin_backend):
+        cls.admin_backend = admin_backend
 
 
     async def worker_job_request_json(self, request):
@@ -275,6 +279,19 @@ class APIServer(Sanic):
         return sanic_json(result)
 
 
+    async def validate_key(self, request):
+        api_key = request.args.get('key', None)
+        if self.app.admin_backend:
+            response = await self.app.admin_backend.admin_is_api_key_valid(api_key)
+            if not response.get('valid'):
+                return sanic_json(
+                    {
+                        'success': False,
+                        'error': response.get('error_msg')
+                    }
+                )
+
+
     def load_server_configuration(self, app):
         """Parses server configuration file.
         """
@@ -292,6 +309,8 @@ class APIServer(Sanic):
         APIServer.worker_config = APIServer.server_config.get('WORKERS', {})
 
 
+
+
     def init_endpoint(self, config_file):
         with open(config_file, 'r') as file:
             config = toml.load(file)
@@ -299,8 +318,8 @@ class APIServer(Sanic):
             job_type = config.get('WORKER', {}).get('job_type')
         APIServer.endpoints[name] = APIEndpoint(self, config_file)
 
-    def init_all_endpoints(self, app, loop):
 
+    def init_all_endpoints(self, app, loop):
         config_dir = APIServer.args.ep_config
         APIServer.logger.info(f'--- Searching endpoints configurations in {config_dir}')
         if Path(config_dir).is_dir():
@@ -313,6 +332,7 @@ class APIServer(Sanic):
                 self.init_endpoint(config_file)
         else:
             APIServer.logger.error("!!! No Endpoint Configuration found, please specify where to load ml_api_endpoing.cfg with the --ep_config argument")
+
 
     def init_job_handler(self, app, loop):
         APIServer.job_handler = JobHandler(app)
@@ -343,7 +363,7 @@ class APIServer(Sanic):
             return sanic_json(job_cmd)
 
         job_type = APIServer.endpoints.get(endpoint_name).worker_job_type
-        queue = APIServer.job_hander.job_queues.get(job_type)
+        queue = APIServer.job_handler.job_queues.get(job_type)
         if not queue:
             job_cmd = { 'cmd': "error", 'msg': f"Internal Error: Queue not found" }
             return sanic_json(job_cmd)
@@ -401,6 +421,7 @@ class APIServer(Sanic):
         self.add_route(self.worker_job_progress, "/worker_job_progress", methods=["POST", "GET"])
         self.add_route(self.worker_check_server_status, "/worker_check_server_status", methods=["POST"])
         self.add_route(self.stream_progress_to_client ,"/stream_progress", methods=["POST", "GET"], stream=True)
+        self.add_route(self.validate_key, "/api/validate_key", methods=["POST", "GET"], name='api$validate_key')
 
 
     def setup_static_routes(self, app):

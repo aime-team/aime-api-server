@@ -201,6 +201,7 @@ class JobHandler():
         else:
             return JobState.UNKNOWN
 
+
     async def get_job_type_status(self, job_type_name):
         job_type = self.job_types.get(job_type_name)
         if job_type:
@@ -306,9 +307,18 @@ class JobHandler():
 
 
     async def get_worker_state(self, worker_auth):
+        
         for job_type in self.job_types.values():
             if worker_auth in job_type.workers:
                 return await job_type.get_worker_state(worker_auth)
+
+
+    def get_worker_config(self, worker_auth):
+        for job_type in self.job_types.values():
+            if worker_auth in job_type.workers:
+                for endpoint in self.app.endpoints.values():
+                    if endpoint.worker_job_type == job_type.name:
+                        return endpoint.config.get('WORKER', {})
 
 
     def get_rank(self, job_id):    
@@ -325,7 +335,7 @@ class JobHandler():
             return False
 
 
-    async def activate_worker(self, worker_auth):
+    async def enable_worker(self, worker_auth):
         for job_type in self.job_types.values():
             if worker_auth in job_type.workers:
                 worker = job_type.workers.get(worker_auth)
@@ -334,7 +344,7 @@ class JobHandler():
         return False
 
 
-    async def deactivate_worker(self, worker_auth):
+    async def disable_worker(self, worker_auth):
         for job_type in self.job_types.values():
             if worker_auth in job_type.workers:
                 worker = job_type.workers.get(worker_auth)
@@ -458,7 +468,8 @@ class JobType():
     async def start_job(self, job_id, req_json):
         job = self.jobs.get(job_id)
         worker = self.workers.get(req_json.get('auth'))
-        if job and worker:        
+        if job and worker:
+            await self.app.admin_backend.admin_log_request_start_processing(job_id, job.start_time_compute)
             await worker.start_job(job)
 
 
@@ -584,16 +595,16 @@ class JobType():
             await job.finish()
 
 
-    async def activate(self, worker_auth):
+    async def enable(self, worker_auth):
         worker = self.workers.get(worker_auth)
         if worker:
-            await worker.activate()
+            await worker.enable()
 
 
-    async def deactivate(self, worker_auth):
+    async def disable(self, worker_auth):
         worker = self.workers.get(worker_auth)
         if worker:
-            await worker.deactivate()
+            await worker.disable()
 
 
     def add_start_times(self, job_data):
@@ -625,12 +636,12 @@ class Worker():
         self.running_jobs = dict() # key job_id
 
 
-    async def activate(self):
+    async def enable(self):
         self.state = WorkerState.WAITING
         await self.update_offline_state()
 
 
-    async def deactivate(self):
+    async def disable(self):
         self.state = WorkerState.DISABLED
 
 
