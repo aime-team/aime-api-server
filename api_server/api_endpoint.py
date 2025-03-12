@@ -20,6 +20,20 @@ from .input_validation import InputValidationHandler
 
 
 TYPES_DICT = {'string': str, 'integer':int, 'float':float, 'bool':bool, 'image':str, 'audio':str}
+WORKER_META_PARAMETERS = ['auth', 'worker_interface_version']
+STATISTIC_PARAMETERS = [
+    'start_time',
+    'start_time_compute',
+    'arrival_time',
+    'finished_time',
+    'result_received_time'
+    'compute_duration',
+    'total_duration',
+    'pending_duration',
+    'preprocessing_duration'
+]
+
+
 
 class APIEndpoint():
     """AIME API endpoint
@@ -110,7 +124,6 @@ class APIEndpoint():
 
     def get_clients_config(self):
         clients_config = self.config.get('CLIENTS', {})
-        print(self.config)
         return clients_config['client_request_limit'], clients_config['provide_worker_meta_data'], clients_config['authorization_keys']
    
    
@@ -359,25 +372,11 @@ class APIEndpoint():
                 if ep_output_param_name != 'error':
                     APIEndpoint.logger.warn(f"missing output '{ep_output_param_name}' in job results")
 
-        meta_outputs = [
-            'compute_duration',
-            'total_duration',
-            'start_time',
-            'start_time_compute',
-            'auth',
-            'worker_interface_version',
-            'pending_duration',
-            'preprocessing_duration',
-            'arrival_time',
-            'finished_time',
-            'result_received_time'
-        ]
         result_sent_time = time.time()
         response['result_sent_time'] = result_sent_time
         if self.provide_worker_meta_data:
-            for meta_output in meta_outputs:
-                if meta_output in result:
-                    response[meta_output] = result[meta_output]
+            response.update({key: result[key] for key in WORKER_META_PARAMETERS if key in result})
+        response.update({key: result[key] for key in STATISTIC_PARAMETERS if key in result})
         self.__status_data['num_finished_requests'] += 1
         if self.app.admin_backend:
             await self.app.admin_backend.admin_log_request_end(
@@ -385,7 +384,6 @@ class APIEndpoint():
                 result_sent_time,
                 'success'
             )
-        worker_config = await self.app.admin_backend.api_get_worker_config('neo01_NVIDIA GeForce RTX 3090+NVIDIA GeForce RTX 3090_0')
         return response
 
 
