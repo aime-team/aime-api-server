@@ -39,7 +39,7 @@ class APIServer(Sanic):
     """
     endpoints = {}  # key: endpoint_name
     job_handler = None
-    registered_client_sessions = list()
+    registered_keys = dict() # client_session_auth_key: api_key
     args = None
     static_routes = {}
     worker_config = {}
@@ -340,9 +340,9 @@ class APIServer(Sanic):
         
     def is_client_valid(self, job_data):
         client_session_auth_key = job_data.pop('client_session_auth_key', '')
-        if client_session_auth_key in self.registered_client_sessions:
+        if client_session_auth_key in self.registered_keys:
             return True
-        if client_session_auth_key not in self.registered_client_sessions:
+        if client_session_auth_key not in self.registered_keys:
             APIServer.logger.warn(f'Discarding job, client session auth key not valid anymore')
             return False
 
@@ -354,7 +354,7 @@ class APIServer(Sanic):
         if not client_session_auth_key:
             job_cmd = { 'cmd': "error", 'msg': f"client_session_auth_key missing" }
             return sanic_json(job_cmd)
-        endpoint_name = APIServer.registered_client_sessions.get(client_session_auth_key)
+        endpoint_name = APIServer.registered_keys.get(client_session_auth_key)
         if not endpoint_name:
             job_cmd = { 'cmd': "error", 'msg': f"client_session_auth_key not authorized" }
             return sanic_json(job_cmd)

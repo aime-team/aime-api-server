@@ -204,8 +204,8 @@ class JobHandler():
 
     def get_job(self, job_id):
         job_type = self.get_job_type(job_id)
-            if job_type:
-                return job_type.jobs.get(job_id)
+        if job_type:
+            return job_type.jobs.get(job_id)
 
 
     async def get_job_type_status(self, job_type_name):

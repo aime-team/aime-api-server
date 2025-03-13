@@ -54,7 +54,6 @@ class APIEndpoint():
         self.ep_input_param_config['key'] = { 'type': 'string'}  # add implicit input 
         self.ep_input_param_config['wait_for_result'] = { 'type': 'bool'}     # add implicit input 
         self.worker_job_type, self.worker_auth_key = self.get_worker_params()
-        self.registered_client_session_auth_keys = dict()
         self.lock = asyncio.Lock()
         self.__status_data = self.init_ep_status_data()
 
@@ -215,6 +214,7 @@ class APIEndpoint():
             if self.app.job_handler.get_free_queue_slots(self.endpoint_name):
                 self.__status_data['num_requests'] += 1
                 input_args = request.json if request.method == "POST" else request.args
+                api_key = input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key'))
                 validation_errors, error_code = await self.validate_client(input_args)
 
                 # fast exit if not authorized for request
@@ -233,7 +233,7 @@ class APIEndpoint():
                 if self.app.admin_backend:
                     await self.app.admin_backend.admin_log_request_start(
                         job.id,
-                        input_args.get('key'),
+                        api_key,
                         self.endpoint_name,
                         job.start_time,
                         request.ip,
@@ -314,7 +314,7 @@ class APIEndpoint():
                 )
         client_session_auth_key = generate_auth_key()
         client_version = request.args.get('version','No version given from client')
-        self.app.registered_client_sessions.append(client_session_auth_key)
+        self.app.registered_keys[client_session_auth_key] = api_key
         APIEndpoint.logger.debug(f'Client login with {client_version} on endpoint {self.endpoint_name} in version {self.version}. Assigned session authentication key: {client_session_auth_key}')
         return sanic_json(
             {
@@ -377,7 +377,7 @@ class APIEndpoint():
         response.update({key: result[key] for key in STATISTIC_PARAMETERS if key in result})
         self.__status_data['num_finished_requests'] += 1
         if self.app.admin_backend:
-            job = self.app.job_handler.get(job_id)
+            job = self.app.job_handler.get_job(job_id)
             if job:
                 await self.app.admin_backend.admin_log_request_end(
                     job_id,
@@ -408,6 +408,7 @@ class APIEndpoint():
     async def validate_client(self, input_args):
         api_key = input_args.get('key')
         client_session_auth_key = input_args.get('client_session_auth_key')
+        api_key = api_key
         error_code = None
         validation_errors = []
         if self.app.admin_backend:
@@ -419,7 +420,7 @@ class APIEndpoint():
                 elif not await self.app.admin_backend.admin_is_api_key_authorized_for_endpoint(api_key, self.endpoint_name):
                     validation_errors.append(f'Client not authorized for endpoint {self.endpoint_name}!')
                     error_code = 402 # TODO Define error codes
-            elif client_session_auth_key not in self.app.registered_client_sessions:
+            elif client_session_auth_key not in self.app.registered_keys:
                 validation_errors.append(f'API Key missing and client session authentication key not registered in API Server')
                 error_code = 401
         return validation_errors, error_code

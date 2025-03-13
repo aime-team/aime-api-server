@@ -264,6 +264,7 @@ class MinimumAdminBackendImplementation(AdminInterface):
         self.app.logger.debug(
             f'Admin Backend call to admin_log_request_start from '
             f'job: {get_job_counter_id(job_id)}, '
+            f'key: {api_key}, '
             f'endpoint_name: {endpoint_name}, '
             f'ip_address: {ip_address}, '
             f'header: {http_request_header}'
@@ -287,6 +288,7 @@ class MinimumAdminBackendImplementation(AdminInterface):
         self.app.logger.debug(
             f'Admin Backend call to admin_log_request_end from '
             f'job: {get_job_counter_id(job_id)}, '
+            f'start_time_compute: {start_time_compute_utc}, '
             f'end_datetime: {end_time_utc}, '
             f'request_state: {request_state}, '
             f'request_error_msg: {request_error_msg}'
