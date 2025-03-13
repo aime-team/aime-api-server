@@ -475,9 +475,8 @@ class JobType():
         job = self.jobs.get(job_id)
         worker = self.workers.get(req_json.get('auth'))
         if job and worker:
-            await self.app.admin_backend.admin_log_request_start_processing(job_id, job.start_time_compute)
             await worker.start_job(job)
-
+            await self.app.admin_backend.admin_log_request_start_processing(job_id, job.start_time_compute)
 
     def get_num_running_jobs(self, endpoint_name=None):
         return sum(worker.get_num_running_jobs(endpoint_name) for worker in self.workers.values())
