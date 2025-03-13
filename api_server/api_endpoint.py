@@ -372,18 +372,19 @@ class APIEndpoint():
                 if ep_output_param_name != 'error':
                     APIEndpoint.logger.warn(f"missing output '{ep_output_param_name}' in job results")
 
-        result_sent_time = time.time()
-        response['result_sent_time'] = result_sent_time
         if self.provide_worker_meta_data:
             response.update({key: result[key] for key in WORKER_META_PARAMETERS if key in result})
         response.update({key: result[key] for key in STATISTIC_PARAMETERS if key in result})
         self.__status_data['num_finished_requests'] += 1
         if self.app.admin_backend:
-            await self.app.admin_backend.admin_log_request_end(
-                job_id,
-                result_sent_time,
-                'success'
-            )
+            job = self.app.job_handler.get(job_id)
+            if job:
+                await self.app.admin_backend.admin_log_request_end(
+                    job_id,
+                    job.start_time_compute,
+                    job.result_received_time,
+                    'success'
+                )
         return response
 
 

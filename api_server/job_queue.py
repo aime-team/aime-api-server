@@ -202,6 +202,12 @@ class JobHandler():
             return JobState.UNKNOWN
 
 
+    def get_job(self, job_id):
+        job_type = self.get_job_type(job_id)
+            if job_type:
+                return job_type.jobs.get(job_id)
+
+
     async def get_job_type_status(self, job_type_name):
         job_type = self.job_types.get(job_type_name)
         if job_type:

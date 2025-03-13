@@ -278,6 +278,7 @@ class MinimumAdminBackendImplementation(AdminInterface):
     async def admin_log_request_end(
         self,
         job_id,
+        start_time_compute_utc,
         end_time_utc,
         request_state, # 'success', 'failed', 'canceled'
         request_error_msg=None
