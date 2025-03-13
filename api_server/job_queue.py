@@ -339,7 +339,7 @@ class JobHandler():
         for job_type in self.job_types.values():
             if worker_auth in job_type.workers:
                 worker = job_type.workers.get(worker_auth)
-                await worker.activate()
+                await worker.enable()
                 return True
         return False
 
@@ -348,7 +348,7 @@ class JobHandler():
         for job_type in self.job_types.values():
             if worker_auth in job_type.workers:
                 worker = job_type.workers.get(worker_auth)
-                await worker.deactivate()
+                await worker.disable()
                 return True
         return False
 
