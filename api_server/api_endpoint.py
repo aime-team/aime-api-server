@@ -26,7 +26,7 @@ STATISTIC_PARAMETERS = [
     'start_time_compute',
     'arrival_time',
     'finished_time',
-    'result_received_time'
+    'result_received_time',
     'compute_duration',
     'total_duration',
     'pending_duration',
