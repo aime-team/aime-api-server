@@ -94,14 +94,39 @@ class JobQueue(asyncio.Queue):
 
 
 class JobHandler():
-
+    
     def __init__(self, app):
+        """Job handler class to distribute api requests to the correct jobtypes and workers. 
+        Provides methods for the worker, the endpoints and the AdminInterface() for job handling.
+
+        Args:
+            app (Sanic): Sanic server instance
+        """        
         self.app = app
         self.job_types = self.init_all_job_types()
         self.lock = asyncio.Lock()
 
 
+    def init_all_job_types(self):
+        self.app.logger.info('--- creating job queues')
+        job_types = dict()
+        for endpoint in self.app.endpoints.values():
+            job_type_name = endpoint.worker_job_type
+            if job_type_name not in job_types:
+                job_types[job_type_name] = JobType(self.app, job_type_name, endpoint.worker_auth_key, endpoint.max_queue_length)
+        return job_types
+
+
+    ### Worker methods
+
     async def worker_job_request(self, req_json):
+        """Worker job request to the JobHandler. 
+        Args:
+            req_json (dict): Job request from worker
+
+        Returns:
+            dict: Job data of incoming job at a related endpoint or {'cmd': 'no_job'} if timed out.
+        """        
         job_type = self.job_types.get(req_json.get('job_type'))
         if job_type:
             job_data = await job_type.worker_job_request(req_json)
@@ -114,6 +139,13 @@ class JobHandler():
 
 
     async def worker_update_progress_state(self, req_json):
+        """Update progress state with incoming progress updates from the worker to make it accessable to the endpoint. 
+        Args:
+            req_json (dict): Progress state from worker
+
+        Returns:
+            dict: Response dict to worker with success message.
+        """    
         job_type = self.job_types.get(req_json.get('job_type'))
         job_id = req_json.get('job_id')
         if job_type:
@@ -135,6 +167,13 @@ class JobHandler():
 
 
     async def worker_set_job_result(self, req_json):
+        """Set job result with incoming result from the worker to make it accessable to the endpoint. 
+        Args:
+            req_json (dict): Job result from worker
+
+        Returns:
+            dict: Response dict to worker with success message.
+        """    
         self.app.logger.debug(f'Request on /worker_job_result: {shorten_strings(req_json)}')
         job_id = req_json.get('job_id')
         job_type = self.job_types.get(req_json.get('job_type'))
@@ -146,19 +185,29 @@ class JobHandler():
                 job_id = f'unknown job {job_id}'
                 response_cmd = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
                 self.app.logger.warning(
-                    f"Worker {req_json.get('auth')} tried to send progress for job {job_id} with "
+                    f"Worker {req_json.get('auth')} tried to send job result for job {job_id} with "
                     f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
                 )
         else:
             response_cmd = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
             self.app.logger.warning(
-                f"Worker {req_json.get('auth')} tried  to send progress for job {job_id} with "
+                f"Worker {req_json.get('auth')} tried  to send job result for job {job_id} with "
                 f"job type {job_type}, but following error occured: {response_cmd.get('msg')}"
             )
         return response_cmd
 
 
+    ### Endpoint methods
+
     async def endpoint_new_job(self, job_data):
+        """For endpoints: Init new job and put it to the related job queue.
+
+        Args:
+            job_data (dict): Job data of api request
+
+        Returns:
+            Job: Newly created instance of Job()
+        """        
         endpoint_name = job_data.get('endpoint_name')
         job_type = self.get_job_type(endpoint_name=endpoint_name)
         if job_type:
@@ -168,19 +217,179 @@ class JobHandler():
 
     
     async def endpoint_get_progress_state(self, job_id):
+        """For endpoints: Get current progress_state of job with given job id.
+
+        Args:
+            job_id (str): Job ID of the related API request
+
+        Returns:
+            dict: Current progress state of related job
+        """
         job_type = self.get_job_type(job_id)
         if job_type:
             return await job_type.get_progress_state(job_id)
 
 
     async def endpoint_wait_for_job_result(self, job_id):
+        """For endpoints: Wait for the final job result of job with given job id.
+
+        Args:
+            job_id (str): Job ID of the related API request
+
+        Returns:
+            dict: Current progress state of related job
+        """
         job_type = self.get_job_type(job_id)
         if job_type:
             result_future = job_type.get_result_future(job_id)
             result = await result_future
             await self.finish_job(job_id)
             return result
-    
+
+
+    async def get_job_type_status(self, job_type_name):
+        """Get current status information about the job type with given name.
+
+        Args:
+            job_type_name (str): Name of the job type
+
+        Returns:
+            dict: Current status information. Example: 
+                {
+                    'num_workers_online': 1,
+                    'num_processing_requests': 1,
+                    'num_pending_requests': 2,
+                    'mean_request_duration': 12.4,
+                    'num_free_slots': 0
+                }
+
+        """        
+        job_type = self.job_types.get(job_type_name)
+        if job_type:
+            return {
+                'num_workers_online': await job_type.get_num_workers_online(),
+                'num_processing_requests': job_type.get_num_running_jobs(),
+                'num_pending_requests': len(job_type.queue),
+                'mean_request_duration': job_type.mean_duration,
+                'num_free_slots': job_type.free_slots
+            }
+
+
+
+
+    ### Admin interface methods
+
+    async def enable_worker(self, worker_auth):
+        """Enable worker with given worker name 
+
+        Args:
+            worker_auth (str): Name of the worker
+
+        Returns:
+            bool: True if worker_auth is found in JobHandler() else False
+        """        
+        for job_type in self.job_types.values():
+            if worker_auth in job_type.workers:
+                worker = job_type.workers.get(worker_auth)
+                await worker.enable()
+                return True
+        return False
+
+
+    async def disable_worker(self, worker_auth):
+        """Disable worker with given worker name 
+
+        Args:
+            worker_auth (str): Name of the worker
+
+        Returns:
+            bool: True if worker_auth is found in JobHandler() else False
+        """        
+        for job_type in self.job_types.values():
+            if worker_auth in job_type.workers:
+                worker = job_type.workers.get(worker_auth)
+                await worker.disable()
+                return True
+        return False
+
+
+    async def get_num_workers_online(self, job_type_name):
+        """Get number of workers not in the state 'offline' connected to the job type with given name.
+
+        Args:
+            job_type_name (str): Name of the job type
+
+        Returns:
+            int: Number of workers being online
+        """        
+        job_type = self.job_types.get(job_type_name)
+        if job_type:
+            return await job_type.get_num_workers_online()
+
+
+    async def get_all_workers(self, job_type_name=None):
+        """Get a list of all worker objects. If job_type_name is given, return only the workers connected to the given job type.
+
+        Args:
+            job_type_name (str, optional): Name of the job type. Defaults to None.
+
+        Returns:
+            list[Worker, ]: List of all worker objects connected to given job type or all job types.
+        """        
+        if job_type_name:
+            job_type = self.job_types.get(job_type_name)
+            return await job_type.get_all_active_workers()
+        else:
+            return [worker for job_type in self.job_types.values() for worker in await job_type.get_all_workers()]
+
+
+    async def get_all_active_workers(self, job_type_name=None):
+        """Get a list of all worker objects not in the state 'offline'. If job_type_name is given, return only the workers connected to the given job type.
+
+        Args:
+            job_type_name (str, optional): Name of the job type. Defaults to None.
+
+        Returns:
+            list[Worker, ]: List of all online worker objects connected to given job type or all job types.
+        """        
+        if job_type_name:
+            job_type = self.job_types.get(job_type_name)
+            return await job_type.get_all_active_workers()
+        else:
+            return [worker for job_type in self.job_types.values() for worker in await job_type.get_all_active_workers()]
+
+
+    async def get_worker_state(self, worker_auth):
+        """Get the state of the worker with given name.
+
+        Args:
+            worker_auth (str): Name of the worker
+
+        Returns:
+            str: Current worker state: 'processing', 'waiting', 'offline' or 'disabled'
+        """
+        for job_type in self.job_types.values():
+            if worker_auth in job_type.workers:
+                return await job_type.get_worker_state(worker_auth)
+
+
+    def get_worker_config(self, worker_auth):
+        """Get the configuration of the worker with given name from the related endpoint configuration.
+
+        Args:
+            worker_auth (str): Name of the worker
+
+        Returns:
+            dict: Worker configuration containing job_type, worker_auth_key, etc.
+        """        
+        for job_type in self.job_types.values():
+            if worker_auth in job_type.workers:
+                for endpoint in self.app.endpoints.values():
+                    if endpoint.worker_job_type == job_type.name:
+                        return endpoint.config.get('WORKER', {})
+
+
+    # Helper Methods
 
     async def finish_job(self, job_id):
         job_type = self.get_job_type(job_id)
@@ -208,18 +417,6 @@ class JobHandler():
             return job_type.jobs.get(job_id)
 
 
-    async def get_job_type_status(self, job_type_name):
-        job_type = self.job_types.get(job_type_name)
-        if job_type:
-            return {
-                'num_workers_online': await job_type.get_num_workers_online(),
-                'num_processing_requests': job_type.get_num_running_jobs(),
-                'num_pending_requests': len(job_type.queue),
-                'mean_request_duration': job_type.mean_duration,
-                'num_free_slots': job_type.free_slots
-            }
-
-
     def get_result_future(self, job_id):
         job_type = self.get_job_type(job_id)
         if job_type:
@@ -234,16 +431,6 @@ class JobHandler():
         job_type = self.get_job_type(endpoint_name=endpoint_name)
         if job_type:
             return job_type.free_queue_slots
-
-
-    def init_all_job_types(self):
-        self.app.logger.info('--- creating job queues')
-        job_types = dict()
-        for endpoint in self.app.endpoints.values():
-            job_type_name = endpoint.worker_job_type
-            if job_type_name not in job_types:
-                job_types[job_type_name] = JobType(self.app, job_type_name, endpoint.worker_auth_key, endpoint.max_queue_length)
-        return job_types
 
 
     def get_job_type(self, job_id=None, endpoint_name=None):
@@ -278,53 +465,10 @@ class JobHandler():
             await job_type.job_request_timed_out(req_json)
 
 
-    async def start_job(self, job_id, req_json):
-        job_type = self.job_types.get(req_json.get('job_type'))
-        if job_type:
-            await job_type.start_job(job_id, req_json)
-
-
     async def get_estimate_time(self, job_id):
         job_type = self.get_job_type(job_id)
         if job_type:
             return await job_type.get_estimate_time(job_id)
-
-
-    async def get_num_workers_online(self, job_type_name):
-        job_type = self.job_types.get(job_type_name)
-        if job_type:
-            return await job_type.get_num_workers_online()
-
-
-    async def get_all_workers(self, job_type_name=None):
-        if job_type_name:
-            job_type = self.job_types.get(job_type_name)
-            return await job_type.get_all_active_workers()
-        else:
-            return [worker for job_type in self.job_types.values() for worker in await job_type.get_all_workers()]
-
-
-    async def get_all_active_workers(self, job_type_name=None):
-        if job_type_name:
-            job_type = self.job_types.get(job_type_name)
-            return await job_type.get_all_active_workers()
-        else:
-            return [worker for job_type in self.job_types.values() for worker in await job_type.get_all_active_workers()]
-
-
-    async def get_worker_state(self, worker_auth):
-        
-        for job_type in self.job_types.values():
-            if worker_auth in job_type.workers:
-                return await job_type.get_worker_state(worker_auth)
-
-
-    def get_worker_config(self, worker_auth):
-        for job_type in self.job_types.values():
-            if worker_auth in job_type.workers:
-                for endpoint in self.app.endpoints.values():
-                    if endpoint.worker_job_type == job_type.name:
-                        return endpoint.config.get('WORKER', {})
 
 
     def get_rank(self, job_id):    
@@ -341,26 +485,17 @@ class JobHandler():
             return False
 
 
-    async def enable_worker(self, worker_auth):
-        for job_type in self.job_types.values():
-            if worker_auth in job_type.workers:
-                worker = job_type.workers.get(worker_auth)
-                await worker.enable()
-                return True
-        return False
-
-
-    async def disable_worker(self, worker_auth):
-        for job_type in self.job_types.values():
-            if worker_auth in job_type.workers:
-                worker = job_type.workers.get(worker_auth)
-                await worker.disable()
-                return True
-        return False
-
 
 class JobType():
     def __init__(self, app, name, worker_auth_key, max_queue_length):
+        """Handles jobs, job queues, and the workers of all endpoints connected to this job type.
+
+        Args:
+            app (Sanic): Sanic server instance
+            name (str): Name of the job type
+            worker_auth_key (str): Worker name
+            max_queue_length (int): Maximum length of the queue
+        """        
         self.app = app
         self.name = name
         self.max_queue_length = max_queue_length
@@ -628,6 +763,14 @@ class JobType():
 class Worker():
     
     def __init__(self, app, auth, job_type, job_request_timeout=60):
+        """Worker object representing a GPU Worker instance.
+
+        Args:
+            app (Sanic): Sanic server instance
+            auth (str): Name of the worker
+            job_type (str): Related job type
+            job_request_timeout (int, optional): Timeout in seconds until worker gets response 'no_job'. Defaults to 60.
+        """        
         self.app = app
         self.auth = auth
         self.job_type = job_type
@@ -766,11 +909,17 @@ class Worker():
 
 
 class Job():
-
     id_counter = AtomicCounter()
 
     def __init__(self, job_id, endpoint_name, queue, loop):
+        """Job object representing API request containing progress state, result_future, 
 
+        Args:
+            job_id (str): Unique job ID
+            endpoint_name (str): The name of the endpoint related to this job.
+            queue (asyncio.Queue): The asyncio queue that will hold this job.
+            loop (asyncio.Loop): The event loop to associate with the job's result future.
+        """
         self.id = job_id
         self.endpoint_name = endpoint_name
         self.queue = queue
@@ -791,6 +940,17 @@ class Job():
 
     @classmethod
     async def new(cls, endpoint_name, queue, loop):
+        """Generates a new job ID using the asynchronous classmethod `generate_new_job_id` and 
+        initializes a 'Job' object.
+
+        Args:
+            endpoint_name (str): The name of the endpoint related to this job.
+            queue (asyncio.Queue): The asyncio queue that will hold this job.
+            loop (asyncio.Loop): The event loop to associate with the job's result future.
+
+        Returns:
+            Job: A new instance of Job.
+        """    
         job_id = await cls.generate_new_job_id()
         return cls(job_id, endpoint_name, queue, loop)
 
