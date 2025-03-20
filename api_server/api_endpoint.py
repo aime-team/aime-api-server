@@ -236,7 +236,7 @@ class APIEndpoint():
                         api_key,
                         self.endpoint_name,
                         job.start_time,
-                        request.ip,
+                        request.headers.get('x-forwarded-for') or request.ip,
                         dict(request.headers)
                     )
                 if input_args.get('wait_for_result', True):
