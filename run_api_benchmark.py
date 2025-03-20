@@ -80,7 +80,7 @@ class BenchmarkApiEndpoint():
             self.args.login_key
         )
         try:
-            self.model_api.do_api_login()
+            self.model_api.init_api_key()
         except ConnectionError as error:
             exit(error)
         self.params = self.get_job_parameter()
