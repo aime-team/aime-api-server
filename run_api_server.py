@@ -14,7 +14,7 @@ app = APIServer(API_NAME)
 # create sessions
 session = Session(app, interface=InMemorySessionInterface())
 
-admin_backend = MinimumAdminBackendImplementation(app, app.args, None) if app.args.dev else None
+admin_backend = MinimumAdminBackendImplementation(app, app.args, None)
 
 app.connect_admin_backend(admin_backend)
 
