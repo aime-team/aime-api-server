@@ -218,7 +218,7 @@ function clearChatContext() {
 function onResultCallback(data) {
   if (data.error) {
       if (data.error.indexOf('Client session authentication key not registered in API Server') > -1) {
-          modelAPI.doAPILogin( () => onSendAPIRequest(), function (error) {
+          modelAPI.initAPIKey( () => onSendAPIRequest(), function (error) {
             infoBox.textContent = 'Login Error: ' + error + '\n';
             enableSendButton();                                 
           });
@@ -575,10 +575,10 @@ docReady(function() {
         });
     });
         
-        modelAPI.doAPILogin(function (data) {
-            console.log('Key: ' + modelAPI.clientSessionAuthKey)
-        },
-        function (error) {
-            infoBox.textContent = 'Login Error: ' + error + '\n';
+    modelAPI.initAPIKey(function (data) {
+        console.log('API Key initialized')
+    },
+    function (error) {
+        infoBox.textContent = 'Login Error: ' + error + '\n';
     });
 });
