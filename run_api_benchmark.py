@@ -1050,7 +1050,7 @@ class JobHandler():
             'worker_compute': result.get('finished_time', 0) - result.get('arrival_time', 0),
             'transfer_client2server': result.get('start_time', 0) - result.get('request_start_time', 0),
             'transfer_server2worker': result.get('arrival_time', 0) - result.get('start_time_compute', 0),
-            'transfer_worker2server': result.get('result_sent_time', 0) - result.get('finished_time', 0),
+            'transfer_worker2server': result.get('result_received_time', 0) - result.get('finished_time', 0),
             'transfer_server2client': finish_time - result.get('result_received_time', 0)
         }
         durations['worker_generation'] = durations['worker_compute'] - durations['worker_pending'] - durations['worker_preprocessing']
