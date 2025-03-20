@@ -280,16 +280,30 @@ class APIServer(Sanic):
 
 
     async def validate_key(self, request):
+        """Route /api/validate_key to check if api key is valid
+
+        Args:
+            request (sanic.request.types.Request): Client request containing api key "key"
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client. Example: {'success': True, 'error': None}
+        """        
         api_key = request.args.get('key', None)
-        if self.app.admin_backend:
-            response = await self.app.admin_backend.admin_is_api_key_valid(api_key)
-            if not response.get('valid'):
-                return sanic_json(
-                    {
-                        'success': False,
-                        'error': response.get('error_msg')
-                    }
-                )
+        if self.admin_backend:
+            response = await self.admin_backend.admin_is_api_key_valid(api_key)
+            return sanic_json(
+                {
+                    'success': response.get('valid'),
+                    'error': response.get('error_msg')
+                }
+            )
+        else:
+            return sanic_json(
+                {
+                    'success': False,
+                    'error': 'No Admin Backend to validate api key'
+                }
+            )
 
 
     def load_server_configuration(self, app):
@@ -307,8 +321,6 @@ class APIServer(Sanic):
         APIServer.input_param_config = APIServer.server_config.get('INPUTS', {})
         APIServer.static_routes = APIServer.server_config.get('STATIC', {})
         APIServer.worker_config = APIServer.server_config.get('WORKERS', {})
-
-
 
 
     def init_endpoint(self, config_file):
@@ -342,9 +354,10 @@ class APIServer(Sanic):
         client_session_auth_key = job_data.pop('client_session_auth_key', '')
         if client_session_auth_key in self.registered_keys:
             return True
-        if client_session_auth_key not in self.registered_keys:
-            APIServer.logger.warn(f'Discarding job, client session auth key not valid anymore')
-            return False
+        else:
+            return True # TODO: Discuss if necessary or admin_backend check
+            #APIServer.logger.warn(f'Discarding job, client session auth key not valid anymore')
+            #return False
 
 
     @staticmethod #stream=True in add_route() only works if staticmethod?
