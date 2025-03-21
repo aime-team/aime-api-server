@@ -147,7 +147,7 @@ class BenchmarkApiEndpoint():
             '-u', '--user_name', type=str, default='aime', required=False, help='User name to login on AIME API Server'
         )
         parser.add_argument(
-            '-k', '--login_key', type=str, default='6a17e2a5b70603cb1a3294b4a1df67da', required=False, help='Login key related to the user name received from AIME to login on AIME API Server'
+            '-k', '--login_key', type=str, default='6a17e2a5-b706-03cb-1a32-94b4a1df67da', required=False, help='Login key related to the user name received from AIME to login on AIME API Server'
         )
         parser.add_argument(
             '-nu', '--num_units', default=1, type=int, required=False, help='Number of units to generate. Images for stable_diffusion_xl_txt2img'
