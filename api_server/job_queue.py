@@ -529,7 +529,13 @@ class JobType():
 
         worker_auth = req_json.get('auth')
         if worker_auth:
-            worker = self.workers.get(worker_auth) or self.init_worker(worker_auth, req_json.get('request_timeout'))
+            if worker_auth in self.workers:
+                worker = self.workers.get(worker_auth)
+                if worker.model != WorkerModel(req_json):
+                    self.app.logger.warning(f'Attention: Model attributes of worker {worker_auth} changed from {worker.model} to {WorkerModel(req_json)}')
+                    worker.model = WorkerModel(req_json)
+            else:
+                worker = self.init_worker(req_json)
             await worker.register_job_request(req_json)
             job_id = None
             got_valid_job = False
@@ -590,7 +596,6 @@ class JobType():
         job = await Job.new(job_data.get('endpoint_name'), self.queue, self.app.loop)
         self.jobs[job.id] = job 
         job_data['job_id'] = job.id
-        self.app.logger.info(f"Client {job_data.get('client_session_auth_key')} putting job {get_job_counter_id(job.id)} into the '{self.name}' queue ... ")
         await self.queue.put(job_data)
         return job
 
@@ -662,9 +667,9 @@ class JobType():
         return job_batch_data
 
 
-    def init_worker(self, auth, request_timeout=60):
-        worker = Worker(self.app, auth, self, request_timeout)
-        self.workers[auth] = worker
+    def init_worker(self, req_json):
+        worker = Worker(self.app, self, req_json)
+        self.workers[req_json.get('auth')] = worker
         return worker
 
 
@@ -762,17 +767,16 @@ class JobType():
 
 class Worker():
     
-    def __init__(self, app, auth, job_type, job_request_timeout=60):
+    def __init__(self, app, job_type, req_json):
         """Worker object representing a GPU Worker instance.
 
         Args:
             app (Sanic): Sanic server instance
-            auth (str): Name of the worker
             job_type (str): Related job type
-            job_request_timeout (int, optional): Timeout in seconds until worker gets response 'no_job'. Defaults to 60.
+            req_json (dict): Request json of worker job request containing auth, job_request_timeout and model info
         """        
         self.app = app
-        self.auth = auth
+        self.auth = req_json.get('auth')
         self.job_type = job_type
         self.lock = asyncio.Lock()
         self.state = WorkerState.WAITING
@@ -781,7 +785,8 @@ class Worker():
         self.retry = False
         self.free_slots = 0
         self.last_request_time = time.time()
-        self.job_request_timeout = job_request_timeout
+        self.job_request_timeout = req_json.get('request_timeout')
+        self.model = WorkerModel(req_json)
         self.running_jobs = dict() # key job_id
 
 
@@ -1013,6 +1018,26 @@ class Job():
             if req_json.get('version'):
                 req_json['worker_interface_version'] = req_json.pop('version')
         return req_json
+
+
+class WorkerModel():
+    def __init__(self, req_json):
+        self.label = req_json.get('model_label', 'Unknown')
+        self.quantization = req_json.get('model_quantization', 'Unknown')
+        self.size = req_json.get('model_size', 'Unknown')
+        self.family = req_json.get('model_family', 'Unknown')
+        self.type = req_json.get('model_type', 'Unknown')
+        self.repo_name = req_json.get('model_repo_name', 'Unknown')
+
+
+    def __str__(self):
+        return str(vars(self))
+
+
+    def __eq__(self, other):
+        if not isinstance(other, WorkerModel):
+            return False
+        return vars(self) == vars(other)
 
 
 def calculate_estimate_time(estimate_duration, start_time):
