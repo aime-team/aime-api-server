@@ -190,6 +190,17 @@ class AdminInterface():
         """        
         return self.app.job_handler.get_worker_config(worker_name)
 
+    async def api_get_worker_model(self, worker_name):
+        """Retrieve the served model of the worker with given worker name.
+
+        Args:
+            worker_name (str): Name of the worker
+
+        Returns:
+            dict: Model configuration containing e.g. model_name, size, quantization, label, family
+        """        
+        return {}
+
 
     async def api_get_worker_status(self, worker_name):
         """Retrieve the current status of the worker with given worker name.
