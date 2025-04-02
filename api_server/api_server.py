@@ -348,16 +348,6 @@ class APIServer(Sanic):
 
     def init_job_handler(self, app, loop):
         APIServer.job_handler = JobHandler(app)
-        
-        
-    def is_client_valid(self, job_data):
-        client_session_auth_key = job_data.pop('client_session_auth_key', '')
-        if client_session_auth_key in self.registered_keys:
-            return True
-        else:
-            return True # TODO: Discuss if necessary or admin_backend check
-            #APIServer.logger.warn(f'Discarding job, client session auth key not valid anymore')
-            #return False
 
 
     @staticmethod #stream=True in add_route() only works if staticmethod?

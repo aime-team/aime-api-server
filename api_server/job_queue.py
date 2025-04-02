@@ -11,6 +11,7 @@ from .utils.misc import shorten_strings, get_job_counter_id
 import uuid
 from .__version import __version__
 
+WEIGHT_FACTOR_ALPHA = 0.05
 
 class JobState(Enum):
     UNKNOWN = 'unknown'
@@ -18,6 +19,7 @@ class JobState(Enum):
     PROCESSING = 'processing'
     DONE = 'done'
     CANCELED = 'canceled'
+    ELAPSED = 'elapsed'
 
 
 class WorkerState(Enum):
@@ -45,9 +47,10 @@ class JobQueue(asyncio.Queue):
     the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.
 
     """    
-    def __init__(self, max_length):
+    def __init__(self, max_length, max_time):
         super().__init__(maxsize=max_length)
         self.max_length = max_length
+        self.max_time = max_time
 
 
     @property
@@ -56,11 +59,12 @@ class JobQueue(asyncio.Queue):
 
 
     async def get(self, timeout=60):
-        """Get job data of the next job in the queue. Timeout after self.job_request_timeout
+        """Get job object of the next job in the queue.
 
         Returns:
-            dict: Job data of the next job in the queue
+            dict: Job object of the next job in the queue
         """        
+        await self.remove_elapsed_jobs()
         return await asyncio.wait_for(super().get(), timeout=timeout)
 
 
@@ -71,9 +75,9 @@ class JobQueue(asyncio.Queue):
             dict: Job data of the next job in the queue, None if no job available
         """        
         try:
-            job_data = self.get_nowait()
+            job = self.get_nowait()
             self.task_done()
-            return job_data
+            return job
         except asyncio.QueueEmpty:
             return dict()
 
@@ -82,7 +86,8 @@ class JobQueue(asyncio.Queue):
         return self._queue
 
 
-    def get_rank(self, job_id):
+    async def get_rank(self, job_id):
+        await self.remove_elapsed_jobs()
         for rank, task in enumerate(self._queue):
             if task.get('job_id') == job_id:
                 return rank +1
@@ -91,6 +96,18 @@ class JobQueue(asyncio.Queue):
 
     def __len__(self):
         return len(self._queue)
+
+
+    async def remove_elapsed_jobs(self):
+        while True:
+            try:
+                job = self.get_nowait()
+            except asyncio.QueueEmpty:
+                job = None
+            if job and await job.state == JobState.ELAPSED:
+                self.task_done()
+            else:
+                break
 
 
 class JobHandler():
@@ -113,7 +130,7 @@ class JobHandler():
         for endpoint in self.app.endpoints.values():
             job_type_name = endpoint.worker_job_type
             if job_type_name not in job_types:
-                job_types[job_type_name] = JobType(self.app, job_type_name, endpoint.worker_auth_key, endpoint.max_queue_length)
+                job_types[job_type_name] = JobType(self.app, endpoint)
         return job_types
 
 
@@ -207,7 +224,8 @@ class JobHandler():
 
         Returns:
             Job: Newly created instance of Job()
-        """        
+        """
+        await self.clean_up_old_jobs()
         endpoint_name = job_data.get('endpoint_name')
         job_type = self.get_job_type(endpoint_name=endpoint_name)
         if job_type:
@@ -397,16 +415,16 @@ class JobHandler():
             await job_type.finish_job(job_id)
 
 
-    def is_job_queued(self, job_id):
+    async def is_job_queued(self, job_id):
         job_type = self.get_job_type(job_id)
         if job_type:
-            return job_type.is_job_queued(job_id)
+            return await job_type.is_job_queued(job_id)
 
 
-    def get_job_state(self, job_id):
+    async def get_job_state(self, job_id):
         job_type = self.get_job_type(job_id)
         if job_type:
-            return job_type.get_job_state(job_id)
+            return await job_type.get_job_state(job_id)
         else:
             return JobState.UNKNOWN
 
@@ -455,8 +473,15 @@ class JobHandler():
             return job_type.validate_worker_request(req_json)
 
 
-    def get_queue(self, job_type):
-        return self.job_types.get(job_type).queue
+    def get_queue(self, endpoint_name):
+        job_type = self.get_job_type(endpoint_name=endpoint_name)
+        if job_type:
+            return job_type.queue
+
+    def get_worker(self, worker_auth):
+        for job_type in self.job_types.values():
+            if worker_auth in job_type.workers:
+                return job_type.workers.get(worker_auth)
            
 
     async def job_request_timed_out(self, req_json):
@@ -469,13 +494,7 @@ class JobHandler():
         job_type = self.get_job_type(job_id)
         if job_type:
             return await job_type.get_estimate_time(job_id)
-
-
-    def get_rank(self, job_id):    
-        job_type = self.get_job_type(job_id)
-        if job_type:
-            return job_type.get_rank(job_id)
-       
+      
 
     def is_job_future_done(self, job_id):
         job_type = self.get_job_type(job_id)
@@ -485,9 +504,14 @@ class JobHandler():
             return False
 
 
+    async def clean_up_old_jobs(self):
+        for job_type in self.job_types.values():
+            await job_type.clean_up_old_jobs()
+
+
 
 class JobType():
-    def __init__(self, app, name, worker_auth_key, max_queue_length):
+    def __init__(self, app, endpoint):
         """Handles jobs, job queues, and the workers of all endpoints connected to this job type.
 
         Args:
@@ -497,13 +521,12 @@ class JobType():
             max_queue_length (int): Maximum length of the queue
         """        
         self.app = app
-        self.name = name
-        self.max_queue_length = max_queue_length
-        self.queue = JobQueue(max_queue_length)
-        self.app.logger.info(f'Queue for job type: {name} initialized')
-        self.worker_auth_key = worker_auth_key
+        self.endpoint = endpoint
+        self.name = endpoint.worker_job_type
+        self.queue = JobQueue(endpoint.max_queue_length, endpoint.max_time_in_queue)
+        self.app.logger.info(f'Queue for job type: {self.name} initialized')
+        self.worker_auth_key = endpoint.worker_auth_key
         self.workers = dict() # key worker_auth
-        #TODO delete finished jobs after certain time
         self.jobs = dict() # key: job_id 
 
 
@@ -514,15 +537,6 @@ class JobType():
     @property
     def free_queue_slots(self):
         return self.queue.free_slots
-
-
-    @property
-    def mean_duration(self):
-        if self.jobs:
-            durations = [job.duration for job in self.jobs.values() if job.duration]
-            if durations:
-                return round(statistics.mean(durations), 2)
-        return 200
 
 
     async def worker_job_request(self, req_json):
@@ -542,27 +556,22 @@ class JobType():
             max_job_batch = req_json.get('max_job_batch', 1)
             while not got_valid_job:
                 try:
-                    job_data = await self.queue.get(timeout=req_json.get('request_timeout', 54) * 0.9)    # wait on queue for job
+                    job = await self.queue.get(timeout=req_json.get('request_timeout', 54) * 0.9)    # wait on queue for job
+                    job_id = job.id
                     self.queue.task_done()   # take it out of the queue
                 except asyncio.TimeoutError:
                     await self.job_request_timed_out(req_json)
                     return {'cmd': 'no_job'}
+                got_valid_job = await self.is_job_queued(job_id)
+            await self.start_job(job, req_json)
 
-                job_id = job_data.get('job_id')
-                if self.app.is_client_valid(job_data):
-                    got_valid_job = self.is_job_queued(job_id)
-            await self.start_job(job_id, req_json)
-
-            job_batch_data = await self.fill_job_batch_with_waiting_jobs(job_data, req_json)
-
-            endpoint_name = job_data.pop('endpoint_name', '')          
-            endpoint = self.app.endpoints.get(endpoint_name)
+            job_batch_data = await self.fill_job_batch_with_waiting_jobs(job, req_json)
             return {
                 'cmd': 'job',
                 'api_server_version': __version__,
-                'endpoint_name': endpoint_name,
-                'progress_output_descriptions': endpoint.ep_progress_param_config.get('OUTPUTS'),
-                'final_output_descriptions': endpoint.ep_output_param_config,
+                'endpoint_name': self.endpoint.endpoint_name,
+                'progress_output_descriptions': self.endpoint.ep_progress_param_config.get('OUTPUTS'),
+                'final_output_descriptions': self.endpoint.ep_output_param_config,
                 'job_data': job_batch_data
             }
 
@@ -587,23 +596,22 @@ class JobType():
         if job and worker:
             if worker:
                 await job.set_job_result(req_json)
-                return await worker.set_job_result(req_json)
+                return await worker.finish_job(job.id)
             else:
                 return {'cmd': 'error', 'msg': f'Job with job id {req_json.get("job_id")} not found in registered workers!'}
 
 
     async def new_job(self, job_data):
-        job = await Job.new(job_data.get('endpoint_name'), self.queue, self.app.loop)
+        job = await Job.new(job_data, self.app)
         self.jobs[job.id] = job 
-        job_data['job_id'] = job.id
-        await self.queue.put(job_data)
+        await self.queue.put(job)
         return job
 
 
     async def get_progress_state(self, job_id):
         job = self.jobs.get(job_id)
         if job:
-            job.progress_state['queue_position'] = job.queue_position
+            job.progress_state['queue_position'] = await job.queue_position
             job.progress_state['estimate'] = await self.get_estimate_time(job_id)
             job.progress_state['num_workers_online'] = await self.get_num_workers_online()
             if not job.progress_state.get('progress'):
@@ -611,21 +619,20 @@ class JobType():
             return job.progress_state
 
 
-    async def start_job(self, job_id, req_json):
-        job = self.jobs.get(job_id)
+    async def start_job(self, job, req_json):
         worker = self.workers.get(req_json.get('auth'))
         if job and worker:
             await worker.start_job(job)
             if self.app.admin_backend:
-                await self.app.admin_backend.admin_log_request_start_processing(job_id, job.start_time_compute)
+                await self.app.admin_backend.admin_log_request_start_processing(job.id, job.start_time_compute)
 
     def get_num_running_jobs(self, endpoint_name=None):
         return sum(worker.get_num_running_jobs(endpoint_name) for worker in self.workers.values())
 
 
-    def is_job_queued(self, job_id):
+    async def is_job_queued(self, job_id):
         job = self.jobs.get(job_id)
-        return job.state == JobState.QUEUED if job else False
+        return await job.state == JobState.QUEUED if job else False
 
 
     def is_job_future_done(self, job_id):
@@ -640,28 +647,26 @@ class JobType():
             return job.result_future
 
 
-    def get_job_state(self, job_id):
+    async def get_job_state(self, job_id):
         job = self.jobs.get(job_id)
         if job:
-            return job.state
+            return await job.state
         else:
             return JobState.UNKNOWN
 
 
-    async def fill_job_batch_with_waiting_jobs(self, job_data, req_json):
-        job_data = self.add_start_times(job_data) # backward compatibility for awi < 0.9.7. To be removed in future versions
-        job_batch_data = [job_data]
+    async def fill_job_batch_with_waiting_jobs(self, job, req_json):
+        job = self.add_start_times(job) # backward compatibility for awi < 0.9.7. To be removed in future versions
+        job_batch_data = [job.job_data]
         max_job_batch = req_json.get('max_job_batch')
         if max_job_batch > 1:
             while (len(job_batch_data) < max_job_batch):
-                job_data = self.fetch_waiting_job()
-                if job_data:
-                    if self.app.is_client_valid(job_data):
-                        job_id = job_data.get('job_id')
-                        if self.is_job_queued(job_id):
-                            job_data = self.add_start_times(job_data) # backward compatibility for awi < 0.9.7. To be removed in future versions
-                            job_batch_data.append(job_data)
-                            await self.start_job(job_id, req_json)
+                job = self.fetch_waiting_job()
+                if job:
+                    if self.is_job_queued(job.id):
+                        job = self.add_start_times(job) # backward compatibility for awi < 0.9.7. To be removed in future versions
+                        job_batch_data.append(job.job_data)
+                        await self.start_job(job, req_json)
                 else:
                     break
         return job_batch_data
@@ -693,20 +698,30 @@ class JobType():
             return dict()
 
 
-    def get_rank(self, job_id):
-        return self.queue.get_rank(job_id)
- 
-
     async def get_estimate_time(self, job_id):
         job = self.jobs.get(job_id)
         if job:
-            worker = self.workers.get(job.worker_auth)
-            if not worker:
-                if self.workers:
-                    worker = next(iter(self.workers.values()))
+            job_state = await job.state
+            if job_state == JobState.DONE:
+                return 0
+            elif job_state == JobState.PROCESSING:
+                worker = self.workers.get(job.worker_auth)
+                return worker.get_estimate_time(job)
+            elif job_state == JobState.QUEUED:
+                num_workers_online = await self.get_num_workers_online()
+                if num_workers_online:
+                    worker = next(iter(self.workers.values()))     
+                    return max(
+                        0,
+                        calculate_estimate_time(
+                            worker.mean_compute_duration * (await job.queue_position + 1) / num_workers_online,
+                            job.start_time
+                        )
+                    )
                 else:
                     return -1
-            return await worker.get_estimate_time(job)
+            else:
+                return -1
 
 
     async def get_num_workers_online(self):
@@ -753,16 +768,21 @@ class JobType():
             await worker.disable()
 
 
-    def add_start_times(self, job_data):
+    async def clean_up_old_jobs(self):
+        for job in self.jobs.copy().values():
+            if job.result_received_time and (time.time() - job.result_received_time) > job.result_lifetime:
+                del self.jobs[job.id]
+
+
+    def add_start_times(self, job):
         """Add start_time and start_time_compute for API Worker Interface < 0.9.7. To be removed in future versions.
 
         Args:
             job_data (dict): Job parameters
         """
-        job = self.jobs.get(job_data.get('job_id'))
-        job_data['start_time'] = job.start_time
-        job_data['start_time_compute'] = job.start_time_compute
-        return job_data
+        job.job_data['start_time'] = job.start_time
+        job.job_data['start_time_compute'] = job.start_time_compute
+        return job
 
 
 class Worker():
@@ -781,13 +801,14 @@ class Worker():
         self.lock = asyncio.Lock()
         self.state = WorkerState.WAITING
         self.num_finished_jobs = 0
-        self.num_timed_out_jobs = 0
+        self.num_elapsed_jobs = 0
         self.retry = False
         self.free_slots = 0
         self.last_request_time = time.time()
         self.job_request_timeout = req_json.get('request_timeout')
         self.model = WorkerModel(req_json)
         self.running_jobs = dict() # key job_id
+        self.mean_compute_duration = int()
 
 
     async def enable(self):
@@ -803,15 +824,6 @@ class Worker():
         return sum(1 for job in self.running_jobs.values() if not endpoint_name or job.endpoint_name == endpoint_name)
 
 
-    @property
-    def mean_compute_duration(self):
-        if self.job_type.jobs:
-            durations = [job.compute_duration for job in self.job_type.jobs.values() if self.auth == job.worker_auth and job.compute_duration]
-            if durations:
-                return round(statistics.mean(durations), 2)
-        return 7.5
-
-
     async def register_job_request(self, req_json):
         logger_string = (
             f"Worker '{req_json.get('auth')}' in version {req_json.get('worker_version')} "
@@ -823,7 +835,7 @@ class Worker():
             else:
                 self.app.logger.debug(logger_string)
                 self.retry = False
-            self.check_and_update_state()
+            await self.check_and_update_state()
             self.free_slots = req_json.get('max_job_batch', 1)
             self.job_request_timeout = req_json.get('request_timeout', 60)
 
@@ -834,13 +846,14 @@ class Worker():
 
 
     async def start_job(self, job):
-        await job.start(self.auth, 2 * self.job_request_timeout)
-        self.app.logger.info(f"Worker '{self.auth}' got job {get_job_counter_id(job.id)}")
-        async with self.lock:
-            self.free_slots += -1
-            self.check_and_update_state()
-            self.state = WorkerState.PROCESSING
-            self.running_jobs[job.id] = job
+        if job:
+            await job.start(self.auth)
+            self.app.logger.info(f"Worker '{self.auth}' got job {get_job_counter_id(job.id)}")
+            async with self.lock:
+                self.free_slots += -1
+                await self.check_and_update_state()
+                self.state = WorkerState.PROCESSING
+                self.running_jobs[job.id] = job
 
 
     async def set_progress_state(self, req_json):
@@ -853,24 +866,25 @@ class Worker():
                 if job:
                     self.state = WorkerState.PROCESSING
                     response_cmd = {'cmd': 'ok'}
-            self.check_and_update_state()
+            await self.check_and_update_state()
         return response_cmd
 
 
-    async def set_job_result(self, req_json):
+    async def finish_job(self, job_id):
         async with self.lock:
             self.num_finished_jobs += 1
-            self.running_jobs.pop(req_json.get('job_id'), None)
-            self.check_and_update_state()
+            job = self.running_jobs.pop(job_id, None)
+            self.mean_compute_duration = (1 - WEIGHT_FACTOR_ALPHA) * self.mean_compute_duration + WEIGHT_FACTOR_ALPHA * job.compute_duration
+            await self.check_and_update_state()
         return {'cmd': 'ok'}
 
 
-    def check_and_update_state(self):
+    async def check_and_update_state(self):
         self.last_request_time = time.time()
         for job_id, job in self.running_jobs.copy().items():
-            if not job.is_alive():
-                self.running_jobs.pop(job_id)
-                self.num_timed_out_jobs += 1
+            if await job.state == JobState.ELAPSED:
+                self.running_jobs.pop(job_id, None)
+                self.num_elapsed_jobs += 1
         if not self.running_jobs and not self.state == WorkerState.DISABLED:
             self.state = WorkerState.WAITING
 
@@ -881,83 +895,92 @@ class Worker():
                 self.state = WorkerState.OFFLINE
 
 
-    async def get_estimate_time(self, job):
-        if job.state == JobState.QUEUED:
-            num_workers_online = await self.job_type.get_num_workers_online()
-            if num_workers_online and job.queue_position:                
-                return max(
-                    calculate_estimate_time(
-                        self.mean_compute_duration * (job.queue_position + 1) / num_workers_online,
-                        job.start_time
-                    ),
-                    calculate_estimate_time(
-                        self.job_type.mean_duration,
-                        job.start_time
-                    )
-                )
-            else:
-                return -1
-
-        elif job.state == JobState.PROCESSING:
-            return max(
-                0,
-                calculate_estimate_time(
-                    self.mean_compute_duration, 
-                    job.start_time_compute
-                )
+    def get_estimate_time(self, job):
+        return max(
+            0,
+            calculate_estimate_time(
+                self.mean_compute_duration, 
+                job.start_time_compute
             )
+        )
 
-        elif job.state == JobState.DONE:
-            return 0
-        else:
-            return -1
 
 
 class Job():
     id_counter = AtomicCounter()
 
-    def __init__(self, job_id, endpoint_name, queue, loop):
+    def __init__(self, job_data, app):
         """Job object representing API request containing progress state, result_future, 
 
         Args:
             job_id (str): Unique job ID
-            endpoint_name (str): The name of the endpoint related to this job.
-            queue (asyncio.Queue): The asyncio queue that will hold this job.
-            loop (asyncio.Loop): The event loop to associate with the job's result future.
+            job_data (dict): Job data of the client api request.
+            app (Sanic): Sanic server instance.
         """
-        self.id = job_id
-        self.endpoint_name = endpoint_name
-        self.queue = queue
+        self.id = job_data.get('job_id')
+        self.endpoint_name = job_data.pop('endpoint_name')
+        self.job_data = job_data
+        self.app = app
         self.worker_auth = str()
-        self.timeout = int()
+        self.job_inactivity_timeout = self.app.endpoints.get(self.endpoint_name).clients_config.get('job_inactivity_timeout')
+        self.max_time_in_queue = self.app.endpoints.get(self.endpoint_name).max_time_in_queue
+        self.result_lifetime = self.app.endpoints.get(self.endpoint_name).clients_config.get('result_lifetime')
         self.last_update = time.time()
-        self.state = JobState.QUEUED
+        self.__state = JobState.QUEUED
         self.progress_state = dict()
         self.lock = asyncio.Lock()
-        self.result_future = asyncio.Future(loop=loop)
+        self.result_future = asyncio.Future(loop=app.loop)
         self.start_time = time.time()
         self.start_time_compute = None
         self.result_received_time = None
+        
         self.duration = None
         self.compute_duration = None
         self.pending_duration = None
 
 
+    @property
+    async def state(self):
+        if not self.__state == JobState.ELAPSED and self.is_elapsed():
+            self.__state = JobState.ELAPSED
+            self.result_received_time = time.time()
+            if self.app.admin_backend:
+                await self.app.admin_backend.admin_log_request_end(
+                    self.id,
+                    self.start_time_compute,
+                    self.result_received_time,
+                    self.__state.value
+                )
+        return self.__state
+
+
+    def is_elapsed(self):
+        now = time.time()
+        if self.__state == JobState.QUEUED and (now - self.start_time) > self.max_time_in_queue:
+            return True
+        elif self.__state == JobState.PROCESSING and (now - self.last_update) > self.job_inactivity_timeout:
+            worker = self.app.job_handler.get_worker(self.worker_auth)
+            worker.running_jobs.pop(self.id)
+            return True
+        else:
+            return False
+
+
     @classmethod
-    async def new(cls, endpoint_name, queue, loop):
+    async def new(cls, job_data, app):
         """Generates a new job ID using the asynchronous classmethod `generate_new_job_id` and 
         initializes a 'Job' object.
 
         Args:
-            endpoint_name (str): The name of the endpoint related to this job.
-            queue (asyncio.Queue): The asyncio queue that will hold this job.
-            loop (asyncio.Loop): The event loop to associate with the job's result future.
+            job_data (dict): Job data of the client api request.
+            app (Sanic): Sanic server instance.
 
         Returns:
             Job: A new instance of Job.
         """    
         job_id = await cls.generate_new_job_id()
-        return cls(job_id, endpoint_name, queue, loop)
+        job_data['job_id'] = job_id
+        return cls(job_data, app)
 
 
     @classmethod
@@ -966,17 +989,22 @@ class Job():
         return f'{uuid.uuid4()}#{counter}'
 
     @property
-    def queue_position(self):
-        return self.queue.get_rank(self.id)
-
+    async def queue_position(self):
+        if await self.state == JobState.PROCESSING:
+            return 0
+        else:
+            queue = self.app.job_handler.get_queue(self.endpoint_name)
+            if queue:
+                return await queue.get_rank(self.id)
+            else:
+                return -1
 
 
     async def set_progress_state(self, req_json):
         async with self.lock:
-            self.timeout = 2 * req_json.get('request_timeout', 60)
             self.progress_state = req_json
             self.last_update = time.time()
-            self.state = JobState.PROCESSING
+            self.__state = JobState.PROCESSING
 
 
     async def set_job_result(self, req_json):
@@ -989,23 +1017,18 @@ class Job():
             
 
 
-    async def start(self, worker_auth, timeout):
+    async def start(self, worker_auth):
         
         async with self.lock:
             self.worker_auth = worker_auth
-            self.timeout = timeout
-            self.state = JobState.PROCESSING
+            self.__state = JobState.PROCESSING
             self.start_time_compute = time.time()
 
 
     async def finish(self):
         async with self.lock:
-            self.state = JobState.DONE
+            self.__state = JobState.DONE
             self.progress_state.clear()
-
-
-    def is_alive(self):
-        return False if time.time() - self.last_update > self.timeout else True
 
 
     def add_meta_data(self, req_json):
@@ -1017,6 +1040,7 @@ class Job():
             req_json['compute_duration'] = self.compute_duration
             if req_json.get('version'):
                 req_json['worker_interface_version'] = req_json.pop('version')
+
         return req_json
 
 
