@@ -383,7 +383,8 @@ class APIEndpoint():
                     job_id,
                     job.start_time_compute,
                     job.result_received_time,
-                    'success'
+                    'success',
+                    job.metrics
                 )
         return response
 

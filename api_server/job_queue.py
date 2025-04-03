@@ -941,6 +941,7 @@ class Job():
         self.duration = None
         self.compute_duration = None
         self.pending_duration = None
+        self.metrics = dict()
 
 
     @classmethod
@@ -985,6 +986,7 @@ class Job():
             self.duration = self.result_received_time - self.start_time
             self.compute_duration = self.result_received_time - self.start_time_compute
             self.pending_duration = self.start_time - self.start_time_compute
+            self.metrics = req_json.get('metrics', {})
             self.result_future.set_result(self.add_meta_data(req_json))
             
 

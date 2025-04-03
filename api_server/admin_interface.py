@@ -164,6 +164,7 @@ class AdminInterface():
         start_time_compute_utc,
         end_time_utc,
         request_state, # 'success', 'failed', 'canceled' ,
+        metrics=None, # dict
         request_error_msg=None
         ):
         # Implemented by Admin BE
@@ -294,6 +295,7 @@ class MinimumAdminBackendImplementation(AdminInterface):
         start_time_compute_utc,
         end_time_utc,
         request_state, # 'success', 'failed', 'canceled'
+        metrics=None, # dict
         request_error_msg=None
         ):
         self.app.logger.debug(
@@ -302,5 +304,6 @@ class MinimumAdminBackendImplementation(AdminInterface):
             f'start_time_compute: {start_time_compute_utc}, '
             f'end_datetime: {end_time_utc}, '
             f'request_state: {request_state}, '
+            f'metrics: {metrics}, '
             f'request_error_msg: {request_error_msg}'
         )
