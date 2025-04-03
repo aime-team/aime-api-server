@@ -53,6 +53,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Source Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#api_server.api_server.APIServer"><code class="docutils literal notranslate"><span class="pre">APIServer</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.load_server_configuration"><code class="docutils literal notranslate"><span class="pre">APIServer.load_server_configuration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.validate_key"><code class="docutils literal notranslate"><span class="pre">APIServer.validate_key()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_check_server_status"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_check_server_status()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_job_progress"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_job_progress()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_job_request_json"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_job_request_json()</span></code></a></li>
@@ -74,7 +75,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#api_server.job_queue.JobQueue"><code class="docutils literal notranslate"><span class="pre">JobQueue</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.job_queue.JobQueue.fetch_waiting_job"><code class="docutils literal notranslate"><span class="pre">JobQueue.fetch_waiting_job()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.job_queue.JobQueue.get"><code class="docutils literal notranslate"><span class="pre">JobQueue.get()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#api_server.job_queue.JobQueue.put"><code class="docutils literal notranslate"><span class="pre">JobQueue.put()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#api_server.utils.ffmpeg.FFmpeg"><code class="docutils literal notranslate"><span class="pre">FFmpeg</span></code></a><ul>
@@ -147,6 +147,23 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.validate_key">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.validate_key" title="Link to this definition"></a></dt>
+<dd><p>Route /api/validate_key to check if api key is valid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – Client request containing api key “key”</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response to client. Example: {‘success’: True, ‘error’: None}</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_check_server_status">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_check_server_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_check_server_status" title="Link to this definition"></a></dt>
 <dd><p>Route /worker_check_server_status for API worker interface to check
@@ -187,7 +204,7 @@ server connection and queue validation for given job type and worker authenticat
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.worker_job_progress">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">worker_job_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.worker_job_progress" title="Link to this definition"></a></dt>
 <dd><p>Receive progress results from api worker interface via route /worker_job_progress
-and put it to APIServer.progress_states[job_id] to make it available for APIEndpoint.api_progress().</p>
+and put it to APIServer.job_handler.progress_states[job_id] to make it available for APIEndpoint.api_progress().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – API worker interface request containing progress results</p>
@@ -324,7 +341,7 @@ to make it available by APIEndpoint.api_request and APIEndpoint.api_progress to 
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">api_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.api_progress" title="Link to this definition"></a></dt>
 <dd><p>Client request on route /self.endpoint_name/progress called periodically by the client interface
 to receive progress and end results if the input parameter ‘wait_for_result’ of the related api_request
-was False. Takes the progress results from APIServer.progress_states put there by
+was False. Takes the progress results from APIServer.job_handler.progress_states put there by
 APIServer.worker_job_progress() and sends it as response json to the client. When the job is finished the
 final job result is awaited and taken from the job queue in finalize_request() and sent as response json
 to the client.</p>
@@ -384,7 +401,7 @@ authentication key.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.finalize_request">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_future</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.finalize_request" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.finalize_request" title="Link to this definition"></a></dt>
 <dd><p>Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future
 initialized in api_request() to get the results.</p>
 <dl class="field-list simple">
@@ -487,18 +504,10 @@ given endpoint config file.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobQueue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_auth_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobQueue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue" title="Link to this definition"></a></dt>
 <dd><p>Job queue to manage jobs for the given job type. Assignes jobs offered from client on APIEndpoint.api_request
 via route /endpoint_name with a job_id and collects the job_data. The workers asking for jobs on worker_job_request_json get
 the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>job_type</strong> (<em>str</em>) – Job type</p></li>
-<li><p><strong>worker_auth_key</strong> (<em>str</em>) – Key for worker authorization</p></li>
-</ul>
-</dd>
-</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue.fetch_waiting_job">
 <span class="sig-name descname"><span class="pre">fetch_waiting_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.fetch_waiting_job" title="Link to this definition"></a></dt>
@@ -515,31 +524,14 @@ the job_data for the next job in the queue to process. Also monitors states of w
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue.get">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.get" title="Link to this definition"></a></dt>
-<dd><p>Get job data of the next job in the queue. Timeout after self.job_timeout</p>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.get" title="Link to this definition"></a></dt>
+<dd><p>Get job data of the next job in the queue. Timeout after self.job_request_timeout</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Job data of the next job in the queue</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="api_server.job_queue.JobQueue.put">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.put" title="Link to this definition"></a></dt>
-<dd><p>Put job_data from the client job offer to the job_queue.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>job_data</strong> (<em>dict</em>) – Job data of the job</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>_description_</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>_type_</p>
 </dd>
 </dl>
 </dd></dl>
