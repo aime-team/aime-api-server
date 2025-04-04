@@ -1,6 +1,10 @@
+# Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+#
+# This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
+
 # Author: Khaled Abdel Moezz
-# Base Session Interface for Sanic Sessions
-# Provides the core session management functionality for various storage backends
+# Sanic Session Extension
+# Provides session management for Sanic applications with multiple storage backends
 
 import abc
 import datetime

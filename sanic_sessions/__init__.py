@@ -1,3 +1,7 @@
+# Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+#
+# This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
+
 # Author: Khaled Abdel Moezz
 # Sanic Session Extension
 # Provides session management for Sanic applications with multiple storage backends
