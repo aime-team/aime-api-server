@@ -17,7 +17,7 @@ app = APIServer(API_NAME)
 memcache_client = aiomcache.Client("127.0.0.1", 11211)  # Default Memcached port
 
 # Initialize session with memcache Interface
-session = Session(app, interface=MemcacheSessionInterface( cookie_name='aime_memcache_session', memcache_connection=memcache_client, expiry=3600 ))
+session = Session(app, interface=MemcacheSessionInterface( cookie_name='aime_api_session', memcache_connection=memcache_client, expiry=3600 ))
 
 admin_backend = MinimumAdminBackendImplementation(app, app.args, None)
 
