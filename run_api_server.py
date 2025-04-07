@@ -2,9 +2,7 @@
 #
 # This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
 
-from sanic_sessions import Session
-from sanic_sessions.memcache import MemcacheSessionInterface
-import aiomcache
+from sanic_sessions import Session, InMemorySessionInterface
 from api_server.api_server import APIServer
 from api_server.utils.misc import copy_js_client_interface_to_frontend_folder
 from api_server.admin_interface import MinimumAdminBackendImplementation
@@ -13,11 +11,8 @@ from api_server.admin_interface import MinimumAdminBackendImplementation
 API_NAME = "AIME_API_Server"
 app = APIServer(API_NAME)
 
-# Create a Memcached client connection
-memcache_client = aiomcache.Client("127.0.0.1", 11211)  # Default Memcached port
-
-# Initialize session with memcache Interface
-session = Session(app, interface=MemcacheSessionInterface( cookie_name='aime_api_session', memcache_connection=memcache_client, expiry=3600 ))
+# Initialize session middleware
+session = Session(app, interface=InMemorySessionInterface())
 
 admin_backend = MinimumAdminBackendImplementation(app, app.args, None)
 
@@ -31,3 +26,4 @@ if __name__ == "__main__":
         debug=app.args.dev,
         workers=app.args.worker_processes
     )
+
