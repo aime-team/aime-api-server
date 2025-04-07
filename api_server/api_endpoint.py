@@ -284,9 +284,12 @@ class APIEndpoint():
         
         if job_state == JobState.PROCESSING:
             if self.app.job_handler.is_job_future_done(job_id):
-                response['job_result'] = await self.finalize_request(request, job_id)
+                job_result = await self.finalize_request(request, job_id)
+                response['job_result'] = job_result
                 APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
                 job_state = self.app.job_handler.get_job_state(job_id)
+                response['success'] = job_result.get('success')
+                response['error'] = job_result.get('error')
         response['job_state'] = job_state.value
         if job_state != JobState.DONE:
             response['progress'] = await self.get_and_validate_progress_data(job_id)
@@ -358,7 +361,7 @@ class APIEndpoint():
             dict: Dictionary representation of the response.
         """        
         result = await self.app.job_handler.endpoint_wait_for_job_result(job_id)
-        response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
+        response = {'success': not bool(result.get('error')), 'job_id': job_id, 'ep_version': self.version}
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
@@ -383,7 +386,9 @@ class APIEndpoint():
                     job_id,
                     job.start_time_compute,
                     job.result_received_time,
-                    'success'
+                    'success' if not result.get('error') else 'failed',
+                    job.metrics,
+                    result.get('error')
                 )
         return response
 
