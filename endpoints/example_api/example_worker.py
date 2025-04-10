@@ -38,6 +38,11 @@ def main():
         counter = job_data['counter'] + 1        
         results['text'] = f"request #{counter} done. You sent: {job_data['prompt']}"
         results['counter'] = counter
+        results['metrics'] = {
+            'in_num_tokens': 200,
+            'out_num_tokens': 30, 
+        }
+
         api_worker.send_job_results(results)
 
 
