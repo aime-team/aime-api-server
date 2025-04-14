@@ -389,6 +389,13 @@ class JobHandler():
                         return endpoint.config.get('WORKER', {})
 
 
+    def get_worker_model(self, worker_auth):
+        for job_type in self.job_types.values():
+            worker = job_type.workers.get(worker_auth)
+            if worker:
+                return worker.model
+
+
     # Helper Methods
 
     async def finish_job(self, job_id):
