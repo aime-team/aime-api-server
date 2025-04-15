@@ -198,9 +198,10 @@ class AdminInterface():
             worker_name (str): Name of the worker
 
         Returns:
-            dict: Model configuration containing e.g. model_name, size, quantization, label, family
-        """        
-        return {}
+            dict: Model configuration containing e.g. label, size, quantization, type, family and repo_name
+        """
+        return vars(self.app.job_handler.get_worker_model(worker_name))
+
 
 
     async def api_get_worker_status(self, worker_name):
@@ -243,6 +244,7 @@ class AdminInterface():
 
 
 class MinimumAdminBackendImplementation(AdminInterface):
+
 
 
     async def admin_is_api_key_authorized_for_endpoint(self, api_key, endpoint_name):
