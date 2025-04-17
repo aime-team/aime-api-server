@@ -241,7 +241,7 @@ class APIEndpoint():
                         dict(request.headers)
                     )
                 if input_args.get('wait_for_result', True):
-                    response = await self.finalize_request(request, job.id) 
+                    response = await self.finalize_request(request, job) 
                 else:
                     response = {
                         'success': True,
@@ -278,22 +278,19 @@ class APIEndpoint():
         validation_errors, error_code = await self.validate_progress_request(input_args)
         if validation_errors:
             return self.handle_validation_errors(validation_errors, error_code)
-
-        job_id = input_args.get('job_id')
-        response = {"success": True, 'job_id': job_id, 'ep_version': self.version}
-        job_state = await self.app.job_handler.get_job_state(job_id)
-        
-        if job_state == JobState.PROCESSING:
-            if self.app.job_handler.is_job_future_done(job_id):
-                response['job_result'] = await self.finalize_request(request, job_id)
+        job = self.app.job_handler.get_job(input_args.get('job_id'))
+        response = {"success": True, 'job_id': job.id, 'ep_version': self.version}
+       
+        if await job.state == JobState.PROCESSING:
+            if self.app.job_handler.is_job_future_done(job):
+                response['job_result'] = await self.finalize_request(request, job)
                 APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
-                job_state = await self.app.job_handler.get_job_state(job_id)
-        elif job_state == JobState.ELAPSED:
-            validation_errors.append(f'Job {job_id} on {self.endpoint_name} elapsed!')
+        elif await job.state == JobState.ELAPSED:
+            validation_errors.append(f'Job {job.id} on {self.endpoint_name} elapsed!')
             return self.handle_validation_errors(validation_errors, 400)
-        response['job_state'] = job_state.value
-        if job_state != JobState.DONE:
-            response['progress'] = await self.get_and_validate_progress_data(job_id)
+        response['job_state'] = await job.state
+        if await job.state != JobState.DONE:
+            response['progress'] = await self.get_and_validate_progress_data(job)
         APIEndpoint.logger.debug(f'Progress response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
         return sanic_json(response)
 
@@ -342,26 +339,25 @@ class APIEndpoint():
         if not job_id:
             validation_errors.append(f'No job_id given')
             error_code = 402 # TODO Define error codes
-
-        if await self.app.job_handler.get_job_state(job_id) == JobState.UNKNOWN:
+        elif not self.app.job_handler.get_job(job_id):
             validation_errors.append(f'Client has no active request with this job id')
             error_code = 402 # TODO Define error codes
         return validation_errors, error_code
 
 
-    async def finalize_request(self, request, job_id):
+    async def finalize_request(self, request, job):
         """Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future 
         initialized in api_request() to get the results.
 
         Args:
             request (sanic.request.types.Request): _description_
-            job_id (str): Job ID
+            job (Job): Instance of class Job()
 
         Returns:
             dict: Dictionary representation of the response.
         """        
-        result = await self.app.job_handler.endpoint_wait_for_job_result(job_id)
-        response = {'success': True, 'job_id': job_id, 'ep_version': self.version}
+        result = await self.app.job_handler.endpoint_wait_for_job_result(job)
+        response = {'success': True, 'job_id': job.id, 'ep_version': self.version}
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
@@ -380,14 +376,12 @@ class APIEndpoint():
         response.update({key: result[key] for key in STATISTIC_PARAMETERS if key in result})
         self.__status_data['num_finished_requests'] += 1
         if self.app.admin_backend:
-            job = self.app.job_handler.get_job(job_id)
-            if job:
-                await self.app.admin_backend.admin_log_request_end(
-                    job_id,
-                    job.start_time_compute,
-                    job.result_received_time,
-                    'success'
-                )
+            await self.app.admin_backend.admin_log_request_end(
+                job.id,
+                job.start_time_compute,
+                job.result_received_time,
+                'success'
+            )
         return response
 
 
