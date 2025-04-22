@@ -348,16 +348,6 @@ class APIServer(Sanic):
 
     def init_job_handler(self, app, loop):
         APIServer.job_handler = JobHandler(app)
-        
-        
-    def is_client_valid(self, job_data):
-        client_session_auth_key = job_data.pop('client_session_auth_key', '')
-        if client_session_auth_key in self.registered_keys:
-            return True
-        else:
-            return True # TODO: Discuss if necessary or admin_backend check
-            #APIServer.logger.warn(f'Discarding job, client session auth key not valid anymore')
-            #return False
 
 
     @staticmethod #stream=True in add_route() only works if staticmethod?
@@ -390,7 +380,7 @@ class APIServer(Sanic):
                 progress_state = APIServer.job_handler.progress_states.get(job_id, previous_progress_state)
                 if not progress_state:
                     progress_state['progress'] = 0                    
-                progress_state['job_state'] = job_state.value
+                progress_state['job_state'] = job_state
 
                 queue_position = 0
                 if job_state == JobState.QUEUED:
@@ -409,7 +399,7 @@ class APIServer(Sanic):
                         endpoint = APIServer.endpoints.get(endpoint_name)
                         progress_state['job_result'] = await endpoint.finalize_request(request, job_id)
                         job_state = APIServer.job_handler.get_job_state(job_id)
-                        progress_state['job_state'] = job_state.value
+                        progress_state['job_state'] = job_state
                         progress_state['progress'] = 100                  
                         progress_state['queue_position'] = 0
                         await response.write(f'data: {json.dumps(progress_state)}\n\n')
@@ -426,6 +416,7 @@ class APIServer(Sanic):
         self.register_listener(self.init_all_endpoints, 'before_server_start')
         self.register_listener(self.init_job_handler, 'after_server_start')
         self.register_listener(FFmpeg.is_ffmpeg_installed, 'after_server_start')
+        self.register_listener(self.start_job_clean_up_background_task, 'after_server_start')
 
 
     def __setup_worker_interface(self):
@@ -446,6 +437,16 @@ class APIServer(Sanic):
     def set_server_sanic_config(self, server_config, app):
         config = server_config.get('SANIC', {})
         app.update_config({key.upper(): value for key, value in config.items()})
+
+
+    async def start_job_clean_up_background_task(self, app, loop):
+        loop.create_task(self.periodically_clean_up_jobs())
+
+
+    async def periodically_clean_up_jobs(self, update_interval=5):
+        while True:
+            await self.job_handler.clean_up_jobs()
+            await asyncio.sleep(update_interval)
 
 
     @staticmethod

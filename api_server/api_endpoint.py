@@ -47,8 +47,8 @@ class APIEndpoint():
     def __init__(self, app, config_file):
         self.app = app
         self.config = self.get_config_from_file(config_file)
-        self.title, self.endpoint_name, self.description, self.http_methods, self.version, self.max_queue_length = self.get_endpoint_description()
-        self.client_request_limit, self.provide_worker_meta_data, self.authorization_keys = self.get_clients_config()
+        self.title, self.endpoint_name, self.description, self.http_methods, self.version, self.max_queue_length, self.max_time_in_queue = self.get_endpoint_description()
+        self.clients_config = self.config.get('CLIENTS', {})
         self.ep_input_param_config, self.ep_output_param_config, self.ep_progress_param_config, self.ep_session_param_config = self.get_param_config()
         self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
         self.ep_input_param_config['key'] = { 'type': 'string'}  # add implicit input 
@@ -101,30 +101,31 @@ class APIEndpoint():
 
 
     def get_endpoint_description(self):
-        """Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.
+        """Loads endpoint description parameters title, name, description, http_methods, version
+        and max_queue_length and max_time_in_queue from given endpoint config file.
 
         Args:
             config (dict): Config dictionary
 
         Returns:
-            tuple (str, str, str, int, list): Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.
+            tuple (str, str, str, list, int, int, int): Tuple with endpoint descriptions title, name, description, http_methods, 
+                                                        version, max_queue_length, max_time_in_queue.
         """
         ep_config = self.config['ENDPOINT']
         name = ep_config['name']             
         title = ep_config.get('title', name)  
-        description = ep_config.get('description', title)
-
         http_methods = self.get_http_methods(ep_config)
-        version = ep_config.get('version')
-        max_queue_length = ep_config.get('max_queue_length')
         APIEndpoint.logger.info(f'----------- {title} - {name} {http_methods}')
-        return title, name, description, http_methods, version, max_queue_length
-
-
-    def get_clients_config(self):
-        clients_config = self.config.get('CLIENTS', {})
-        return clients_config['client_request_limit'], clients_config['provide_worker_meta_data'], clients_config['authorization_keys']
-   
+        return (
+            title,
+            name,
+            ep_config.get('description', title),
+            http_methods,
+            ep_config.get('version'),
+            ep_config.get('max_queue_length'),
+            ep_config.get('max_time_in_queue')
+        )
+  
    
     def get_http_methods(self, ep_config):
         """Loads http methods defined in given endpoint config file
@@ -240,7 +241,7 @@ class APIEndpoint():
                         dict(request.headers)
                     )
                 if input_args.get('wait_for_result', True):
-                    response = await self.finalize_request(request, job.id) 
+                    response = await self.finalize_request(request, job) 
                 else:
                     response = {
                         'success': True,
@@ -278,21 +279,20 @@ class APIEndpoint():
         if validation_errors:
             return self.handle_validation_errors(validation_errors, error_code)
 
-        job_id = input_args.get('job_id')
-        response = {"success": True, 'job_id': job_id, 'ep_version': self.version}
-        job_state = self.app.job_handler.get_job_state(job_id)
-        
-        if job_state == JobState.PROCESSING:
-            if self.app.job_handler.is_job_future_done(job_id):
-                job_result = await self.finalize_request(request, job_id)
-                response['job_result'] = job_result
+        job = self.app.job_handler.get_job(input_args.get('job_id'))
+        response = {"success": True, 'job_id': job.id, 'ep_version': self.version}
+       
+        if await job.state == JobState.PROCESSING:
+            if self.app.job_handler.is_job_future_done(job):
+                response['job_result'] = await self.finalize_request(request, job)
                 APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
-                job_state = self.app.job_handler.get_job_state(job_id)
-                response['success'] = job_result.get('success')
-                response['error'] = job_result.get('error')
-        response['job_state'] = job_state.value
-        if job_state != JobState.DONE:
-            response['progress'] = await self.get_and_validate_progress_data(job_id)
+        elif await job.state == JobState.ELAPSED:
+            validation_errors.append(f'Job {job.id} on {self.endpoint_name} elapsed!')
+            return self.handle_validation_errors(validation_errors, 400)
+        response['job_state'] = await job.state
+        if await job.state != JobState.DONE:
+            response['progress'] = await self.get_and_validate_progress_data(job)
+
         APIEndpoint.logger.debug(f'Progress response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
         return sanic_json(response)
 
@@ -341,27 +341,26 @@ class APIEndpoint():
         if not job_id:
             validation_errors.append(f'No job_id given')
             error_code = 402 # TODO Define error codes
-
-        if self.app.job_handler.get_job_state(job_id) == JobState.UNKNOWN:
+        elif not self.app.job_handler.get_job(job_id):
             validation_errors.append(f'Client has no active request with this job id')
             error_code = 402 # TODO Define error codes
         return validation_errors, error_code
 
 
-    async def finalize_request(self, request, job_id):
+    async def finalize_request(self, request, job):
         """Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future 
         initialized in api_request() to get the results.
 
         Args:
             request (sanic.request.types.Request): _description_
-            job_id (_type_): _description_
-            job_future (_type_): _description_
+            job (Job): Instance of class Job()
 
         Returns:
             dict: Dictionary representation of the response.
         """        
-        result = await self.app.job_handler.endpoint_wait_for_job_result(job_id)
-        response = {'success': not bool(result.get('error')), 'job_id': job_id, 'ep_version': self.version}
+        result = await self.app.job_handler.endpoint_wait_for_job_result(job)
+        response = {'success': True, 'job_id': job.id, 'ep_version': self.version}
+
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
@@ -375,21 +374,19 @@ class APIEndpoint():
                 if ep_output_param_name != 'error':
                     APIEndpoint.logger.warn(f"missing output '{ep_output_param_name}' in job results")
 
-        if self.provide_worker_meta_data:
+        if self.clients_config.get('provide_worker_meta_data'):
             response.update({key: result[key] for key in WORKER_META_PARAMETERS if key in result})
         response.update({key: result[key] for key in STATISTIC_PARAMETERS if key in result})
         self.__status_data['num_finished_requests'] += 1
         if self.app.admin_backend:
-            job = self.app.job_handler.get_job(job_id)
-            if job:
-                await self.app.admin_backend.admin_log_request_end(
-                    job_id,
-                    job.start_time_compute,
-                    job.result_received_time,
-                    'success' if not result.get('error') else 'failed',
-                    job.metrics,
-                    result.get('error')
-                )
+            await self.app.admin_backend.admin_log_request_end(
+                job.id,
+                job.start_time_compute,
+                job.result_received_time,
+                'success' if not result.get('error') else 'failed',
+                job.metrics,
+                result.get('error')
+            )
         return response
 
 
