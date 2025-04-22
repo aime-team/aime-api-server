@@ -1022,8 +1022,8 @@ class Job():
             req_json['start_time'] = self.start_time
             req_json['start_time_compute'] = self.start_time_compute
             req_json['result_received_time'] = self.result_received_time
-            req_json['total_duration'] = self.duration
-            req_json['compute_duration'] = self.compute_duration
+            req_json['total_duration'] = round(self.duration, 3)
+            req_json['compute_duration'] = round(self.compute_duration, 3)
             if req_json.get('version'):
                 req_json['worker_interface_version'] = req_json.pop('version')
         return req_json
