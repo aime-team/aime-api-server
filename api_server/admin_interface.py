@@ -176,8 +176,8 @@ class AdminInterface():
 
         Returns:
             list[str]: List of workers
-        """        
-        return await self.app.job_handler.get_all_workers()
+        """
+        return [worker.auth for worker in await self.app.job_handler.get_all_workers()]
 
 
     async def api_get_worker_config(self, worker_name):

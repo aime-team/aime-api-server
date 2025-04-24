@@ -305,6 +305,35 @@ class APIServer(Sanic):
                 }
             )
 
+    async def get_endpoints(self, request):
+        """Route /api/endpoints to retrieve a list of all endpoints. If request contains api_key only authorized endpoints are listed.
+
+        Args:
+            request (sanic.request.types.Request): Client request
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client. Example: {'endpoints': ['endpoint_name_1, endpoint_name_2, ...]}  
+        """
+        api_key = request.args.get('key')
+        endpoints = list(self.endpoints.keys())
+        if api_key:
+            response = await self.admin_backend.admin_is_api_key_valid(api_key)
+            if not response.get('valid'):
+                return sanic_json(
+                    {
+                        'error': response.get('error_msg')
+                    },
+                    status = 401
+                )
+            endpoints = [
+                endpoint_name for endpoint_name in endpoints if await self.admin_backend.admin_is_api_key_authorized_for_endpoint(api_key,endpoint_name)
+            ]
+        return sanic_json(
+            {
+                'endpoints': endpoints
+            }
+        )
+
 
     def load_server_configuration(self, app):
         """Parses server configuration file.
@@ -426,6 +455,7 @@ class APIServer(Sanic):
         self.add_route(self.worker_check_server_status, "/worker_check_server_status", methods=["POST"])
         self.add_route(self.stream_progress_to_client ,"/stream_progress", methods=["POST", "GET"], stream=True)
         self.add_route(self.validate_key, "/api/validate_key", methods=["POST", "GET"], name='api$validate_key')
+        self.add_route(self.get_endpoints, "/api/endpoints", methods=["POST", "GET"], name='api$get_endpoints')
 
 
     def setup_static_routes(self, app):

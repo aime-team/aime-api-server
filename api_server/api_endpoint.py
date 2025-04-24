@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 import toml
 
-from .job_queue import JobState
+from .job_queue import JobState, WorkerState
 from .utils.misc import StaticRouteHandler, shorten_strings, generate_auth_key
 from .input_validation import InputValidationHandler
 
@@ -47,7 +47,7 @@ class APIEndpoint():
     def __init__(self, app, config_file):
         self.app = app
         self.config = self.get_config_from_file(config_file)
-        self.title, self.endpoint_name, self.description, self.http_methods, self.version, self.max_queue_length, self.max_time_in_queue = self.get_endpoint_description()
+        self.title, self.endpoint_name, self.description, self.category, self.http_methods, self.version, self.max_queue_length, self.max_time_in_queue = self.get_endpoint_description()
         self.clients_config = self.config.get('CLIENTS', {})
         self.ep_input_param_config, self.ep_output_param_config, self.ep_progress_param_config, self.ep_session_param_config = self.get_param_config()
         self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
@@ -60,6 +60,7 @@ class APIEndpoint():
         app.add_route(self.api_request, "/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name)
         app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=self.http_methods, name=self.endpoint_name + "$progress")
         app.add_route(self.client_login, "/" + self.endpoint_name + "/login", methods=self.http_methods, name=self.endpoint_name + "$login")
+        app.add_route(self.client_get_endpoint_details, "/api/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name + "$get_endpoint_details")
 
         self.add_static_routes(config_file)
 
@@ -120,6 +121,7 @@ class APIEndpoint():
             title,
             name,
             ep_config.get('description', title),
+            ep_config.get('category'),
             http_methods,
             ep_config.get('version'),
             ep_config.get('max_queue_length'),
@@ -325,6 +327,102 @@ class APIEndpoint():
                 'ep_version': self.version, 
                 'client_session_auth_key': client_session_auth_key,
                 'key': api_key
+            }
+        )
+
+    async def client_get_endpoint_details(self, request):
+        """Route /api/<endpoint_name> to get details about <endpoint_name>. 
+
+        Args:
+            request (sanic.request.types.Request): Client request
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client. Example: 
+            {
+                'name': 'llama3_chat', 
+                'title': 'LLama 3.x Chat',
+                'description': 'Llama 3.x Instruct Chat example API',
+                'http_methods': ['GET', 'POST'],
+                'version': 2,
+                'max_queue_length': 1000,
+                'max_time_in_queue': 3600,
+                'category': 'chat',
+                'num_active_workers': 1,
+                'num_workers': 1,
+                'workers': [
+                    {
+                        'name': 'hostname#0_2xNVIDIA_GeForce_RTX_3090',
+                        'state': 'online',
+                        'max_batch_size': 1,
+                        'model': {
+                            'label': 'Meta-Llama-3-8B-Instruct',
+                            'quantization': 'fp16',
+                            'size': '8B',
+                            'family': 'Llama',
+                            'type': 'LLM',
+                            'repo_name': 'Meta-Llama-3-8B-Instruct'
+                        }
+                    }
+                ],
+                'parameter_description': {
+                    'input': {
+                        'prompt_input': {'type': 'string', 'default': '', 'required': False},
+                        'chat_context': {'type': 'json', 'default': '', 'required': False},
+                        'top_k': {'type': 'integer', 'minimum': 1, 'maximum': 1000, 'default': 40},
+                        'top_p': {'type': 'float', 'minimum': 0.0, 'maximum': 1.0, 'default': 0.9},
+                        'temperature': {'type': 'float', 'minimum': 0.0, 'maximum': 1.0, 'default': 0.8},
+                        'max_gen_tokens': {'type': 'integer', 'default': 2000},
+                        'client_session_auth_key': {'type': 'string'},
+                        'key': {'type': 'string'},
+                        'wait_for_result': {'type': 'bool'}
+                    },
+                    'output': {
+                        'text': {'type': 'string'},
+                        'num_generated_tokens': {'type': 'integer'},
+                        'model_name': {'type': 'string'},
+                        'max_seq_len': {'type': 'integer'},
+                        'current_context_length': {'type': 'integer'},
+                        'error': {'type': 'string'},
+                        'prompt_length': {'type': 'integer'}
+                    },
+                    'progress': {
+                        'OUTPUTS': {
+                            'text': {'type': 'string'},
+                            'num_generated_tokens': {'type': 'integer'},
+                            'current_context_length': {'type': 'integer'}
+                        }
+                    }
+                }
+            }
+
+        """        
+        workers = await self.app.job_handler.get_all_workers(self.worker_job_type)
+        return sanic_json(
+            {
+                'name': self.endpoint_name,
+                'title': self.title,
+                'description': self.description,
+                'http_methods': self.http_methods,
+                'version': self.version,
+                'max_queue_length': self.max_queue_length,
+                'max_time_in_queue': self.max_time_in_queue,
+                'category': self.category,
+                'num_active_workers': len(await self.app.job_handler.get_all_active_workers(self.worker_job_type)),
+                'num_workers': len(workers),
+                'workers': [
+                    {
+                        'name': worker.auth,
+                        'state': worker.state if worker.state in (WorkerState.OFFLINE, WorkerState.DISABLED) else 'online',
+                        'max_batch_size': worker.max_batch_size,
+                        'model' : vars(worker.model)
+                    }
+                    for worker in workers
+                ],
+                'parameter_description': {
+                    'input': self.ep_input_param_config,
+                    'output': self.ep_output_param_config,
+                    'progress': self.ep_progress_param_config
+                }
             }
         )
 

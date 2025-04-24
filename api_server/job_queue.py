@@ -737,12 +737,12 @@ class JobType():
 
     async def get_all_workers(self):
         await self.update_offline_workers_state()
-        return [worker.auth for worker in self.workers.values()]
+        return [worker for worker in self.workers.values()]
 
 
     async def get_all_active_workers(self):
         await self.update_offline_workers_state()
-        return [worker.auth for worker in self.workers.values() if not worker.state == WorkerState.OFFLINE]
+        return [worker for worker in self.workers.values() if not worker.state == WorkerState.OFFLINE]
 
 
     async def get_worker_state(self, worker_auth):
@@ -808,6 +808,7 @@ class Worker():
         self.num_finished_jobs = 0
         self.num_elapsed_jobs = 0
         self.retry = False
+        self.max_batch_size = 0
         self.free_slots = 0
         self.last_request_time = time.time()
         self.job_request_timeout = req_json.get('request_timeout')
@@ -841,7 +842,8 @@ class Worker():
                 self.app.logger.debug(logger_string)
                 self.retry = False
             await self.check_and_update_state()
-            self.free_slots = req_json.get('max_job_batch', 1)
+            self.max_batch_size = req_json.get('max_job_batch', 1)
+            self.free_slots = self.max_batch_size
             self.job_request_timeout = req_json.get('request_timeout', 60)
 
 
