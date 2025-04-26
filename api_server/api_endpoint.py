@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 import toml
 
-from .job_queue import JobState
+from .job_queue import JobState, WorkerState
 from .utils.misc import StaticRouteHandler, shorten_strings, generate_auth_key
 from .input_validation import InputValidationHandler
 
@@ -47,8 +47,8 @@ class APIEndpoint():
     def __init__(self, app, config_file):
         self.app = app
         self.config = self.get_config_from_file(config_file)
-        self.title, self.endpoint_name, self.description, self.http_methods, self.version, self.max_queue_length = self.get_endpoint_description()
-        self.client_request_limit, self.provide_worker_meta_data, self.authorization_keys = self.get_clients_config()
+        self.title, self.endpoint_name, self.description, self.category, self.http_methods, self.version, self.max_queue_length, self.max_time_in_queue = self.get_endpoint_description()
+        self.clients_config = self.config.get('CLIENTS', {})
         self.ep_input_param_config, self.ep_output_param_config, self.ep_progress_param_config, self.ep_session_param_config = self.get_param_config()
         self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
         self.ep_input_param_config['key'] = { 'type': 'string'}  # add implicit input 
@@ -60,6 +60,7 @@ class APIEndpoint():
         app.add_route(self.api_request, "/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name)
         app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=self.http_methods, name=self.endpoint_name + "$progress")
         app.add_route(self.client_login, "/" + self.endpoint_name + "/login", methods=self.http_methods, name=self.endpoint_name + "$login")
+        app.add_route(self.client_get_endpoint_details, "/api/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name + "$get_endpoint_details")
 
         self.add_static_routes(config_file)
 
@@ -101,30 +102,32 @@ class APIEndpoint():
 
 
     def get_endpoint_description(self):
-        """Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.
+        """Loads endpoint description parameters title, name, description, http_methods, version
+        and max_queue_length and max_time_in_queue from given endpoint config file.
 
         Args:
             config (dict): Config dictionary
 
         Returns:
-            tuple (str, str, str, int, list): Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.
+            tuple (str, str, str, list, int, int, int): Tuple with endpoint descriptions title, name, description, http_methods, 
+                                                        version, max_queue_length, max_time_in_queue.
         """
         ep_config = self.config['ENDPOINT']
         name = ep_config['name']             
         title = ep_config.get('title', name)  
-        description = ep_config.get('description', title)
-
         http_methods = self.get_http_methods(ep_config)
-        version = ep_config.get('version')
-        max_queue_length = ep_config.get('max_queue_length')
         APIEndpoint.logger.info(f'----------- {title} - {name} {http_methods}')
-        return title, name, description, http_methods, version, max_queue_length
-
-
-    def get_clients_config(self):
-        clients_config = self.config.get('CLIENTS', {})
-        return clients_config['client_request_limit'], clients_config['provide_worker_meta_data'], clients_config['authorization_keys']
-   
+        return (
+            title,
+            name,
+            ep_config.get('description', title),
+            ep_config.get('category'),
+            http_methods,
+            ep_config.get('version'),
+            ep_config.get('max_queue_length'),
+            ep_config.get('max_time_in_queue')
+        )
+  
    
     def get_http_methods(self, ep_config):
         """Loads http methods defined in given endpoint config file
@@ -240,7 +243,7 @@ class APIEndpoint():
                         dict(request.headers)
                     )
                 if input_args.get('wait_for_result', True):
-                    response = await self.finalize_request(request, job.id) 
+                    response = await self.finalize_request(request, job) 
                 else:
                     response = {
                         'success': True,
@@ -278,21 +281,20 @@ class APIEndpoint():
         if validation_errors:
             return self.handle_validation_errors(validation_errors, error_code)
 
-        job_id = input_args.get('job_id')
-        response = {"success": True, 'job_id': job_id, 'ep_version': self.version}
-        job_state = self.app.job_handler.get_job_state(job_id)
-        
-        if job_state == JobState.PROCESSING:
-            if self.app.job_handler.is_job_future_done(job_id):
-                job_result = await self.finalize_request(request, job_id)
-                response['job_result'] = job_result
+        job = self.app.job_handler.get_job(input_args.get('job_id'))
+        response = {"success": True, 'job_id': job.id, 'ep_version': self.version}
+       
+        if await job.state == JobState.PROCESSING:
+            if self.app.job_handler.is_job_future_done(job):
+                response['job_result'] = await self.finalize_request(request, job)
                 APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
-                job_state = self.app.job_handler.get_job_state(job_id)
-                response['success'] = job_result.get('success')
-                response['error'] = job_result.get('error')
-        response['job_state'] = job_state.value
-        if job_state != JobState.DONE:
-            response['progress'] = await self.get_and_validate_progress_data(job_id)
+        elif await job.state == JobState.ELAPSED:
+            validation_errors.append(f'Job {job.id} on {self.endpoint_name} elapsed!')
+            return self.handle_validation_errors(validation_errors, 400)
+        response['job_state'] = await job.state
+        if await job.state != JobState.DONE:
+            response['progress'] = await self.get_and_validate_progress_data(job)
+
         APIEndpoint.logger.debug(f'Progress response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
         return sanic_json(response)
 
@@ -328,6 +330,102 @@ class APIEndpoint():
             }
         )
 
+    async def client_get_endpoint_details(self, request):
+        """Route /api/<endpoint_name> to get details about <endpoint_name>. 
+
+        Args:
+            request (sanic.request.types.Request): Client request
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client. Example: 
+            {
+                'name': 'llama3_chat', 
+                'title': 'LLama 3.x Chat',
+                'description': 'Llama 3.x Instruct Chat example API',
+                'http_methods': ['GET', 'POST'],
+                'version': 2,
+                'max_queue_length': 1000,
+                'max_time_in_queue': 3600,
+                'category': 'chat',
+                'num_active_workers': 1,
+                'num_workers': 1,
+                'workers': [
+                    {
+                        'name': 'hostname#0_2xNVIDIA_GeForce_RTX_3090',
+                        'state': 'online',
+                        'max_batch_size': 1,
+                        'model': {
+                            'label': 'Meta-Llama-3-8B-Instruct',
+                            'quantization': 'fp16',
+                            'size': '8B',
+                            'family': 'Llama',
+                            'type': 'LLM',
+                            'repo_name': 'Meta-Llama-3-8B-Instruct'
+                        }
+                    }
+                ],
+                'parameter_description': {
+                    'input': {
+                        'prompt_input': {'type': 'string', 'default': '', 'required': False},
+                        'chat_context': {'type': 'json', 'default': '', 'required': False},
+                        'top_k': {'type': 'integer', 'minimum': 1, 'maximum': 1000, 'default': 40},
+                        'top_p': {'type': 'float', 'minimum': 0.0, 'maximum': 1.0, 'default': 0.9},
+                        'temperature': {'type': 'float', 'minimum': 0.0, 'maximum': 1.0, 'default': 0.8},
+                        'max_gen_tokens': {'type': 'integer', 'default': 2000},
+                        'client_session_auth_key': {'type': 'string'},
+                        'key': {'type': 'string'},
+                        'wait_for_result': {'type': 'bool'}
+                    },
+                    'output': {
+                        'text': {'type': 'string'},
+                        'num_generated_tokens': {'type': 'integer'},
+                        'model_name': {'type': 'string'},
+                        'max_seq_len': {'type': 'integer'},
+                        'current_context_length': {'type': 'integer'},
+                        'error': {'type': 'string'},
+                        'prompt_length': {'type': 'integer'}
+                    },
+                    'progress': {
+                        'OUTPUTS': {
+                            'text': {'type': 'string'},
+                            'num_generated_tokens': {'type': 'integer'},
+                            'current_context_length': {'type': 'integer'}
+                        }
+                    }
+                }
+            }
+
+        """        
+        workers = await self.app.job_handler.get_all_workers(self.worker_job_type)
+        return sanic_json(
+            {
+                'name': self.endpoint_name,
+                'title': self.title,
+                'description': self.description,
+                'http_methods': self.http_methods,
+                'version': self.version,
+                'max_queue_length': self.max_queue_length,
+                'max_time_in_queue': self.max_time_in_queue,
+                'category': self.category,
+                'num_active_workers': len(await self.app.job_handler.get_all_active_workers(self.worker_job_type)),
+                'num_workers': len(workers),
+                'workers': [
+                    {
+                        'name': worker.auth,
+                        'state': worker.state if worker.state in (WorkerState.OFFLINE, WorkerState.DISABLED) else 'online',
+                        'max_batch_size': worker.max_batch_size,
+                        'model' : vars(worker.model)
+                    }
+                    for worker in workers
+                ],
+                'parameter_description': {
+                    'input': self.ep_input_param_config,
+                    'output': self.ep_output_param_config,
+                    'progress': self.ep_progress_param_config
+                }
+            }
+        )
+
 
     def handle_validation_errors(self, validation_errors, error_code=400):
         response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
@@ -341,27 +439,26 @@ class APIEndpoint():
         if not job_id:
             validation_errors.append(f'No job_id given')
             error_code = 402 # TODO Define error codes
-
-        if self.app.job_handler.get_job_state(job_id) == JobState.UNKNOWN:
+        elif not self.app.job_handler.get_job(job_id):
             validation_errors.append(f'Client has no active request with this job id')
             error_code = 402 # TODO Define error codes
         return validation_errors, error_code
 
 
-    async def finalize_request(self, request, job_id):
+    async def finalize_request(self, request, job):
         """Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future 
         initialized in api_request() to get the results.
 
         Args:
             request (sanic.request.types.Request): _description_
-            job_id (_type_): _description_
-            job_future (_type_): _description_
+            job (Job): Instance of class Job()
 
         Returns:
             dict: Dictionary representation of the response.
         """        
-        result = await self.app.job_handler.endpoint_wait_for_job_result(job_id)
-        response = {'success': not bool(result.get('error')), 'job_id': job_id, 'ep_version': self.version}
+        result = await self.app.job_handler.endpoint_wait_for_job_result(job)
+        response = {'success': True, 'job_id': job.id, 'ep_version': self.version}
+
         #--- extract and store session variables from job
         for ep_session_param_name in self.ep_session_param_config:
             if ep_session_param_name in result:
@@ -375,21 +472,19 @@ class APIEndpoint():
                 if ep_output_param_name != 'error':
                     APIEndpoint.logger.warn(f"missing output '{ep_output_param_name}' in job results")
 
-        if self.provide_worker_meta_data:
+        if self.clients_config.get('provide_worker_meta_data'):
             response.update({key: result[key] for key in WORKER_META_PARAMETERS if key in result})
         response.update({key: result[key] for key in STATISTIC_PARAMETERS if key in result})
         self.__status_data['num_finished_requests'] += 1
         if self.app.admin_backend:
-            job = self.app.job_handler.get_job(job_id)
-            if job:
-                await self.app.admin_backend.admin_log_request_end(
-                    job_id,
-                    job.start_time_compute,
-                    job.result_received_time,
-                    'success' if not result.get('error') else 'failed',
-                    job.metrics,
-                    result.get('error')
-                )
+            await self.app.admin_backend.admin_log_request_end(
+                job.id,
+                job.start_time_compute,
+                job.result_received_time,
+                'success' if not result.get('error') else 'failed',
+                job.metrics,
+                result.get('error')
+            )
         return response
 
 
