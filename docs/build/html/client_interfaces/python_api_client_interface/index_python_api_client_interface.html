@@ -107,7 +107,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 <p><strong>Examples</strong></p>
 <blockquote>
 <div><p>Synchronous with progress callback:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">python_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">aime_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
 
 <span class="k">def</span> <span class="nf">progress_callback</span><span class="p">(</span><span class="n">progress_info</span><span class="p">,</span> <span class="n">progress_data</span><span class="p">):</span>
     <span class="n">process_progress_info</span><span class="p">(</span><span class="n">progress_info</span><span class="p">)</span>
@@ -122,7 +122,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 </div>
 <p>Asynchronous with asynchronous callbacks:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">from</span> <span class="nn">python_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
+<span class="kn">from</span> <span class="nn">aime_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">result_callback</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
     <span class="k">await</span> <span class="n">process_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -147,7 +147,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 </div>
 <p>Asynchronous with synchronous callbacks:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">from</span> <span class="nn">python_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
+<span class="kn">from</span> <span class="nn">aime_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
 
 <span class="n">sync</span> <span class="k">def</span> <span class="nf">result_callback</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
     <span class="n">process_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
@@ -172,7 +172,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 </div>
 <p>Asynchronous generator:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
-<span class="kn">from</span> <span class="nn">python_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
+<span class="kn">from</span> <span class="nn">aime_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">model_api</span> <span class="o">=</span> <span class="n">modelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.info&#39;</span><span class="p">,</span> <span class="s1">&#39;llama3_chat&#39;</span><span class="p">,</span> <span class="s1">&#39;user_name&#39;</span><span class="p">,</span> <span class="s1">&#39;user_key&#39;</span><span class="p">)</span>

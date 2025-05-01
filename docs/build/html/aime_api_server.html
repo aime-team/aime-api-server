@@ -52,6 +52,7 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration/configuration.html">Configure API Server</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Source Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#api_server.api_server.APIServer"><code class="docutils literal notranslate"><span class="pre">APIServer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.get_endpoints"><code class="docutils literal notranslate"><span class="pre">APIServer.get_endpoints()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.load_server_configuration"><code class="docutils literal notranslate"><span class="pre">APIServer.load_server_configuration()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.validate_key"><code class="docutils literal notranslate"><span class="pre">APIServer.validate_key()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_server.APIServer.worker_check_server_status"><code class="docutils literal notranslate"><span class="pre">APIServer.worker_check_server_status()</span></code></a></li>
@@ -63,6 +64,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint"><code class="docutils literal notranslate"><span class="pre">APIEndpoint</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.api_progress"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.api_progress()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.api_request"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.api_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.client_get_endpoint_details"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.client_get_endpoint_details()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.client_login"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.client_login()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.finalize_request"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.finalize_request()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api_server.api_endpoint.APIEndpoint.get_endpoint_description"><code class="docutils literal notranslate"><span class="pre">APIEndpoint.get_endpoint_description()</span></code></a></li>
@@ -140,6 +142,23 @@
 <dd class="field-odd"><p><strong>api_name</strong> (<em>str</em>) – Name of API server</p>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_server.APIServer.get_endpoints">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_endpoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.get_endpoints" title="Link to this definition"></a></dt>
+<dd><p>Route /api/endpoints to retrieve a list of all endpoints. If request contains api_key only authorized endpoints are listed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – Client request</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Response to client. Example: {‘endpoints’: [‘endpoint_name_1, endpoint_name_2, …]}</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_server.APIServer.load_server_configuration">
 <span class="sig-name descname"><span class="pre">load_server_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_server.APIServer.load_server_configuration" title="Link to this definition"></a></dt>
@@ -383,6 +402,98 @@ the client gets a quick confirmation response and the result can be requested on
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.client_get_endpoint_details">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">client_get_endpoint_details</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.client_get_endpoint_details" title="Link to this definition"></a></dt>
+<dd><p>Route /api/&lt;endpoint_name&gt; to get details about &lt;endpoint_name&gt;.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – Client request</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>Response to client. Example:
+{</p>
+<blockquote>
+<div><p>’name’: ‘llama3_chat’,
+‘title’: ‘LLama 3.x Chat’,
+‘description’: ‘Llama 3.x Instruct Chat example API’,
+‘http_methods’: [‘GET’, ‘POST’],
+‘version’: 2,
+‘max_queue_length’: 1000,
+‘max_time_in_queue’: 3600,
+‘category’: ‘chat’,
+‘num_active_workers’: 1,
+‘num_workers’: 1,
+‘workers’: [</p>
+<blockquote>
+<div><dl>
+<dt>{</dt><dd><p>‘name’: ‘hostname#0_2xNVIDIA_GeForce_RTX_3090’,
+‘state’: ‘online’,
+‘max_batch_size’: 1,
+‘model’: {</p>
+<blockquote>
+<div><p>’label’: ‘Meta-Llama-3-8B-Instruct’,
+‘quantization’: ‘fp16’,
+‘size’: ‘8B’,
+‘family’: ‘Llama’,
+‘type’: ‘LLM’,
+‘repo_name’: ‘Meta-Llama-3-8B-Instruct’</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>],
+‘parameter_description’: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>’input’: {</dt><dd><p>‘prompt_input’: {‘type’: ‘string’, ‘default’: ‘’, ‘required’: False},
+‘chat_context’: {‘type’: ‘json’, ‘default’: ‘’, ‘required’: False},
+‘top_k’: {‘type’: ‘integer’, ‘minimum’: 1, ‘maximum’: 1000, ‘default’: 40},
+‘top_p’: {‘type’: ‘float’, ‘minimum’: 0.0, ‘maximum’: 1.0, ‘default’: 0.9},
+‘temperature’: {‘type’: ‘float’, ‘minimum’: 0.0, ‘maximum’: 1.0, ‘default’: 0.8},
+‘max_gen_tokens’: {‘type’: ‘integer’, ‘default’: 2000},
+‘client_session_auth_key’: {‘type’: ‘string’},
+‘key’: {‘type’: ‘string’},
+‘wait_for_result’: {‘type’: ‘bool’}</p>
+</dd>
+</dl>
+<p>},
+‘output’: {</p>
+<blockquote>
+<div><p>’text’: {‘type’: ‘string’},
+‘num_generated_tokens’: {‘type’: ‘integer’},
+‘model_name’: {‘type’: ‘string’},
+‘max_seq_len’: {‘type’: ‘integer’},
+‘current_context_length’: {‘type’: ‘integer’},
+‘error’: {‘type’: ‘string’},
+‘prompt_length’: {‘type’: ‘integer’}</p>
+</div></blockquote>
+<p>},
+‘progress’: {</p>
+<blockquote>
+<div><dl class="simple">
+<dt>’OUTPUTS’: {</dt><dd><p>‘text’: {‘type’: ‘string’},
+‘num_generated_tokens’: {‘type’: ‘integer’},
+‘current_context_length’: {‘type’: ‘integer’}</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sanic.response.types.JSONResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.client_login">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">client_login</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.client_login" title="Link to this definition"></a></dt>
 <dd><p>Route for client interface to login to the API Server while receiving a client session
@@ -401,15 +512,14 @@ authentication key.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.finalize_request">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.finalize_request" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.finalize_request" title="Link to this definition"></a></dt>
 <dd><p>Awaits the result until the APIServer.worker_job_result_json() puts the job results in the related future
 initialized in api_request() to get the results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>request</strong> (<em>sanic.request.types.Request</em>) – _description_</p></li>
-<li><p><strong>job_id</strong> (<em>_type_</em>) – _description_</p></li>
-<li><p><strong>job_future</strong> (<em>_type_</em>) – _description_</p></li>
+<li><p><strong>job</strong> (<em>Job</em>) – Instance of class Job()</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -424,16 +534,21 @@ initialized in api_request() to get the results.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.api_endpoint.APIEndpoint.get_endpoint_description">
 <span class="sig-name descname"><span class="pre">get_endpoint_description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#api_server.api_endpoint.APIEndpoint.get_endpoint_description" title="Link to this definition"></a></dt>
-<dd><p>Loads endpoint description parameters title, name, description, client_request_limit, http_methods from given endpoint config file.</p>
+<dd><p>Loads endpoint description parameters title, name, description, http_methods, version
+and max_queue_length and max_time_in_queue from given endpoint config file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Config dictionary</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple with endpoint descriptions title, name, description, client_request_limit, http_methods.</p>
+<dd class="field-even"><p><dl class="simple">
+<dt>Tuple with endpoint descriptions title, name, description, http_methods,</dt><dd><p>version, max_queue_length, max_time_in_queue.</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple (str, str, str, int, list)</p>
+<dd class="field-odd"><p>tuple (str, str, str, list, int, int, int)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -504,7 +619,7 @@ given endpoint config file.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobQueue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">api_server.job_queue.</span></span><span class="sig-name descname"><span class="pre">JobQueue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue" title="Link to this definition"></a></dt>
 <dd><p>Job queue to manage jobs for the given job type. Assignes jobs offered from client on APIEndpoint.api_request
 via route /endpoint_name with a job_id and collects the job_data. The workers asking for jobs on worker_job_request_json get
 the job_data for the next job in the queue to process. Also monitors states of workers in registered_workers and mean_job_durations.</p>
@@ -525,10 +640,10 @@ the job_data for the next job in the queue to process. Also monitors states of w
 <dl class="py method">
 <dt class="sig sig-object py" id="api_server.job_queue.JobQueue.get">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#api_server.job_queue.JobQueue.get" title="Link to this definition"></a></dt>
-<dd><p>Get job data of the next job in the queue. Timeout after self.job_request_timeout</p>
+<dd><p>Get job object of the next job in the queue.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Job data of the next job in the queue</p>
+<dd class="field-odd"><p>Job object of the next job in the queue</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>dict</p>
