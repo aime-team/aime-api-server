@@ -80,7 +80,7 @@ class BenchmarkApiEndpoint():
             self.args.login_key
         )
         try:
-            self.model_api.do_api_login()
+            self.model_api.init_api_key()
         except ConnectionError as error:
             exit(error)
         self.params = self.get_job_parameter()
@@ -147,7 +147,7 @@ class BenchmarkApiEndpoint():
             '-u', '--user_name', type=str, default='aime', required=False, help='User name to login on AIME API Server'
         )
         parser.add_argument(
-            '-k', '--login_key', type=str, default='6a17e2a5b70603cb1a3294b4a1df67da', required=False, help='Login key related to the user name received from AIME to login on AIME API Server'
+            '-k', '--login_key', type=str, default='6a17e2a5-b706-03cb-1a32-94b4a1df67da', required=False, help='Login key related to the user name received from AIME to login on AIME API Server'
         )
         parser.add_argument(
             '-nu', '--num_units', default=1, type=int, required=False, help='Number of units to generate. Images for stable_diffusion_xl_txt2img'
@@ -1050,7 +1050,7 @@ class JobHandler():
             'worker_compute': result.get('finished_time', 0) - result.get('arrival_time', 0),
             'transfer_client2server': result.get('start_time', 0) - result.get('request_start_time', 0),
             'transfer_server2worker': result.get('arrival_time', 0) - result.get('start_time_compute', 0),
-            'transfer_worker2server': result.get('result_sent_time', 0) - result.get('finished_time', 0),
+            'transfer_worker2server': result.get('result_received_time', 0) - result.get('finished_time', 0),
             'transfer_server2client': finish_time - result.get('result_received_time', 0)
         }
         durations['worker_generation'] = durations['worker_compute'] - durations['worker_pending'] - durations['worker_preprocessing']

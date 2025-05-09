@@ -9,20 +9,20 @@
  */
 class ModelAPI {
 
-    static version = 'JavaScript AIME API Client Interface 0.8.2';
+    static version = 'JavaScript AIME API Client Interface 0.8.3';
     
     /**
     * Constructor of the class.
     * @constructor
     * @param {string} endpointName - The name of the API endpoint.
     * @param {string} user - api user
-    * @param {sting} key - api Key required to authenticate and authorize to use api endpoint    * 
+    * @param {sting} apiKey - api Key required to authenticate and authorize to use api endpoint    * 
     * @param {number} [defaultProgressIntervall=300] - The intervall for progress updates in milliseconds. The default progress update intervall is 300.
     */
-    constructor(endpointName, user, key, defaultProgressIntervall = 300) {
+    constructor(endpointName, user, apiKey, defaultProgressIntervall = 300) {
         this.endpointName = endpointName;
         this.user = user;
-        this.key = key;
+        this.apiKey = apiKey;
         this.clientSessionAuthKey = null;
         this.defaultProgressIntervall = defaultProgressIntervall;
     }
@@ -35,7 +35,7 @@ class ModelAPI {
      */
     async fetchAuthKey() {
         
-        const response = await this.fetchAsync(`/${this.endpointName}/login?user=${this.user}&key=${this.key}&version=${encodeURIComponent(ModelAPI.version)}`);
+        const response = await this.fetchAsync(`/${this.endpointName}/login?user=${this.user}&key=${this.apiKey}&version=${encodeURIComponent(ModelAPI.version)}`);
         
         if (response.success) {
             return response.client_session_auth_key;
@@ -72,19 +72,60 @@ class ModelAPI {
     }
 
     /**
+     * Method for API Key Initialization.
+     * @async
+     * @param {function} [resultCallback=null] - The callback after successful API key validation.
+     * @param {function} [resultCallback=null] - The error callback for unsuccessful API key validation.
+     * @param {sting} apiKey - optional: set to new api Key required to authenticate and authorize to use api endpoint
+     * 
+     */
+    async initAPIKey(resultCallback = null, errorCallback = null, apiKey = null) {
+        if (apiKey != null) {
+            this.apiKey = apiKey;
+        }
+        try {
+                const response = await this.fetchAsync(
+                    `/api/validate_key?key=${this.apiKey}&version=${encodeURIComponent(ModelAPI.version)}`, false
+                );
+                if (response.success) {
+                    if (resultCallback && typeof resultCallback === 'function') {
+                        resultCallback(response);
+                    }
+                    else {
+                        console.log(`API Key initialized`);
+                    }
+                    return response;
+                }
+                else {
+                    var errorMessage = `${response.error}`
+                    if (response.ep_version) {
+                        errorMessage += ` Endpoint version: ${response.ep_version}`
+                    }
+                    throw new Error(errorMessage)
+                }
+            } 
+        catch (error) {
+            console.error('Error during API Key Validation:', error);
+            if (errorCallback && typeof errorCallback === 'function') {
+                errorCallback(error);
+            }
+        }
+    }
+
+    /**
      * Method for API login.
      * @async
      * @param {function} [resultCallback=null] - The callback after successful login.
      * @param {string} user - optinal: set to new api user
-     * @param {sting} key - optional: set to new api Key required to authenticate and authorize to use api endpoint
+     * @param {sting} apiKey - optional: set to new api Key required to authenticate and authorize to use api endpoint
      * 
      */
-    async doAPILogin(resultCallback = null, errorCallback = null, user = null, key = null) {
+    async doAPILogin(resultCallback = null, errorCallback = null, user = null, apiKey = null) {
         if (user != null) {
             this.user = user;
         }
-        if (key != null) {
-            this.key = key;
+        if (apiKey != null) {
+            this.apiKey = apiKey;
         }
         try {
             const authKey = await this.fetchAuthKey();
@@ -102,6 +143,7 @@ class ModelAPI {
         }
     }
 
+
     /**
      * Method for API requests with options for progress updates.
      * @async
@@ -113,11 +155,11 @@ class ModelAPI {
     async doAPIRequest(params, resultCallback, progressCallback = null, progressStream = false) {
         const url = `/${this.endpointName}`;
         console.log(`URL: ${url}`);
-        console.log(`API Key: ${this.clientSessionAuthKey}`);
         //console.log('progressStream: ', progressStream);
 
         params = await this.stringifyObjects(params)
         params.client_session_auth_key = this.clientSessionAuthKey;
+        params.key = this.apiKey;
         params.wait_for_result = !progressCallback;
 
         const response = await this.fetchAsync(url, params, true);
@@ -194,7 +236,7 @@ class ModelAPI {
      * @param {function} progressCallback - The callback for progress updates.
      */
     async pollProgress(url, jobID, resultCallback, progressCallback) {
-        const progressURL = `/${this.endpointName}/progress?client_session_auth_key=${encodeURIComponent(this.clientSessionAuthKey)}&job_id=${encodeURIComponent(jobID)}`;
+        const progressURL = `/${this.endpointName}/progress?key=${encodeURIComponent(this.apiKey)}&job_id=${encodeURIComponent(jobID)}`;
 
         const fetchProgress = async (progressURL) => {
             try {
@@ -259,9 +301,9 @@ class ModelAPI {
  * @param {function} resultCallback - The callback after the request is completed.
  * @param {function} [progressCallback=null] - The callback for progress updates.
  */
-function doAPIRequest(endpointName, params, resultCallback, user = null, key = null, progressCallback = null) {
-    const model = new ModelAPI(endpointName, user, key);
-    model.doAPILogin((data) => {
+function doAPIRequest(endpointName, params, resultCallback, user = null, apiKey = null, progressCallback = null) {
+    const model = new ModelAPI(endpointName, user, apiKey);
+    model.initAPIKey((data) => {
         model.doAPIRequest(params, resultCallback, progressCallback);
     });
 }

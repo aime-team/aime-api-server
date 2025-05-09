@@ -6,7 +6,7 @@ const API_USER = 'aime'
 const API_KEY = '6a17e2a5-b706-03cb-1a32-94b4a1df67da'
 
 
-modelAPI = new ModelAPI('llama3_chat', API_USER, API_KEY);
+modelAPI = new ModelAPI('llama4_chat', API_USER, API_KEY);
 
 let readyToSendRequest = true;
 let chatboxContentEl;
@@ -14,7 +14,7 @@ let infoBox;
 let currentChatContext = [];
 let currentTemplate;
 let chatContextPerSession = new Object();
-const assistantName = 'Steve';
+const assistantName = 'Pete';
 
 const CHAT_TEMPLATES = {
     'eng': [

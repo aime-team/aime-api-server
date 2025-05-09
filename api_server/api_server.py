@@ -19,15 +19,17 @@ import json
 import asyncio
 
 from .api_endpoint import APIEndpoint
+from .job_queue import JobState, JobHandler
 from .openai import OpenAI
-from .job_queue import JobQueue, JobState
 from .flags import Flags
 from .utils.misc import StaticRouteHandler, shorten_strings, CustomFormatter
 from .utils.ffmpeg import FFmpeg
-from .__version import __version__
 
 
 logging.getLogger('asyncio').setLevel(logging.ERROR)
+        
+
+
 
 
 class APIServer(Sanic):
@@ -36,24 +38,19 @@ class APIServer(Sanic):
     Args:
         api_name (str): Name of API server
     """
-    job_queues = {} # key: endpoint_name
     endpoints = {}  # key: endpoint_name
-    job_states = {} # key: job_id
-    job_result_futures = {} # key: job_id
-    progress_states = {}    # key: job_id
-    registered_client_sessions = {} # key: client_session_auth_key
-    openai = None
+    job_handler = None
+    registered_keys = dict() # client_session_auth_key: api_key
     args = None
     static_routes = {}
     worker_config = {}
-    openai_config = {}
     input_param_config = {}
-    default_authentification = "None"
-    default_authorization = "None"
-    default_authorization_keys = {}
+    openai_config = {}
     logger = logging.getLogger('API')
     host = None
     port = None
+    admin_backend = None
+    openai = None
 
     def __init__(self, api_name):
         """Constructor
@@ -65,8 +62,13 @@ class APIServer(Sanic):
         APIServer.args = flags.args
         APIServer.host, APIServer.port = APIServer.get_host_and_port()
         self.configure_logger()
-        super().__init__(api_name, configure_logging=False)      
+        super().__init__(api_name, configure_logging=False)
         self.init(APIServer.args)
+
+
+    @classmethod
+    def connect_admin_backend(cls, admin_backend):
+        cls.admin_backend = admin_backend
 
 
     async def worker_job_request_json(self, request):
@@ -150,14 +152,16 @@ class APIServer(Sanic):
         """
         req_json = request.json
         APIServer.logger.debug(f'Request on /worker_job_request: {shorten_strings(req_json)}')
-        queue = APIServer.job_queues.get(req_json.get('job_type'))
-        job_cmd = await self.validate_worker_queue(queue, req_json)
-        if job_cmd.get('cmd') != 'ok':
-            APIServer.logger.warning(f"Worker {req_json.get('auth')} tried a job request for job type {req_json.get('job_type')}, but following error occured: {job_cmd.get('msg')}")
-            return sanic_json(job_cmd)
+        response_cmd = APIServer.job_handler.validate_worker_request(req_json)
+        if response_cmd.get('cmd') != 'ok':
+            APIServer.logger.warning(
+                f"Worker {req_json.get('auth')} tried a job request for job type {req_json.get('job_type')}, "
+                f"but following error occured: {response_cmd.get('msg')}"
+            )
+            return sanic_json(response_cmd)
              
-        job_cmd = await self.wait_for_valid_job(queue, req_json)
-        return sanic_json(job_cmd)
+        response_cmd = await APIServer.job_handler.worker_job_request(req_json)
+        return sanic_json(response_cmd)
 
 
     async def worker_job_result_json(self, request):
@@ -171,44 +175,21 @@ class APIServer(Sanic):
         Returns:
             sanic.response.types.JSONResponse: Response to API worker interface with 'cmd': 'ok' when API server received data.
         """
-        result = self.process_job_result(request)
-        job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(result.get('job_type')), result)
-        if job_cmd.get('cmd') != 'ok':
-            APIServer.logger.warning(f"Worker {result.get('auth')} tried to send job result for job type {result.get('job_type')}, but following error occured: {job_cmd.get('msg')}")
-            return sanic_json(job_cmd)
-        job_id = result.get('job_id')
-
-        if APIServer.job_result_futures.get(job_id):
-            APIServer.job_result_futures.get(job_id).set_result(result)
-            response = {'cmd': 'ok'}
-        else:
-            job_id = 'unknown job'
-            response = {'cmd': 'warning', 'msg': f"Job {job_id} invalid! Couldn't process job results!"}
-        APIServer.logger.info(f"Worker '{result.get('auth')}' processed job {job_id}")
-        return sanic_json(response)
-
-    
-    def process_job_result(self, request):
         req_json = request.json
-        APIServer.logger.debug(f'Request on /worker_job_result: {shorten_strings(req_json)}')
-        job_id = req_json['job_id']
-        now = time.time()
-        req_json['result_received_time'] = now
-        req_json['total_duration'] = round(now - req_json.get('start_time'), 1)
-        req_json['compute_duration'] = round(now - req_json.get('start_time_compute'), 1)
-        queue = APIServer.job_queues.get(req_json.get('job_type'))
-        worker = queue.registered_workers.get(req_json.get('auth'))
-        if worker:
-            worker['status'] = f'finished job {job_id}'
-            worker['jobs_done'] += 1
-        if req_json.get('version'):
-            req_json['worker_interface_version'] = req_json.pop('version')
-        return req_json
-
+        response_cmd = APIServer.job_handler.validate_worker_request(req_json)
+        if response_cmd.get('cmd') != 'ok':
+            APIServer.logger.warning(
+                f"Worker {req_json.get('auth')} tried to send job result for job {progress_result.get('job_id')} "
+                f"with job type {req_json.get('job_type')}, but following error occured: {response_cmd.get('msg')}"
+            )
+            return sanic_json(response_cmd)
+        response_cmd = await APIServer.job_handler.worker_set_job_result(req_json)
+        return sanic_json(response_cmd)
+    
 
     async def worker_job_progress(self, request):
         """Receive progress results from api worker interface via route /worker_job_progress 
-        and put it to APIServer.progress_states[job_id] to make it available for APIEndpoint.api_progress(). 
+        and put it to APIServer.job_handler.progress_states[job_id] to make it available for APIEndpoint.api_progress(). 
 
         Args:
             request (sanic.request.types.Request): API worker interface request containing progress results
@@ -234,25 +215,22 @@ class APIServer(Sanic):
         """
         req_json = request.json
         APIServer.logger.debug(f'Request on /worker_job_progress: {shorten_strings(req_json)}')
+
         if not isinstance(req_json, list): # compatibility fix: api_worker_interface < version 0.70
             req_json = [req_json]
-        job_cmd_list = list()
-        for job_data in req_json:
-            job_id = job_data.get('job_id')
-            job_type = job_data.get('job_type')
-            job_cmd = await self.validate_worker_queue(APIServer.job_queues.get(job_type), job_data)
-            if job_cmd.get('cmd') not in ('ok'):
-                APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
-                return sanic_json(job_cmd) # Fast exit if worker is not authorized or wrong job type.
-
-            if APIServer.job_result_futures.get(job_id):
-                APIServer.progress_states[job_id] = job_data
-            else:
-                job_cmd = {'cmd': 'warning', 'msg': f'Job with job id {job_id} not valid'}
-                APIServer.logger.warning(f"Worker {job_data.get('auth')} tried to send progress for job {job_id} with job type {job_type}, but following error occured: {job_cmd.get('msg')}")
-            job_cmd_list.append(job_cmd)
+        response_cmd_list = list()
+        for progress_result in req_json:
+            response_cmd = APIServer.job_handler.validate_worker_request(progress_result)
+            if response_cmd.get('cmd') not in ('ok'):
+                APIServer.logger.warning(
+                    f"Worker {progress_result.get('auth')} tried to send progress for job {progress_result.get('job_id')} "
+                    f"with job type {progress_result.get('job_type')}, but following error occured: {response_cmd.get('msg')}"
+                )
+                return sanic_json(response_cmd) # Fast exit if worker is not authorized or wrong job type.
+            response_cmd = await APIServer.job_handler.worker_update_progress_state(progress_result)
+            response_cmd_list.append(response_cmd)
        
-        return sanic_json(job_cmd_list)
+        return sanic_json(response_cmd_list)
 
 
 
@@ -297,13 +275,67 @@ class APIServer(Sanic):
         """
         req_json = request.json
 
-        if APIServer.job_queues and req_json:
-            queue = APIServer.job_queues.get(req_json.get('job_type'))
-            req_json['status_check'] = True
-            result = await self.validate_worker_queue(queue, req_json)
+        if APIServer.job_handler and APIServer.job_handler.job_types and req_json:
+            result = APIServer.job_handler.validate_worker_request(req_json)
         else:
             result = { 'cmd': "warning", 'msg': 'API Server still initializing'}
         return sanic_json(result)
+
+
+    async def validate_key(self, request):
+        """Route /api/validate_key to check if api key is valid
+
+        Args:
+            request (sanic.request.types.Request): Client request containing api key "key"
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client. Example: {'success': True, 'error': None}
+        """        
+        api_key = request.args.get('key', None)
+        if self.admin_backend:
+            response = await self.admin_backend.admin_is_api_key_valid(api_key)
+            return sanic_json(
+                {
+                    'success': response.get('valid'),
+                    'error': response.get('error_msg')
+                }
+            )
+        else:
+            return sanic_json(
+                {
+                    'success': False,
+                    'error': 'No Admin Backend to validate api key'
+                }
+            )
+
+    async def get_endpoints(self, request):
+        """Route /api/endpoints to retrieve a list of all endpoints. If request contains api_key only authorized endpoints are listed.
+
+        Args:
+            request (sanic.request.types.Request): Client request
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client. Example: {'endpoints': ['endpoint_name_1, endpoint_name_2, ...]}  
+        """
+        api_key = request.args.get('key')
+        endpoints = list(self.endpoints.keys())
+        if api_key:
+            response = await self.admin_backend.admin_is_api_key_valid(api_key)
+            if not response.get('valid'):
+                return sanic_json(
+                    {
+                        'error': response.get('error_msg')
+                    },
+                    status = 401
+                )
+            endpoints = [
+                endpoint_name for endpoint_name in endpoints if await self.admin_backend.admin_is_api_key_authorized_for_endpoint(api_key,endpoint_name)
+            ]
+        return sanic_json(
+            {
+                'endpoints': endpoints
+            }
+        )
 
 
     def load_server_configuration(self, app):
@@ -313,31 +345,24 @@ class APIServer(Sanic):
         APIServer.logger.info("Reading server config: " + str(config_file))
 
         with open(config_file, "r") as f:
-            server_config = toml.load(f)
-        self.set_server_clients_config(server_config)
-        self.set_server_sanic_config(server_config, app)
+            APIServer.server_config = toml.load(f)
+          
+        self.set_server_sanic_config(APIServer.server_config, app)
         if not self.args.ep_config:
-            self.args.ep_config = server_config.get('SERVER').get('endpoint_configs', './endpoints')
-        APIServer.input_param_config = server_config.get('INPUTS', {})
-        APIServer.static_routes = server_config.get('STATIC', {})
-        APIServer.worker_config = server_config.get('WORKERS', {})
+            self.args.ep_config = APIServer.server_config.get('SERVER').get('endpoint_configs', './endpoints')
+        APIServer.input_param_config = APIServer.server_config.get('INPUTS', {})
+        APIServer.static_routes = APIServer.server_config.get('STATIC', {})
+        APIServer.worker_config = APIServer.server_config.get('WORKERS', {})
         APIServer.openai_config = server_config.get('OPENAI', {})
-
-
-    def set_server_clients_config(self, server_config):
-        server_clients_config = server_config.get('CLIENTS', {})
-        APIServer.default_authentication = server_clients_config.get("default_authentication", "User")
-        APIServer.default_authorization = server_clients_config.get("default_authorization", "Key")
-        APIServer.default_authorization_keys = server_clients_config.get("default_authorization_keys", {})
-        APIServer.default_client_request_limit = server_clients_config.get("default_client_request_limit", 0)
-        APIServer.default_provide_worker_meta_data = server_clients_config.get("default_provide_worker_meta_data", False)
 
 
     def init_endpoint(self, config_file):
         with open(config_file, 'r') as file:
             config = toml.load(file)
             name = config.get('ENDPOINT', {}).get('name')
+            job_type = config.get('WORKER', {}).get('job_type')
         APIServer.endpoints[name] = APIEndpoint(self, config_file)
+
 
     def init_all_endpoints(self, app, loop):
         config_dir = APIServer.args.ep_config
@@ -354,108 +379,12 @@ class APIServer(Sanic):
             APIServer.logger.error("!!! No Endpoint Configuration found, please specify where to load ml_api_endpoing.cfg with the --ep_config argument")
 
 
+    def init_job_handler(self, app, loop):
+        APIServer.job_handler = JobHandler(app)
+
+
     def init_openai(self, app, loop):
         OpenAI(self)
-
-    async def validate_worker_queue(self, queue, req_json):
-        job_type = req_json.get('job_type')
-        if not queue:
-            if APIServer.args.dev:
-                job_cmd = { 'cmd': "error", 'msg': f"No job queue for job_type: {job_type}" }
-            else:
-                job_cmd = { 'cmd': "warning", 'msg': f"No job queue for job_type: {job_type}" }
-        elif queue.worker_auth_key != req_json.get('auth_key'):
-            job_cmd = { 'cmd': "error", 'msg': f"Worker not authorized!" }
-        else: 
-            job_cmd = {'cmd': 'ok'}
-
-            if not req_json.get('status_check'):
-                if req_json.get('auth') not in queue.registered_workers:
-                    queue.registered_workers[req_json.get('auth')] = {
-                        'status': 'waiting',
-                        'jobs_done': 0,
-                        'retry': False,
-                        'last_request': time.time(),
-                        'job_timeout': req_json.get('request_timeout', 60) * 0.9
-                    }
-                else:
-                    worker = queue.registered_workers[req_json.get('auth')]
-                    worker['last_request'] = time.time()
-                    worker['job_timeout'] = req_json.get('request_timeout', 60) * 0.9
-                    if req_json.get('progress'):
-                        worker['status'] = f"processing job {req_json.get('job_id')}"
-                    else:
-                        worker['status'] = 'waiting'
-
-        return job_cmd
-
-
-    async def wait_for_valid_job(self, queue, req_json):
-        job_id = None
-        auth = req_json.get('auth')
-        worker = queue.registered_workers.get(auth)
-        got_valid_job = False
-        logger_string = f"Worker '{auth}' in version {req_json.get('worker_version')} with {req_json.get('version')} waiting on '{req_json.get('job_type')}' queue for a job ... "
-        if not worker.get('retry'):
-            APIServer.logger.info(logger_string)
-        else:
-            APIServer.logger.debug(logger_string)
-            worker['retry'] = False
-        
-        job_timeout = worker.get('job_timeout', 54)
-        max_job_batch = req_json.get('max_job_batch', 1)
-
-        while not got_valid_job:
-            try:
-                job_data = await queue.get(job_timeout=job_timeout)    # wait on queue for job
-            except asyncio.TimeoutError:
-                worker['retry'] = True
-                return {'cmd': 'no_job', 'api_server_version': __version__}
-                
-            queue.task_done()   # take it out of the queue
-            worker['status'] = 'processing'
-            
-            client_session_auth_key = job_data.pop('client_session_auth_key', '')
-            if not client_session_auth_key in self.registered_client_sessions:
-                APIServer.logger.warn(f"discarding job, client session auth key not valid anymore")
-            else:
-                job_id = job_data['job_id']
-                got_valid_job = (APIServer.job_states[job_id] == JobState.QUEUED)
-
-        endpoint_name = job_data.pop('endpoint_name', '')
-        APIServer.job_states[job_id] = JobState.PROCESSING
-        APIServer.logger.info(f"Worker '{auth}' got job {job_id}")
-        job_data['start_time_compute'] = time.time()
-
-        job_batch_data = [job_data]
-
-        # fill batch with already waiting jobs
-        if max_job_batch > 1:
-            fetch_waiting_jobs = True
-            while (len(job_batch_data) < max_job_batch) and fetch_waiting_jobs:
-                job_data = queue.fetch_waiting_job()
-                if job_data:
-                    client_session_auth_key = job_data.pop('client_session_auth_key', '')
-                    if not client_session_auth_key in self.registered_client_sessions:
-                        APIServer.logger.warn(f"discarding job, client session auth key not valid anymore")
-                    else:
-                        job_id = job_data['job_id']
-                        if(APIServer.job_states[job_id] == JobState.QUEUED):
-                            APIServer.job_states[job_id] = JobState.PROCESSING
-                            job_data.pop('endpoint_name', '')
-                            APIServer.logger.info(f"Worker '{auth}' got job {job_id}")
-                            job_data['start_time_compute'] = time.time()
-                            job_batch_data.append(job_data)
-                else:
-                    fetch_waiting_jobs = False
-
-        job_cmd = { 'cmd': 'job', 'api_server_version': __version__ }
-        endpoint = APIServer.endpoints.get(endpoint_name)
-        job_cmd['endpoint_name'] = endpoint_name
-        job_cmd['progress_output_descriptions'] = endpoint.ep_progress_param_config.get('OUTPUTS')
-        job_cmd['final_output_descriptions'] = endpoint.ep_output_param_config
-        job_cmd['job_data'] = job_batch_data
-        return job_cmd
 
 
     @staticmethod #stream=True in add_route() only works if staticmethod?
@@ -465,7 +394,7 @@ class APIServer(Sanic):
         if not client_session_auth_key:
             job_cmd = { 'cmd': "error", 'msg': f"client_session_auth_key missing" }
             return sanic_json(job_cmd)
-        endpoint_name = APIServer.registered_client_sessions.get(client_session_auth_key)
+        endpoint_name = APIServer.registered_keys.get(client_session_auth_key)
         if not endpoint_name:
             job_cmd = { 'cmd': "error", 'msg': f"client_session_auth_key not authorized" }
             return sanic_json(job_cmd)
@@ -474,7 +403,7 @@ class APIServer(Sanic):
             return sanic_json(job_cmd)
 
         job_type = APIServer.endpoints.get(endpoint_name).worker_job_type
-        queue = APIServer.job_queues.get(job_type)
+        queue = APIServer.job_handler.job_queues.get(job_type)
         if not queue:
             job_cmd = { 'cmd': "error", 'msg': f"Internal Error: Queue not found" }
             return sanic_json(job_cmd)
@@ -483,12 +412,12 @@ class APIServer(Sanic):
         async def stream_sse(response):
             previous_progress_state = {}
             previous_queue_position = -1
-            job_state = APIServer.job_states.get(job_id, JobState.UNKNOWN)
+            job_state = APIServer.job_handler.get_job_state(job_id)
             while (job_state == JobState.QUEUED) or (job_state == JobState.PROCESSING):
-                progress_state = APIServer.progress_states.get(job_id, previous_progress_state)
+                progress_state = APIServer.job_handler.progress_states.get(job_id, previous_progress_state)
                 if not progress_state:
                     progress_state['progress'] = 0                    
-                progress_state['job_state'] = job_state.value
+                progress_state['job_state'] = job_state
 
                 queue_position = 0
                 if job_state == JobState.QUEUED:
@@ -501,14 +430,13 @@ class APIServer(Sanic):
                     await response.write(f'data: {json.dumps(progress_state)}\n\n')
 
                 await asyncio.sleep(0.5)
-                job_state = APIServer.job_states.get(job_id, JobState.UNKNOWN)        
+                job_state = APIServer.job_handler.get_job_state(job_id)
                 if job_state == JobState.PROCESSING:
-                    job_future =  APIServer.job_result_futures.get(job_id, None)
-                    if job_future and job_future.done():
+                    if APIServer.job_handler.is_job_future_done(job_id):
                         endpoint = APIServer.endpoints.get(endpoint_name)
-                        progress_state['job_result'] = await endpoint.finalize_request(request, job_id, job_future, {})
-                        job_state = APIServer.job_states.get(job_id, job_state)                               
-                        progress_state['job_state'] = job_state.value
+                        progress_state['job_result'] = await endpoint.finalize_request(request, job_id)
+                        job_state = APIServer.job_handler.get_job_state(job_id)
+                        progress_state['job_state'] = job_state
                         progress_state['progress'] = 100                  
                         progress_state['queue_position'] = 0
                         await response.write(f'data: {json.dumps(progress_state)}\n\n')
@@ -517,23 +445,16 @@ class APIServer(Sanic):
         return sanic_response.ResponseStream(stream_sse, headers=headers)
 
 
-    def init(self, args):        
+    def init(self, args):
+        
         self.__setup_worker_interface() # has to be done before app.run() is called
         self.register_listener(self.load_server_configuration, 'before_server_start') # maybe better without listener to have config in every main and worker process?
         self.register_listener(self.setup_static_routes, 'before_server_start')
         self.register_listener(self.init_all_endpoints, 'before_server_start')
         self.register_listener(self.init_openai, 'before_server_start')
-        self.register_listener(self.create_job_queues, 'after_server_start')
+        self.register_listener(self.init_job_handler, 'after_server_start')
         self.register_listener(FFmpeg.is_ffmpeg_installed, 'after_server_start')
-
-
-    def create_job_queues(self, app, loop):
-        APIServer.logger.info('--- creating job queues')
-        for endpoint in APIServer.endpoints.values():
-            job_type = endpoint.worker_job_type
-            if not job_type in APIServer.job_queues:
-                APIServer.job_queues[job_type] = JobQueue(job_type, endpoint.worker_auth_key)
-                APIServer.logger.info(f'Queue for job type: {job_type} initialized')
+        self.register_listener(self.start_job_clean_up_background_task, 'after_server_start')
 
 
     def __setup_worker_interface(self):
@@ -542,6 +463,8 @@ class APIServer(Sanic):
         self.add_route(self.worker_job_progress, "/worker_job_progress", methods=["POST", "GET"])
         self.add_route(self.worker_check_server_status, "/worker_check_server_status", methods=["POST"])
         self.add_route(self.stream_progress_to_client ,"/stream_progress", methods=["POST", "GET"], stream=True)
+        self.add_route(self.validate_key, "/api/validate_key", methods=["POST", "GET"], name='api$validate_key')
+        self.add_route(self.get_endpoints, "/api/endpoints", methods=["POST", "GET"], name='api$get_endpoints')
 
 
     def setup_static_routes(self, app):
@@ -553,6 +476,16 @@ class APIServer(Sanic):
     def set_server_sanic_config(self, server_config, app):
         config = server_config.get('SANIC', {})
         app.update_config({key.upper(): value for key, value in config.items()})
+
+
+    async def start_job_clean_up_background_task(self, app, loop):
+        loop.create_task(self.periodically_clean_up_jobs())
+
+
+    async def periodically_clean_up_jobs(self, update_interval=5):
+        while True:
+            await self.job_handler.clean_up_jobs()
+            await asyncio.sleep(update_interval)
 
 
     @staticmethod

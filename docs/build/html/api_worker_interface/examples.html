@@ -102,7 +102,7 @@
 job type and auth_key. Waiting for and receiving job data and sending job result:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">aime_api_worker_interface</span> <span class="kn">import</span> <span class="n">APIWorkerInterface</span>
 
-<span class="n">api_worker</span> <span class="o">=</span> <span class="n">APIWorkerInterface</span><span class="p">(</span><span class="s1">&#39;http://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">auth_key</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">api_worker</span> <span class="o">=</span> <span class="n">APIWorkerInterface</span><span class="p">(</span><span class="s1">&#39;http://127.0.0.1&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">auth_key</span><span class="o">&gt;</span><span class="p">)</span>
 <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="n">job_data</span> <span class="o">=</span> <span class="n">api_worker</span><span class="o">.</span><span class="n">job_request</span><span class="p">()</span>
     <span class="n">output</span> <span class="o">=</span> <span class="n">do_deep_learning_worker_calculations</span><span class="p">(</span><span class="n">job_data</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
@@ -112,7 +112,7 @@ job type and auth_key. Waiting for and receiving job data and sending job result
 <p>Example usage with progress:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">aime_api_worker_interface</span> <span class="kn">import</span> <span class="n">APIWorkerInterface</span>
 
-<span class="n">api_worker</span> <span class="o">=</span> <span class="n">APIWorkerInterface</span><span class="p">(</span><span class="s1">&#39;http://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">auth_key</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">api_worker</span> <span class="o">=</span> <span class="n">APIWorkerInterface</span><span class="p">(</span><span class="s1">&#39;http://127.0.0.1&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">auth_key</span><span class="o">&gt;</span><span class="p">)</span>
 <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="n">job_data</span> <span class="o">=</span> <span class="n">api_worker</span><span class="o">.</span><span class="n">job_request</span><span class="p">()</span>
 
@@ -133,7 +133,7 @@ job type and auth_key. Waiting for and receiving job data and sending job result
         <span class="n">api_worker</span><span class="o">.</span><span class="n">send_progress</span><span class="p">(</span><span class="n">progress</span><span class="p">,</span> <span class="n">progress_data</span><span class="p">)</span>
 
 
-<span class="n">api_worker</span> <span class="o">=</span> <span class="n">APIWorkerInterface</span><span class="p">(</span><span class="s1">&#39;http://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">auth_key</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">api_worker</span> <span class="o">=</span> <span class="n">APIWorkerInterface</span><span class="p">(</span><span class="s1">&#39;http://127.0.0.1&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">auth_key</span><span class="o">&gt;</span><span class="p">)</span>
 <span class="n">callback</span> <span class="o">=</span> <span class="n">Callback</span><span class="p">(</span><span class="n">api_worker</span><span class="p">)</span>
 
 <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
@@ -159,7 +159,7 @@ job type and auth_key. Waiting for and receiving job data and sending job result
         <span class="bp">self</span><span class="o">.</span><span class="n">api_worker</span><span class="o">.</span><span class="n">send_job_results</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
 
-<span class="n">api_worker</span> <span class="o">=</span> <span class="n">APIWorkerInterface</span><span class="p">(</span><span class="s1">&#39;http://api.aime.team&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">auth_key</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">api_worker</span> <span class="o">=</span> <span class="n">APIWorkerInterface</span><span class="p">(</span><span class="s1">&#39;http://127.0.0.1&#39;</span><span class="p">,</span> <span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">auth_key</span><span class="o">&gt;</span><span class="p">)</span>
 <span class="n">callback</span> <span class="o">=</span> <span class="n">Callback</span><span class="p">(</span><span class="n">api_worker</span><span class="p">)</span>
 
 <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>

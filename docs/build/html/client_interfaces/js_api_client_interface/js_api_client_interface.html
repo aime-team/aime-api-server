@@ -67,6 +67,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#ModelAPI.doAPIRequest"><code class="docutils literal notranslate"><span class="pre">ModelAPI.doAPIRequest()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ModelAPI.fetchAsync"><code class="docutils literal notranslate"><span class="pre">ModelAPI.fetchAsync()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ModelAPI.fetchAuthKey"><code class="docutils literal notranslate"><span class="pre">ModelAPI.fetchAuthKey()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ModelAPI.initAPIKey"><code class="docutils literal notranslate"><span class="pre">ModelAPI.initAPIKey()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ModelAPI.pollProgress"><code class="docutils literal notranslate"><span class="pre">ModelAPI.pollProgress()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#ModelAPI.setupProgressStream"><code class="docutils literal notranslate"><span class="pre">ModelAPI.setupProgressStream()</span></code></a></li>
 </ul>
@@ -110,7 +111,7 @@
 <h1>Documentation AIME API JavaScript Client Interface<a class="headerlink" href="#documentation-aime-api-javascript-client-interface" title="Link to this heading"></a></h1>
 <dl class="js class">
 <dt class="sig sig-object js" id="ModelAPI">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">ModelAPI</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpointName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultProgressIntervall=300</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">ModelAPI</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpointName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apiKey</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultProgressIntervall=300</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI" title="Link to this definition"></a></dt>
 <dd><p>Class for communication with the AIME Model API.</p>
 <p>Constructor of the class.</p>
 <dl class="field-list simple">
@@ -118,21 +119,21 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>endpointName</strong> (<em>string</em>) – The name of the API endpoint.</p></li>
 <li><p><strong>user</strong> (<em>string</em>) – api user</p></li>
-<li><p><strong>key</strong> (<em>sting</em>) – api Key required to authenticate and authorize to use api endpoint    *</p></li>
+<li><p><strong>apiKey</strong> (<em>sting</em>) – api Key required to authenticate and authorize to use api endpoint    *</p></li>
 <li><p><strong>defaultProgressIntervall</strong> (<em>number</em>) – The intervall for progress updates in milliseconds. The default progress update intervall is 300.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="js function">
 <dt class="sig sig-object js" id="ModelAPI.doAPILogin">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doAPILogin</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resultCallback=null</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user=&quot;null&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key=null</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.doAPILogin" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doAPILogin</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resultCallback=null</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user=&quot;null&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apiKey=null</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.doAPILogin" title="Link to this definition"></a></dt>
 <dd><p>Method for API login.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>resultCallback</strong> (<em>function</em>) – The callback after successful login.</p></li>
 <li><p><strong>user</strong> (<em>string</em>) – optinal: set to new api user</p></li>
-<li><p><strong>key</strong> (<em>sting</em>) – optional: set to new api Key required to authenticate and authorize to use api endpoint</p></li>
+<li><p><strong>apiKey</strong> (<em>sting</em>) – optional: set to new api Key required to authenticate and authorize to use api endpoint</p></li>
 </ul>
 </dd>
 </dl>
@@ -184,6 +185,21 @@
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>string</strong> – - The authentication key if successful</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="ModelAPI.initAPIKey">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">ModelAPI</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">initAPIKey</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resultCallback=null</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apiKey</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ModelAPI.initAPIKey" title="Link to this definition"></a></dt>
+<dd><p>Method for API Key Initialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resultCallback</strong> (<em>function</em>) – The callback after successful API key validation.</p></li>
+<li><p><strong>resultCallback</strong> – The error callback for unsuccessful API key validation.</p></li>
+<li><p><strong>apiKey</strong> (<em>sting</em>) – optional: set to new api Key required to authenticate and authorize to use api endpoint</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
