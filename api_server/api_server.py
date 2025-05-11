@@ -353,7 +353,7 @@ class APIServer(Sanic):
         APIServer.input_param_config = APIServer.server_config.get('INPUTS', {})
         APIServer.static_routes = APIServer.server_config.get('STATIC', {})
         APIServer.worker_config = APIServer.server_config.get('WORKERS', {})
-        APIServer.openai_config = server_config.get('OPENAI', {})
+        APIServer.openai_config = APIServer.server_config.get('OPENAI', {})
 
 
     def init_endpoint(self, config_file):
