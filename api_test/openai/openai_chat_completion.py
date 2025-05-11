@@ -17,4 +17,6 @@ completion = client.chat.completions.create(
   ]
 )
 
+print(completion.id)
+
 print(completion.choices[0].message)

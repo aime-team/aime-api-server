@@ -6,6 +6,7 @@ from sanic.log import logging
 from sanic.response import json as sanic_json
 
 import json
+from datetime import datetime
 
 import asyncio
 
@@ -26,6 +27,8 @@ class OpenAI():
         app.add_route(self.v1_responses, "/v1/responses", methods=["POST", "GET"], name="v1_responses")
         app.add_route(self.v1_chat_completions, "/v1/chat/completions", methods=["POST", "GET"], name="v1_chat_completions")
 
+    def __timestamp(self):
+        return int(datetime.utcnow().timestamp())
 
     def response_error(self, code, message):
         response = {}
@@ -46,8 +49,7 @@ class OpenAI():
         if not authorization and not authorization.startswith("Bearer "):
             return self.response_error('invalid_api_key', "Incorrect or no API key provided. You can get your API key at https://api.aime.info."), api_key
 
-        api_key = authorization[7:]
-        OpenAI.logger.info(f'OpenAI {str(api_key)}')
+        api_key = authorization[7:].strip()
 
         return None, api_key
 
@@ -85,6 +87,18 @@ class OpenAI():
 
         return sanic_json(response)
 
+    def _convert_chat_context_from_openai(self, messages):
+        last_message = messages.pop()
+        prompt_input = last_message.get('content')
+        chat_context = []
+        for message in messages:
+            if message.get('role', None) == 'developer':
+                message['role'] = 'system' 
+            chat_context.append(message)
+        return chat_context, prompt_input
+
+    def _convert_message_to_openai(self, message):
+        return message
 
     async def v1_chat_completions(self, request):
         """v1 chat 
@@ -99,30 +113,24 @@ class OpenAI():
         if failed:
             return sanic_json(failed)
 
-        chat_context = [
-            {
-                "role":"system",
-                "content": "You are a helpful, respectful and honest assistant named Pete. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."
-            },
-            {
-                "role":"user",
-                "content": "Hello, Pete."
-            },
-            {
-                "role":"assistant",
-                "content":"How can I assist you today?"
-            }
-        ]
+        OpenAI.logger.info(f'OpenAI {str(api_key)}')
+
+        input_params = json.loads(request.body)
+        print(str(input_params))
+        messages = input_params.get('messages', [])
+        model = input_params.get('model', None)
+
+        chat_context, prompt_input = self._convert_chat_context_from_openai(messages)
 
         request.body = json.dumps({
             "key": api_key,
             "chat_context": json.dumps(chat_context),
             "max_gen_tokens": 500,
-            "prompt_input": "Hi Pete!",
+            "prompt_input": prompt_input,
             "temperature": 0.8,
             "top_k": 40,
             "top_p": 0.9,
-            "wait_for_result": False
+            "wait_for_result": True
         })
 
         response = await self.app.endpoints['llama3_chat'].api_request(request)
@@ -130,18 +138,22 @@ class OpenAI():
         print(str(response))
 
         job_id = response.get('job_id', None)
+        content = response.get('text', "")
+        prompt_tokens =  response.get('prompt_length')
+        completion_tokens = response.get('num_generated_tokens', 0)
+        total_tokens = response.get('current_context_length', 0)
 
         response = {
           "id": "chatcmpl-" + job_id,
           "object": "chat.completion",
-          "created": 1741569952,
+          "created": self.__timestamp(),
           "model": "gpt-4.1-2025-04-14",
           "choices": [
             {
               "index": 0,
               "message": {
                 "role": "assistant",
-                "content": "Hello! How can I assist you today?",
+                "content": content,
                 "refusal": None,
                 "annotations": []
               },
@@ -150,9 +162,9 @@ class OpenAI():
             }
           ],
           "usage": {
-            "prompt_tokens": 19,
-            "completion_tokens": 10,
-            "total_tokens": 29,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
             "prompt_tokens_details": {
               "cached_tokens": 0,
               "audio_tokens": 0
