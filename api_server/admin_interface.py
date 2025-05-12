@@ -28,8 +28,8 @@ class AdminInterface():
         return False
 
 
-    # API Key Management
-    async def admin_is_api_key_valid(self, api_key):
+    # API Key Validation
+    async def admin_is_api_key_valid(self, api_key:str, ip_address:str):
         # implemented by Admin BE
         return {
             'valid': True,
@@ -253,7 +253,7 @@ class MinimumAdminBackendImplementation(AdminInterface):
     
 
     # API Key Management
-    async def admin_is_api_key_valid(self, api_key):
+    async def admin_is_api_key_valid(self, api_key, ip_address):
         for endpoint_name in await self.api_get_endpoint_list():
             if await self.admin_is_api_key_authorized_for_endpoint(api_key, endpoint_name):
                 return {
