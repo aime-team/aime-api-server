@@ -2,7 +2,7 @@
 #
 # This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
 
-from sanic_session import Session, InMemorySessionInterface
+from sanic_sessions import Session, InMemorySessionInterface
 from api_server.api_server import APIServer
 from api_server.utils.misc import copy_js_client_interface_to_frontend_folder
 from api_server.admin_interface import MinimumAdminBackendImplementation
@@ -11,7 +11,7 @@ from api_server.admin_interface import MinimumAdminBackendImplementation
 API_NAME = "AIME_API_Server"
 app = APIServer(API_NAME)
 
-# create sessions
+# Initialize session middleware
 session = Session(app, interface=InMemorySessionInterface())
 
 admin_backend = MinimumAdminBackendImplementation(app, app.args, None)
@@ -26,3 +26,4 @@ if __name__ == "__main__":
         debug=app.args.dev,
         workers=app.args.worker_processes
     )
+
