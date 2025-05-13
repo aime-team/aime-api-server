@@ -19,8 +19,8 @@ Python API Client Interface
    :hidden:
 
    Setup <setup>
-   Documentation <python_api_client_interface>
    Examples <examples>
+   Documentation <python_api_client_interface>
    
 
 .. note::
