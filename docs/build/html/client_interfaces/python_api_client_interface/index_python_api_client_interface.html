@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Python API Client Interface &mdash; AIME API Server 0.8.0 documentation</title>
+  <title>Python AIME API Client Interface &mdash; AIME API Server 0.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/aime_override.css?v=56fc6846" />
@@ -86,7 +86,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Python API Client Interface</li>
+      <li class="breadcrumb-item active">Python AIME API Client Interface</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/client_interfaces/python_api_client_interface/index_python_api_client_interface.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -96,8 +96,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="python-api-client-interface">
-<h1>Python API Client Interface<a class="headerlink" href="#python-api-client-interface" title="Link to this heading"></a></h1>
+  <section id="python-aime-api-client-interface">
+<h1>Python AIME API Client Interface<a class="headerlink" href="#python-aime-api-client-interface" title="Link to this heading"></a></h1>
 <p><strong>Setup</strong></p>
 <blockquote>
 <div><p>The Python API interface is available as a Pip package, which can be installed with the following commands:</p>
@@ -120,36 +120,6 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 <span class="n">model_api</span> <span class="o">=</span> <span class="n">ModelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.info&#39;</span><span class="p">,</span> <span class="s1">&#39;llama4_chat&#39;</span><span class="p">)</span>
 <span class="n">version</span> <span class="o">=</span> <span class="n">ModelAPI</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;AIME API Client Interface version: </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p><strong>Examples</strong></p>
-<blockquote>
-<div><p>Example job result dict in result callback argument or return value:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;auth&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;name_of_worker&gt;&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;compute_duration&#39;</span><span class="p">:</span> <span class="mf">2.4</span><span class="p">,</span>
-    <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image/PNG;base64,...&#39;</span>
-    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID3&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="mi">1234413214</span><span class="p">,</span>
-    <span class="s1">&#39;success&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test output...&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;total_duration&#39;</span><span class="p">:</span> <span class="mi">2</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>Example progress_callback arguments progress_info and progress_data dictionaries:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">progress_info</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;job_id&#39;</span><span class="p">:</span> <span class="s1">&#39;JID3&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;progress&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
-    <span class="s1">&#39;queue_position&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s1">&#39;estimate&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span>
-<span class="p">}</span>
-<span class="n">progress_data</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;info&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;infos from worker about progress&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;images&#39;</span><span class="p">:</span> <span class="s1">&#39;data:image/PNG;base64,...&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Test outpu...&#39;</span>
-<span class="p">}</span>
 </pre></div>
 </div>
 </div></blockquote>
