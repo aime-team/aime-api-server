@@ -14,9 +14,13 @@ completion = client.chat.completions.create(
   messages=[
     {"role": "developer", "content": "You are a helpful assistant."},
     {"role": "user", "content": "Hello!"}
-  ]
+  ],
+  stream=True
 )
 
-print(completion.id)
+for chunk in completion:
+    print(chunk)
+    
+#print(completion.id)
 
-print(completion.choices[0].message)
+#print(completion.choices[0].message)

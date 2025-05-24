@@ -6,7 +6,10 @@ from sanic.log import logging
 from sanic.response import json as sanic_json
 
 import json
+from ujson import dumps
 from datetime import datetime
+
+from .job_queue import JobState
 
 import asyncio
 
@@ -118,6 +121,7 @@ class OpenAI():
         input_params = json.loads(request.body)
         print(str(input_params))
         messages = input_params.get('messages', [])
+        stream = input_params.get('stream', False)
         model = input_params.get('model', None)
 
         chat_context, prompt_input = self._convert_chat_context_from_openai(messages)
@@ -130,56 +134,92 @@ class OpenAI():
             "temperature": 0.8,
             "top_k": 40,
             "top_p": 0.9,
-            "wait_for_result": True
+            "wait_for_result": not stream
         })
 
-        response = await self.app.endpoints['llama3_chat'].api_request(request)
+        endpoint = self.app.endpoints[model]
+        response = await endpoint.api_request(request)
         response = response.raw_body 
-        print(str(response))
 
-        job_id = response.get('job_id', None)
-        content = response.get('text', "")
-        prompt_tokens =  response.get('prompt_length')
-        completion_tokens = response.get('num_generated_tokens', 0)
-        total_tokens = response.get('current_context_length', 0)
+        job_id = response.get('job_id', "None")
 
-        response = {
-          "id": "chatcmpl-" + job_id,
-          "object": "chat.completion",
-          "created": self.__timestamp(),
-          "model": "gpt-4.1-2025-04-14",
-          "choices": [
-            {
-              "index": 0,
-              "message": {
-                "role": "assistant",
-                "content": content,
-                "refusal": None,
-                "annotations": []
-              },
-              "logprobs": None,
-              "finish_reason": "stop"
-            }
-          ],
-          "usage": {
-            "prompt_tokens": prompt_tokens,
-            "completion_tokens": completion_tokens,
-            "total_tokens": total_tokens,
-            "prompt_tokens_details": {
-              "cached_tokens": 0,
-              "audio_tokens": 0
-            },
-            "completion_tokens_details": {
-              "reasoning_tokens": 0,
-              "audio_tokens": 0,
-              "accepted_prediction_tokens": 0,
-              "rejected_prediction_tokens": 0
-            }
-          },
-          "service_tier": "default"
-        }
+        if stream:
+            response_stream = await request.respond(content_type='text/event-stream')
+            
+            job = self.app.job_handler.get_job(job_id)
+            job_running = True
+            prev_len = 0
+            while job_running:
+                validation_errors = {}
+                response = await endpoint.process_api_progress(request, job, validation_errors)
+                if response['job_state'] == JobState.PROCESSING or response['job_state'] == JobState.QUEUED:
+                    progress_data = response['progress'].get('progress_data', {})
+                    text = progress_data.get('text', "")
+                    new_len = len(text)
 
-        return sanic_json(response)
+                    if(new_len > prev_len):
+                        content = text[prev_len:]
+                        prev_len = new_len
+                        progress_response = {
+                            "id":"chatcmpl-" + job_id,
+                            "object":"chat.completion.chunk",
+                            "created": self.__timestamp(),
+                            "model":"gpt-4o-mini", 
+                            "system_fingerprint": "fp_44709d6fcb", 
+                            "choices":[
+                                {
+                                    "index":0,
+                                    "delta":{"role":"assistant","content": content},
+                                    "logprobs":None,
+                                    "finish_reason":None
+                                }
+                            ]
+                        }
+                        await response_stream.send("data: " + json.dumps(progress_response) + "\n\n")
+
+                    await asyncio.sleep(0.1)
+
+                else:
+                    job_running = False
+                    response = response.get('job_result', {})
+                    text = response.get('text', "")
+                    content = text[prev_len:]
+                    prompt_tokens =  response.get('prompt_length', 0)
+                    completion_tokens = response.get('num_generated_tokens', 0)
+                    total_tokens = response.get('current_context_length', 0)
+
+                    response = self.__create_chat_completion_response(job_id, content, prompt_tokens, completion_tokens, total_tokens)
+
+                    progress_response = {
+                        "id":"chatcmpl-" + job_id,
+                        "object":"chat.completion.chunk",
+                        "created": self.__timestamp(),
+                        "model":"gpt-4o-mini", 
+                        "system_fingerprint": "fp_44709d6fcb", 
+                        "choices":[
+                            {
+                                "index":0,
+                                "delta":{"role":"assistant","content": content},
+                                "logprobs":None,
+                                "finish_reason":"stop"
+                            }
+                        ]
+                    }
+
+                    await response_stream.send("data: " + json.dumps(progress_response) + "\n\n")
+
+            await response_stream.send("data: [DONE]\n\n")
+
+            await response_stream.eof()      
+        else:
+            content = response.get('text', "")
+            prompt_tokens =  response.get('prompt_length', 0)
+            completion_tokens = response.get('num_generated_tokens', 0)
+            total_tokens = response.get('current_context_length', 0)
+
+            response = self.__create_chat_completion_response(job_id, content, prompt_tokens, completion_tokens, total_tokens)
+
+            return sanic_json(response)
 
 
     async def v1_responses(self, request):
@@ -202,7 +242,7 @@ class OpenAI():
         response = {
             "id": "resp_" + job_id,
             "object": "response",
-            "created_at": 1741476542,
+            "created_at": self.__timestamp(),
             "status": "completed",
             "error": None,
             "incomplete_details": None,
@@ -257,3 +297,42 @@ class OpenAI():
         }
 
         return sanic_json(response)
+
+
+    def  __create_chat_completion_response(self, job_id, content, prompt_tokens, completion_tokens, total_tokens):
+        return {
+            "id": "chatcmpl-" + job_id,
+            "object": "chat.completion",
+            "created": self.__timestamp(),
+            "model": "gpt-4.1-2025-04-14",
+            "choices": [
+                {
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": content,
+                    "refusal": None,
+                    "annotations": []
+                },
+                "logprobs": None,
+                "finish_reason": "stop"
+                }
+            ],
+            "usage": {
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "total_tokens": total_tokens,
+                "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+                },
+                "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+                }
+            },
+            "service_tier": "default"
+        }
+   
