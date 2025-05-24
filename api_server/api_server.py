@@ -291,7 +291,10 @@ class APIServer(Sanic):
         """        
         api_key = request.args.get('key', None)
         if self.admin_backend:
-            response = await self.admin_backend.admin_is_api_key_valid(api_key)
+            response = await self.admin_backend.admin_is_api_key_valid(
+                api_key,
+                request.headers.get('x-forwarded-for') or request.ip
+            )
             return sanic_json(
                 {
                     'success': response.get('valid'),
@@ -318,7 +321,10 @@ class APIServer(Sanic):
         api_key = request.args.get('key')
         endpoints = list(self.endpoints.keys())
         if api_key:
-            response = await self.admin_backend.admin_is_api_key_valid(api_key)
+            response = await self.admin_backend.admin_is_api_key_valid(
+                api_key,
+                request.headers.get('x-forwarded-for') or request.ip
+            )
             if not response.get('valid'):
                 return sanic_json(
                     {

@@ -216,14 +216,15 @@ class APIEndpoint():
             self.__status_data['last_request_time'] = time.time()
             if self.app.job_handler.get_free_queue_slots(self.endpoint_name):
                 self.__status_data['num_requests'] += 1
-                input_args = request.json if request.method == "POST" else request.args
-                api_key = input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key'))
-                validation_errors, error_code = await self.validate_client(input_args)
+
+                validation_errors, error_code = await self.validate_client(request)
 
                 # fast exit if not authorized for request
                 if validation_errors:
                     self.__status_data['num_unauthorized_requests'] += 1
                     return self.handle_validation_errors(validation_errors, error_code)
+
+                input_args = request.json if request.method == "POST" else request.args
                 job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
                 if validation_errors:
                     self.__status_data['num_failed_requests'] += 1
@@ -236,7 +237,7 @@ class APIEndpoint():
                 if self.app.admin_backend:
                     await self.app.admin_backend.admin_log_request_start(
                         job.id,
-                        api_key,
+                        input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
                         self.endpoint_name,
                         job.start_time,
                         request.headers.get('x-forwarded-for') or request.ip,
@@ -289,11 +290,10 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client with progress result and end result
         """        
-        input_args = request.json if request.method == "POST" else request.args
-        validation_errors, error_code = await self.validate_progress_request(input_args)
+        validation_errors, error_code = await self.validate_progress_request(request)
         if validation_errors:
             return self.handle_validation_errors(validation_errors, error_code)
-
+        input_args = request.json if request.method == "POST" else request.args
         job = self.app.job_handler.get_job(input_args.get('job_id'))
 
         response = await self.process_api_progress(request, job, validation_errors)
@@ -311,7 +311,10 @@ class APIEndpoint():
         """
         api_key = request.args.get('key', None)
         if self.app.admin_backend:
-            response = await self.app.admin_backend.admin_is_api_key_valid(api_key)
+            response = await self.app.admin_backend.admin_is_api_key_valid(
+                api_key,
+                request.headers.get('x-forwarded-for') or request.ip
+                )
             if not response.get('valid'):
                 return sanic_json(
                     {
@@ -435,8 +438,9 @@ class APIEndpoint():
         return sanic_json(response, status=error_code)
 
 
-    async def validate_progress_request(self, input_args):
-        validation_errors, error_code = await self.validate_client(input_args)
+    async def validate_progress_request(self, request):
+        validation_errors, error_code = await self.validate_client(request)
+        input_args = request.json if request.method == "POST" else request.args
         job_id = input_args.get('job_id')
         if not job_id:
             validation_errors.append(f'No job_id given')
@@ -507,7 +511,8 @@ class APIEndpoint():
         return job_data
 
 
-    async def validate_client(self, input_args):
+    async def validate_client(self, request):
+        input_args = request.json if request.method == "POST" else request.args
         api_key = input_args.get('key')
         client_session_auth_key = input_args.get('client_session_auth_key')
         api_key = api_key
@@ -515,7 +520,10 @@ class APIEndpoint():
         validation_errors = []
         if self.app.admin_backend:
             if api_key:
-                response = await self.app.admin_backend.admin_is_api_key_valid(api_key)
+                response = await self.app.admin_backend.admin_is_api_key_valid(
+                    api_key,
+                    request.headers.get('x-forwarded-for') or request.ip
+                )
                 if not response.get('valid'):
                     validation_errors.append(response.get('error_msg'))
                     error_code = 401

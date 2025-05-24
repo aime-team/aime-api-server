@@ -23,8 +23,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Documentation AIME API Client Interface" href="python_api_client_interface.html" />
-    <link rel="prev" title="Python API Client Interface" href="index_python_api_client_interface.html" /> 
+    <link rel="next" title="Chat Examples" href="examples.html" />
+    <link rel="prev" title="Python AIME API Client Interface" href="index_python_api_client_interface.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,8 +58,10 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index_python_api_client_interface.html">Python</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html">Chat Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#image-generation-example">Image Generation Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#text-to-speech-generation-example">Text-to-Speech Generation Example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="python_api_client_interface.html">Documentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../http_interface.html">HTTP</a></li>
@@ -84,7 +86,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="index_python_api_client_interface.html">Python API Client Interface</a></li>
+          <li class="breadcrumb-item"><a href="index_python_api_client_interface.html">Python AIME API Client Interface</a></li>
       <li class="breadcrumb-item active">Setup Python API Client Interface</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/client_interfaces/python_api_client_interface/setup.rst.txt" rel="nofollow"> View page source</a>
@@ -97,9 +99,26 @@
              
   <section id="setup-python-api-client-interface">
 <h1>Setup Python API Client Interface<a class="headerlink" href="#setup-python-api-client-interface" title="Link to this heading"></a></h1>
-<p>The Python API interface is available as Pip package, which can be installed with following commands:</p>
+<p>The Python API interface is available as a Pip package, which can be installed with the following commands:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>wheel
-pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com//aime-team/aime-api-client-interfaces.git#subdirectory=python&quot;</span>
+pip<span class="w"> </span>install<span class="w"> </span>aiohttp
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/aime-team/aime-api-client-interfaces.git#subdirectory=python&quot;</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Dependencies:</dt><dd><ul class="simple">
+<li><p>Python 3.8 or higher</p></li>
+<li><p>aiohttp for asynchronous HTTP requests</p></li>
+<li><p>requests for synchronous HTTP requests</p></li>
+</ul>
+</dd>
+</dl>
+<p>To verify the installation, you can run a simple test:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">aime_api_client_interface</span> <span class="kn">import</span> <span class="n">ModelAPI</span>
+
+<span class="n">model_api</span> <span class="o">=</span> <span class="n">ModelAPI</span><span class="p">(</span><span class="s1">&#39;https://api.aime.info&#39;</span><span class="p">,</span> <span class="s1">&#39;llama4_chat&#39;</span><span class="p">)</span>
+<span class="n">version</span> <span class="o">=</span> <span class="n">ModelAPI</span><span class="o">.</span><span class="n">get_version</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;AIME API Client Interface version: </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -108,8 +127,8 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index_python_api_client_interface.html" class="btn btn-neutral float-left" title="Python API Client Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="python_api_client_interface.html" class="btn btn-neutral float-right" title="Documentation AIME API Client Interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index_python_api_client_interface.html" class="btn btn-neutral float-left" title="Python AIME API Client Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="Chat Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
