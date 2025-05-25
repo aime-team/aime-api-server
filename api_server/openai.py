@@ -126,8 +126,6 @@ class OpenAI():
 
         input_params = json.loads(request.body)
 
-        print(str(input_params))
-    
         messages = input_params.get('messages', [])
         stream = input_params.get('stream', False)
 
