@@ -6,10 +6,12 @@ from sanic_sessions import Session, InMemorySessionInterface
 from api_server.api_server import APIServer
 from api_server.utils.misc import copy_js_client_interface_to_frontend_folder
 from api_server.admin_interface import MinimumAdminBackendImplementation
-
+from sanic_ext import Extend
 
 API_NAME = "AIME_API_Server"
 app = APIServer(API_NAME)
+app.config.CORS_ORIGINS = "*"
+Extend(app)
 
 # Initialize session middleware
 session = Session(app, interface=InMemorySessionInterface())
