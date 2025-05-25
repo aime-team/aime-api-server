@@ -63,7 +63,7 @@ class OpenAI():
         api_key = None
 
         OpenAI.logger.info(f'OpenAI {str(slug)}')
-        if not authorization and not authorization.startswith("Bearer "):
+        if not authorization or not authorization.startswith("Bearer "):
             return self.__error_response('invalid_api_key', "Incorrect or no API key provided. You can get your API key at https://api.aime.info.", http_status=401), api_key
 
         api_key = authorization[7:].strip()
