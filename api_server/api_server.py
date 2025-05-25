@@ -280,6 +280,27 @@ class APIServer(Sanic):
         return sanic_json(result)
 
 
+    async def validate_api_key(self, api_key, ip_address, endpoint_name=None):
+        error_code = None
+        validation_errors = []
+        if api_key and self.admin_backend:
+            response = await self.admin_backend.admin_is_api_key_valid(
+                api_key,
+                ip_address
+            )
+            if not response.get('valid'):
+                validation_errors.append(response.get('error_msg'))
+                error_code = 401
+            elif endpoint_name:
+                if not await self.admin_backend.admin_is_api_key_authorized_for_endpoint(api_key, endpoint_name):
+                    validation_errors.append(f'Client not authorized for endpoint {endpoint_name}!')
+                    error_code = 402 # TODO Define error codes
+        else:
+            validation_errors.append(f'API Key missing and client session authentication key not registered in API Server')
+            error_code = 401
+        return validation_errors, error_code        
+
+
     async def validate_key(self, request):
         """Route /api/validate_key to check if api key is valid
 

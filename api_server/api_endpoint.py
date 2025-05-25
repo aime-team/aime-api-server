@@ -516,23 +516,14 @@ class APIEndpoint():
         api_key = input_args.get('key')
         client_session_auth_key = input_args.get('client_session_auth_key')
         api_key = api_key
-        error_code = None
-        validation_errors = []
-        if self.app.admin_backend:
-            if api_key:
-                response = await self.app.admin_backend.admin_is_api_key_valid(
-                    api_key,
-                    request.headers.get('x-forwarded-for') or request.ip
-                )
-                if not response.get('valid'):
-                    validation_errors.append(response.get('error_msg'))
-                    error_code = 401
-                elif not await self.app.admin_backend.admin_is_api_key_authorized_for_endpoint(api_key, self.endpoint_name):
-                    validation_errors.append(f'Client not authorized for endpoint {self.endpoint_name}!')
-                    error_code = 402 # TODO Define error codes
-            elif client_session_auth_key not in self.app.registered_keys:
-                validation_errors.append(f'API Key missing and client session authentication key not registered in API Server')
-                error_code = 401
+        error_code = 401
+        validation_errors = [f'API Key missing and client session authentication key not registered in API Server']
+        if api_key:
+            ip_address = request.headers.get('x-forwarded-for') or request.ip
+            return await self.app.validate_api_key(api_key, ip_address, self.endpoint_name)
+        elif client_session_auth_key and (client_session_auth_key in self.app.registered_keys):
+            error_code = None
+            validation_errors = []
         return validation_errors, error_code
 
 

@@ -22,18 +22,29 @@ class OpenAI():
         config_file (str): Endpoint config file path.
     """    
     logger = logging.getLogger('API')
+    models = {}
 
     def __init__(self, app):
         self.app = app
-        OpenAI.logger.info(f'----------- Initialising OpenAI Layer')        
+
+        if not app.openai_config.get("enable_v1_api", False):
+            OpenAI.logger.info(f'--- OpenAI Layer not enabled -> doing nothing')
+            return
+
+        OpenAI.logger.info(f'------ Initialising OpenAI Layer')
+        OpenAI.models = app.openai_config.get("MODELS", {})
         app.add_route(self.v1_models, "/v1/models", methods=["POST", "GET"], name="v1_models")
-        app.add_route(self.v1_responses, "/v1/responses", methods=["POST", "GET"], name="v1_responses")
         app.add_route(self.v1_chat_completions, "/v1/chat/completions", methods=["POST", "GET"], name="v1_chat_completions")
+        app.add_route(self.v1_responses, "/v1/responses", methods=["POST", "GET"], name="v1_responses")
+        app.add_route(self.v1_audio_speech, "/v1/audio/speech", methods=["POST", "GET"], name="v1_audio_speech")
+        app.add_route(self.v1_audio_transcriptions, "/v1/audio/transcriptions", methods=["POST", "GET"], name="v1_audio_transcriptions")
+        app.add_route(self.v1_image_generations, "/v1/images/generations", methods=["POST", "GET"], name="v1_image_generations")
+
 
     def __timestamp(self):
         return int(datetime.utcnow().timestamp())
 
-    def response_error(self, code, message):
+    def __error_response(self, code, message, http_status=404):
         response = {}
         response["error"] = {
             "message": message,
@@ -41,18 +52,26 @@ class OpenAI():
             "param": None,
             "code": code,
           }
-        return response
+        
+        OpenAI.logger.info(f'OpenAI Error: {str(response["error"])}')
+        return sanic_json(response, status=http_status)
 
 
-    def check_authorization(self, slug, headers):
+    async def check_authorization(self, slug, request):
+        headers = request.headers
         authorization = headers.get('authorization', None)
         api_key = None
 
         OpenAI.logger.info(f'OpenAI {str(slug)}')
         if not authorization and not authorization.startswith("Bearer "):
-            return self.response_error('invalid_api_key', "Incorrect or no API key provided. You can get your API key at https://api.aime.info."), api_key
+            return self.__error_response('invalid_api_key', "Incorrect or no API key provided. You can get your API key at https://api.aime.info.", http_status=401), api_key
 
         api_key = authorization[7:].strip()
+
+        ip_address = headers.get('x-forwarded-for') or request.ip
+        validation_errors, error_code = await self.app.validate_api_key(api_key, ip_address)
+        if validation_errors:
+            return self.__error_response('invalid_api_key', "\n".join(validation_errors), http_status=401), api_key
 
         return None, api_key
 
@@ -66,22 +85,23 @@ class OpenAI():
         Returns:
             sanic.response.types.JSONResponse: Response to client
         """
-        failed, api_key = self.check_authorization("/v1/models", request.headers)
-        if failed:
-            return sanic_json(failed)
+        error, api_key = await self.check_authorization("/v1/models", request)
+        if error:
+            return error
 
         models = []
 
-        for endpoint in self.app.endpoints.values():
-            if endpoint.category == 'chat':
-                model = {
-                  "id": endpoint.endpoint_name,
-                  "object": "model",
-                  "created": 1686935002,
-                  "owned_by": "open-source-model"
-                }
+        for name, values in OpenAI.models.items():
+            created_at = values.get('created_at', 1717700000)
+            owned_by = values.get('owned_by', "open-source-model")
+            model = {
+                "id": name,
+                "object": "model",
+                "created": created_at,
+                "owned_by": owned_by
+            }
 
-                models.append(model)
+            models.append(model)
 
         response = {
           "object": "list",
@@ -90,18 +110,6 @@ class OpenAI():
 
         return sanic_json(response)
 
-    def _convert_chat_context_from_openai(self, messages):
-        last_message = messages.pop()
-        prompt_input = last_message.get('content')
-        chat_context = []
-        for message in messages:
-            if message.get('role', None) == 'developer':
-                message['role'] = 'system' 
-            chat_context.append(message)
-        return chat_context, prompt_input
-
-    def _convert_message_to_openai(self, message):
-        return message
 
     async def v1_chat_completions(self, request):
         """v1 chat 
@@ -112,19 +120,26 @@ class OpenAI():
         Returns:
             sanic.response.types.JSONResponse: Response to client
         """
-        failed, api_key = self.check_authorization("/v1/chat/", request.headers)
-        if failed:
-            return sanic_json(failed)
-
-        OpenAI.logger.info(f'OpenAI {str(api_key)}')
+        error, api_key = await self.check_authorization("/v1/chat/completions", request)
+        if error:
+            return error
 
         input_params = json.loads(request.body)
-        print(str(input_params))
         messages = input_params.get('messages', [])
         stream = input_params.get('stream', False)
-        model = input_params.get('model', None)
 
-        chat_context, prompt_input = self._convert_chat_context_from_openai(messages)
+        default_model = self.app.openai_config.get('fallback_model', None)
+        model = input_params.get('model', default_model)
+
+        # check model availibility
+        model_params = OpenAI.models.get(model)
+        if not model_params:
+            model = default_model
+            model_params = OpenAI.models.get(model)
+        if not model_params:            
+            return self.__error_response('model_not_found', 'Requested model is not supported.')
+
+        chat_context, prompt_input = self.__convert_chat_context_from_openai(messages)
 
         request.body = json.dumps({
             "key": api_key,
@@ -137,11 +152,19 @@ class OpenAI():
             "wait_for_result": not stream
         })
 
-        endpoint = self.app.endpoints[model]
+        endpoint_name = model_params.get('endpoint', None)
+        endpoint = self.app.endpoints.get(endpoint_name, None)
+        if not endpoint:
+            return self.__error_response('model_not_found', 'Invalid model, requested model has no defined endpoint.')
+
         response = await endpoint.api_request(request)
         response = response.raw_body 
+        if not response.get('success', False):
+            error_message = response.get('error', ['request failed'])[0]
+            return self.__error_response('request_failed', error_message)
 
         job_id = response.get('job_id', "None")
+        system_fingerprint = "fp_44709d6fcb"
 
         if stream:
             response_stream = await request.respond(content_type='text/event-stream')
@@ -164,8 +187,8 @@ class OpenAI():
                             "id":"chatcmpl-" + job_id,
                             "object":"chat.completion.chunk",
                             "created": self.__timestamp(),
-                            "model":"gpt-4o-mini", 
-                            "system_fingerprint": "fp_44709d6fcb", 
+                            "model": model, 
+                            "system_fingerprint": system_fingerprint, 
                             "choices":[
                                 {
                                     "index":0,
@@ -194,8 +217,8 @@ class OpenAI():
                         "id":"chatcmpl-" + job_id,
                         "object":"chat.completion.chunk",
                         "created": self.__timestamp(),
-                        "model":"gpt-4o-mini", 
-                        "system_fingerprint": "fp_44709d6fcb", 
+                        "model": model, 
+                        "system_fingerprint": system_fingerprint, 
                         "choices":[
                             {
                                 "index":0,
@@ -209,8 +232,7 @@ class OpenAI():
                     await response_stream.send("data: " + json.dumps(progress_response) + "\n\n")
 
             await response_stream.send("data: [DONE]\n\n")
-
-            await response_stream.eof()      
+            await response_stream.eof()
         else:
             content = response.get('text', "")
             prompt_tokens =  response.get('prompt_length', 0)
@@ -222,81 +244,15 @@ class OpenAI():
             return sanic_json(response)
 
 
-    async def v1_responses(self, request):
-        """v1 chat 
-
-        Args:
-            request (sanic.request.types.Request): Request from client
-
-        Returns:
-            sanic.response.types.JSONResponse: Response to client
-        """
-        print(str(request.headers))
-
-        failed, api_key = self.check_authorization("/v1/responses/", request.headers)
-        if failed:
-            return sanic_json(failed)
-
-        job_id = "67ccd2bed1ec8190b14f964abc0542670bb6a6b452d3795b"
-
-        response = {
-            "id": "resp_" + job_id,
-            "object": "response",
-            "created_at": self.__timestamp(),
-            "status": "completed",
-            "error": None,
-            "incomplete_details": None,
-            "instructions": None,
-            "max_output_tokens": None,
-            "model": "gpt-4.1-2025-04-14",
-            "output": [
-                {
-                  "type": "message",
-                  "id": "msg_" + job_id,
-                  "status": "completed",
-                  "role": "assistant",
-                  "content": [
-                    {
-                      "type": "output_text",
-                      "text": "In a peaceful grove beneath a silver moon, a unicorn named Lumina discovered a hidden pool that reflected the stars. As she dipped her horn into the water, the pool began to shimmer, revealing a pathway to a magical realm of endless night skies. Filled with wonder, Lumina whispered a wish for all who dream to find their own hidden magic, and as she glanced back, her hoofprints sparkled like stardust.",
-                      "annotations": []
-                    }
-                  ]
-                }
-            ],
-            "parallel_tool_calls": True,
-            "previous_response_id": None,
-            "reasoning": {
-                "effort": None,
-                "summary": None
-            },
-            "store": None,
-            "temperature": 1.0,
-            "text": {
-                "format": {
-                  "type": "text"
-                }
-            },
-            "tool_choice": "auto",
-            "tools": [],
-            "top_p": 1.0,
-            "truncation": "disabled",
-            "usage": {
-                "input_tokens": 36,
-                "input_tokens_details": {
-                    "cached_tokens": 0
-                },
-                "output_tokens": 87,
-                "output_tokens_details": {
-                    "reasoning_tokens": 0
-                },
-                "total_tokens": 123
-            },
-            "user": None,
-            "metadata": {}
-        }
-
-        return sanic_json(response)
+    def __convert_chat_context_from_openai(self, messages):
+        last_message = messages.pop()
+        prompt_input = last_message.get('content')
+        chat_context = []
+        for message in messages:
+            if message.get('role', None) == 'developer':
+                message['role'] = 'system' 
+            chat_context.append(message)
+        return chat_context, prompt_input
 
 
     def  __create_chat_completion_response(self, job_id, content, prompt_tokens, completion_tokens, total_tokens):
@@ -335,4 +291,67 @@ class OpenAI():
             },
             "service_tier": "default"
         }
-   
+
+
+    async def v1_responses(self, request):
+        """v1 responses
+
+        Args:
+            request (sanic.request.types.Request): Request from client
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client
+        """
+        error, api_key = await self.check_authorization("/v1/responses", request)
+        if error:
+            return error
+
+        return self.__error_response('not_implemented', 'Service not available', http_status=500)
+
+
+    async def v1_audio_speech(self, request):
+        """v1 audio speech 
+
+        Args:
+            request (sanic.request.types.Request): Request from client
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client
+        """
+        error, api_key = await self.check_authorization("/v1/audio/speech", request)
+        if error:
+            return error
+
+        return self.__error_response('not_implemented', 'Service not available', http_status=500)
+
+
+    async def v1_audio_transcriptions(self, request):
+        """v1 audio speech 
+
+        Args:
+            request (sanic.request.types.Request): Request from client
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client
+        """
+        error, api_key = await self.check_authorization("/v1/audio/transcriptions", request)
+        if error:
+            return error
+
+        return self.__error_response('not_implemented', 'Service not available', http_status=500)
+
+
+    async def v1_image_generations(self, request):
+        """v1 image generations
+
+        Args:
+            request (sanic.request.types.Request): Request from client
+
+        Returns:
+            sanic.response.types.JSONResponse: Response to client
+        """
+        error, api_key = await self.check_authorization("/v1/image/generations", request)
+        if error:
+            return error
+
+        return self.__error_response('not_implemented', 'Service not available', http_status=500)
