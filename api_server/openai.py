@@ -125,6 +125,8 @@ class OpenAI():
             return error
 
         input_params = json.loads(request.body)
+
+        print(str(input_params))
     
         messages = input_params.get('messages', [])
         stream = input_params.get('stream', False)
@@ -137,14 +139,14 @@ class OpenAI():
         max_tokens = input_params.get('max_tokens', None)
 
         # check model availibility
-        model_params = OpenAI.models.get(model)
-        if not model_params:
+        model_config = OpenAI.models.get(model)
+        if not model_config:
             model = default_model
-            model_params = OpenAI.models.get(model)
-        if not model_params:            
+            model_config = OpenAI.models.get(model)
+        if not model_config:            
             return self.__error_response('model_not_found', 'Requested model is not supported.')
 
-        chat_context, prompt_input = self.__convert_chat_context_from_openai(messages)
+        chat_context, prompt_input = self.__convert_chat_context_from_openai(messages, model_config.get('default_system_prompt', None))
 
         request_params = {
             "key": api_key,
@@ -164,7 +166,7 @@ class OpenAI():
         
         request.body = json.dumps(request_params)
 
-        endpoint_name = model_params.get('endpoint', None)
+        endpoint_name = model_config.get('endpoint', None)
         endpoint = self.app.endpoints.get(endpoint_name, None)
         if not endpoint:
             return self.__error_response('model_not_found', 'Invalid model, requested model has no defined endpoint.')
@@ -223,7 +225,7 @@ class OpenAI():
                     completion_tokens = response.get('num_generated_tokens', 0)
                     total_tokens = response.get('current_context_length', 0)
 
-                    response = self.__create_chat_completion_response(job_id, content, prompt_tokens, completion_tokens, total_tokens)
+                    response = self.__create_chat_completion_response(model, job_id, content, prompt_tokens, completion_tokens, total_tokens)
 
                     progress_response = {
                         "id":"chatcmpl-" + job_id,
@@ -251,28 +253,34 @@ class OpenAI():
             completion_tokens = response.get('num_generated_tokens', 0)
             total_tokens = response.get('current_context_length', 0)
 
-            response = self.__create_chat_completion_response(job_id, content, prompt_tokens, completion_tokens, total_tokens)
+            response = self.__create_chat_completion_response(model, job_id, content, prompt_tokens, completion_tokens, total_tokens)
 
             return sanic_json(response)
 
 
-    def __convert_chat_context_from_openai(self, messages):
+    def __convert_chat_context_from_openai(self, messages, default_system_prompt=None):
         last_message = messages.pop()
         prompt_input = last_message.get('content')
         chat_context = []
+        has_system_prompt = False
         for message in messages:
-            if message.get('role', None) == 'developer':
-                message['role'] = 'system' 
+            role = message.get('role', None)
+            if role == 'developer' or role == 'system':
+                message['role'] = 'system'
+                has_system_prompt = True
             chat_context.append(message)
+        if not has_system_prompt and default_system_prompt:
+            message = { 'role': 'system', 'content': default_system_prompt }
+            chat_context.insert(0, message)
         return chat_context, prompt_input
 
 
-    def  __create_chat_completion_response(self, job_id, content, prompt_tokens, completion_tokens, total_tokens):
+    def  __create_chat_completion_response(self, model, job_id, content, prompt_tokens, completion_tokens, total_tokens):
         return {
             "id": "chatcmpl-" + job_id,
             "object": "chat.completion",
             "created": self.__timestamp(),
-            "model": "gpt-4.1-2025-04-14",
+            "model": model,
             "choices": [
                 {
                 "index": 0,
