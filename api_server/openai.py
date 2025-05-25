@@ -125,11 +125,16 @@ class OpenAI():
             return error
 
         input_params = json.loads(request.body)
+    
         messages = input_params.get('messages', [])
         stream = input_params.get('stream', False)
 
         default_model = self.app.openai_config.get('fallback_model', None)
         model = input_params.get('model', default_model)
+        temperature = input_params.get('temperature', None)
+        top_p = input_params.get('top_p', None)
+        top_k = input_params.get('top_k', None)
+        max_tokens = input_params.get('max_tokens', None)
 
         # check model availibility
         model_params = OpenAI.models.get(model)
@@ -141,16 +146,23 @@ class OpenAI():
 
         chat_context, prompt_input = self.__convert_chat_context_from_openai(messages)
 
-        request.body = json.dumps({
+        request_params = {
             "key": api_key,
             "chat_context": json.dumps(chat_context),
-            "max_gen_tokens": 500,
             "prompt_input": prompt_input,
-            "temperature": 0.8,
-            "top_k": 40,
-            "top_p": 0.9,
             "wait_for_result": not stream
-        })
+        }
+
+        if max_tokens:
+            request_params['max_gen_tokens'] = max_tokens
+        if temperature:
+            request_params['temperature'] = temperature
+        if top_p:
+            request_params['top_p'] = top_p
+        if top_k:
+            request_params['top_k'] = top_k
+        
+        request.body = json.dumps(request_params)
 
         endpoint_name = model_params.get('endpoint', None)
         endpoint = self.app.endpoints.get(endpoint_name, None)
