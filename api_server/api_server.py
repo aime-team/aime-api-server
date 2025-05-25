@@ -20,6 +20,7 @@ import asyncio
 
 from .api_endpoint import APIEndpoint
 from .job_queue import JobState, JobHandler
+from .openai import OpenAI
 from .flags import Flags
 from .utils.misc import StaticRouteHandler, shorten_strings, CustomFormatter
 from .utils.ffmpeg import FFmpeg
@@ -27,8 +28,6 @@ from .utils.ffmpeg import FFmpeg
 
 logging.getLogger('asyncio').setLevel(logging.ERROR)
         
-
-
 
 
 class APIServer(Sanic):
@@ -44,10 +43,12 @@ class APIServer(Sanic):
     static_routes = {}
     worker_config = {}
     input_param_config = {}
+    openai_config = {}
     logger = logging.getLogger('API')
     host = None
     port = None
     admin_backend = None
+    openai = None
 
     def __init__(self, api_name):
         """Constructor
@@ -279,6 +280,27 @@ class APIServer(Sanic):
         return sanic_json(result)
 
 
+    async def validate_api_key(self, api_key, ip_address, endpoint_name=None):
+        error_code = None
+        validation_errors = []
+        if api_key and self.admin_backend:
+            response = await self.admin_backend.admin_is_api_key_valid(
+                api_key,
+                ip_address
+            )
+            if not response.get('valid'):
+                validation_errors.append(response.get('error_msg'))
+                error_code = 401
+            elif endpoint_name:
+                if not await self.admin_backend.admin_is_api_key_authorized_for_endpoint(api_key, endpoint_name):
+                    validation_errors.append(f'Client not authorized for endpoint {endpoint_name}!')
+                    error_code = 402 # TODO Define error codes
+        else:
+            validation_errors.append(f'API Key missing and client session authentication key not registered in API Server')
+            error_code = 401
+        return validation_errors, error_code        
+
+
     async def validate_key(self, request):
         """Route /api/validate_key to check if api key is valid
 
@@ -356,6 +378,7 @@ class APIServer(Sanic):
         APIServer.input_param_config = APIServer.server_config.get('INPUTS', {})
         APIServer.static_routes = APIServer.server_config.get('STATIC', {})
         APIServer.worker_config = APIServer.server_config.get('WORKERS', {})
+        APIServer.openai_config = APIServer.server_config.get('OPENAI', {})
 
 
     def init_endpoint(self, config_file):
@@ -383,6 +406,10 @@ class APIServer(Sanic):
 
     def init_job_handler(self, app, loop):
         APIServer.job_handler = JobHandler(app)
+
+
+    def init_openai(self, app, loop):
+        OpenAI(self)
 
 
     @staticmethod #stream=True in add_route() only works if staticmethod?
@@ -449,6 +476,7 @@ class APIServer(Sanic):
         self.register_listener(self.load_server_configuration, 'before_server_start') # maybe better without listener to have config in every main and worker process?
         self.register_listener(self.setup_static_routes, 'before_server_start')
         self.register_listener(self.init_all_endpoints, 'before_server_start')
+        self.register_listener(self.init_openai, 'before_server_start')
         self.register_listener(self.init_job_handler, 'after_server_start')
         self.register_listener(FFmpeg.is_ffmpeg_installed, 'after_server_start')
         self.register_listener(self.start_job_clean_up_background_task, 'after_server_start')

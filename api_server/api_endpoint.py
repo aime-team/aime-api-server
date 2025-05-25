@@ -261,6 +261,19 @@ class APIEndpoint():
             response = {'success': False, 'error': 'Endpoint disabled!'}
         return sanic_json(response)
 
+    async def process_api_progress(self, request, job, validation_errors):
+        response = {"success": True, 'job_id': job.id, 'ep_version': self.version}
+        if await job.state == JobState.PROCESSING:
+            if self.app.job_handler.is_job_future_done(job):
+                response['job_result'] = await self.finalize_request(request, job)
+        elif await job.state == JobState.ELAPSED:
+            validation_errors.append(f'Job {job.id} on {self.endpoint_name} elapsed!')
+            return self.handle_validation_errors(validation_errors, 400)
+        response['job_state'] = await job.state
+        if await job.state != JobState.DONE:
+            response['progress'] = await self.get_and_validate_progress_data(job)
+
+        return response
 
     async def api_progress(self, request):
         """Client request on route /self.endpoint_name/progress called periodically by the client interface 
@@ -282,20 +295,9 @@ class APIEndpoint():
             return self.handle_validation_errors(validation_errors, error_code)
         input_args = request.json if request.method == "POST" else request.args
         job = self.app.job_handler.get_job(input_args.get('job_id'))
-        response = {"success": True, 'job_id': job.id, 'ep_version': self.version}
-       
-        if await job.state == JobState.PROCESSING:
-            if self.app.job_handler.is_job_future_done(job):
-                response['job_result'] = await self.finalize_request(request, job)
-                APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
-        elif await job.state == JobState.ELAPSED:
-            validation_errors.append(f'Job {job.id} on {self.endpoint_name} elapsed!')
-            return self.handle_validation_errors(validation_errors, 400)
-        response['job_state'] = await job.state
-        if await job.state != JobState.DONE:
-            response['progress'] = await self.get_and_validate_progress_data(job)
 
-        APIEndpoint.logger.debug(f'Progress response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
+        response = await self.process_api_progress(request, job, validation_errors)
+
         return sanic_json(response)
 
 
@@ -514,23 +516,14 @@ class APIEndpoint():
         api_key = input_args.get('key')
         client_session_auth_key = input_args.get('client_session_auth_key')
         api_key = api_key
-        error_code = None
-        validation_errors = []
-        if self.app.admin_backend:
-            if api_key:
-                response = await self.app.admin_backend.admin_is_api_key_valid(
-                    api_key,
-                    request.headers.get('x-forwarded-for') or request.ip
-                )
-                if not response.get('valid'):
-                    validation_errors.append(response.get('error_msg'))
-                    error_code = 401
-                elif not await self.app.admin_backend.admin_is_api_key_authorized_for_endpoint(api_key, self.endpoint_name):
-                    validation_errors.append(f'Client not authorized for endpoint {self.endpoint_name}!')
-                    error_code = 402 # TODO Define error codes
-            elif client_session_auth_key not in self.app.registered_keys:
-                validation_errors.append(f'API Key missing and client session authentication key not registered in API Server')
-                error_code = 401
+        error_code = 401
+        validation_errors = [f'API Key missing and client session authentication key not registered in API Server']
+        if api_key:
+            ip_address = request.headers.get('x-forwarded-for') or request.ip
+            return await self.app.validate_api_key(api_key, ip_address, self.endpoint_name)
+        elif client_session_auth_key and (client_session_auth_key in self.app.registered_keys):
+            error_code = None
+            validation_errors = []
         return validation_errors, error_code
 
 
