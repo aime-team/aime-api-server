@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<!-- 
+Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+
+This software may be used and distributed according to the terms of the MIT LICENSE
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
+
+    <title>AIME Mistral Chat API Example</title>
+
+    <link rel="stylesheet" href="/model_api/frontend/css/font.css">
+    <link rel="stylesheet" href="/mistral-chat/static/css/highlight.css">
+    <link rel="stylesheet" href="/mistral-chat/static/css/style.css">
+
+    <script src="/model_api/js/model_api.js"></script>
+    <script src="/mistral-chat/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
+    <script src="/mistral-chat/static/js/highlight.js"></script>
+    <script src="/mistral-chat/static/js/main.js"></script>
+</head>
+
+<body>
+	<div class="pl-5 pr-5 max-w-7xl mx-auto min-h-screen">
+        <div id="top">
+            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: Mistral - Instruct Chat</h2>
+        </div>
+		<div id="layout" class="columns flex flex-col md:flex-row">
+			<!-- LEFT COLUMN -->
+			<div class="column md:container input-col relative md:flex-1 pb-4 min-w-0">
+				<h3 class="mb-4 flex items-center justify-between text-aime_blue text-lg no-print">INPUT</h3>
+				<div id="chatbox" class="relative">
+					<p class="select-label no-print">Chat templates</p>
+					<select class="form-select w100 rounded no-print" id="template-selection" onchange="switchTemplate()">
+						<option value="deu">Deutsch</option>
+						<option value="ber">Deutsch - Berliner Schnauze</option>
+						<option value="wer">Deutsch - Röhrig</option>						
+						<option selected="eng" value="eng">English</option>
+						<option value="yod">English - Yoda</option>
+						<option value="spa">Español</option>
+						<option value="fra">Français</option>
+						<option value="hod">Hodor!</option>
+					</select>
+					<div id="chatbox-title" class="mb-2 bg-aime_lightgreen p-3 rounded-md">
+						<div class="overlook text-xs text-gray-500">System Prompt: </div>
+						<div contenteditable="true" id="system-prompt" class="eol-node mt-1 text-sm leading-4 italic"></div>
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#999" class="size-6 w-4 h-4 no-print">
+							<path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
+							<path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
+						</svg>
+					</div>
+					<div id="chatbox-content" class="bg-aime_darkblue rounded-t-md p-5 max-h-96 overflow-y-scroll pb-0"></div>
+					<div id="chatbox-fadeout" class="absolute inset-x-0 h-10 bg-gradient-to-t to-transparent from-aime_darkblue no-print" style="bottom:57px;"></div>
+					<div id="chatbox-input" class="no-print">
+						<div class="bg-aime_darkblue p-4 flex items-center rounded-b-md">
+							<input id="chat_input" name="chat_input" type="text" placeholder="Type your message..." class="flex-1 bg-aime_darkblue p-2 rounded-l-md border-1 border-gray-500 focus:outline-none text-white text-sm focus:outline-none focus:border-1 focus:border-gray-500" onkeydown="handleKeyPress(event)">
+							<button id="chat_send" title="Send" class="bg-gray-500 text-white p-2 rounded-r-md border-gray-500" onclick="onButtonClick();">
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+									<path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+								</svg>
+							</button>
+						</div>
+					</div>	
+				</div>
+
+				<div class="flex justify-between items-center mt-1">
+					<a id="clear_chat_context" class="cursor-pointer text-xs font-medium text-gray-400 border-b border-transparent hover:border-gray-400 focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out no-print" onclick="clearChatContext()">Clear chat context</a>
+					<a id="print_chat" class="cursor-pointer text-xs font-medium text-gray-400 border-b border-transparent hover:border-gray-400 focus:outline-none focus:border-gray-300 transition duration-150 ease-in-out no-print" onclick="window.print();">Print chat</a>
+				</div>
+				
+				<div id="settings_container" class="w100 mt-5 no-print">
+					<p class="select-label">Top K</p>
+					<input id="top_k_range" class="slider w100" type="range" min="1" max="100" value="40" oninput="document.getElementById('top_k_label').innerHTML = this.value">
+					<label for="top_k_range" id="top_k_label">40</label>
+					
+					<p class="select-label">Top P</p>
+                    <input id="top_p_range" class="slider w100" type="range" min="0" max="1" step="0.05" value="0.9" oninput="document.getElementById('top_p_label').innerHTML = this.value">
+                    <label for="top_p_range" id="top_p_label">0.9</label>
+
+					<p class="select-label">Temperature</p>
+					<input id="temperature_range" class="slider w100" type="range" min="0" max="1" value="0.8" step="0.05" oninput="document.getElementById('temperature_label').innerHTML = this.value">
+					<label for="temperature_range" id="temperature_label">0.8</label>
+
+					<p class="select-label">Maximum response length in tokens</p>
+					<input id="max_gen_tokens_range" class="slider w100" type="range" min="1" max="2000" value="1000" oninput="document.getElementById('max_gen_tokens_label').innerHTML = this.value">
+					<label for="max_gen_tokens_range" id="max_gen_tokens_label">1000</label>
+
+				</div>
+			</div> <!-- /END LEFT COLUMN -->
+
+			<!-- DEVIDER -->
+			<div class="column-divider no-print" role="separator">
+				<div class="thin-line"></div>
+			</div><!-- /END DEVIDER -->
+
+			<!-- RIGHT COLUMN -->
+			<div id="output_section" class="column md:container output-col md:flex-1 pb-4 min-w-0 no-print">
+				<div>
+					<div class="flex">
+						<button id="tab_button_output" class="tab-button active" data-tab="tab_output"><h3 class="text-lg pr-4">OUTPUT</h3></button>
+						<button id="tab_button_json" class="tab-button" data-tab="tab_json"><h3 class="text-lg pl-4">JSON</h3></button>
+					</div>
+				</div>
+					
+					<div id="tab_output" class="tab-content">
+						<div id="progress_container" class="w100">
+							<p class="label">Progress</p>
+							<label id="progress_label" class="text-sm"></label>
+							<label id="tasks_to_wait_for" class="text-sm"></label>
+							<label id="estimate" class="text-sm"></label>
+							<label id="num_workers_online" class="text-sm"></label>
+						</div>
+						<p class="label mt-5">Console Output</p>
+						<textarea readonly id="info_box" class="rounded bg-gray-400 mb-4 w100 p-4 border-none text-sm text-aime_blue">>_</textarea>
+					</div>
+
+					<div id="tab_json" class="hidden tab-content">
+						<div>
+							<p class="label">JSON Example</p>
+		
+							<p class="select-label">API Call (Text)</p>
+							<pre><code class="info-field code language-json rounded">
+			{
+				"prompt_input":"A dialog, where User interacts with a helpful, kind, obedient, honest and very reasonable assistant called Steve.\nUser: Hello, Steve.\nSteve: How can I assist you today?\nUser: What is your favourite movie?\nSteve:",
+				"top_k":40,
+				"top_p":0.9,
+				"temperature":0.8,
+				"client_session_auth_key":"e1b12673-3beb-42eb-bd2c-1747a11dd084",
+				"wait_for_result":false
+			}
+							</code></pre>
+							<br/>
+							<p class="select-label">Progress</p>
+							<pre><code class="info-field code language-json rounded">
+			{
+				"success":true,
+				"job_id":"JID43",
+				"ep_version":0,
+				"job_state":"processing",
+				"progress":{
+					"job_id":"JID43",
+					"start_time":1708257097.326644,
+					"start_time_compute":1708257097.3285873,
+					"progress":3,
+					"progress_data":{
+						"text":"Oh, ",
+						"num_generated_tokens":3
+					},
+					"estimate":1.2,
+					"queue_position":0,
+					"num_workers_online":1
+				}
+			}
+							</code></pre>
+							<br/>
+							<p class="select-label">Result</p>
+							<pre><code class="info-field code language-json rounded">
+			{
+				"success":true,
+				"job_id":"JID43",
+				"ep_version":0,
+				"job_result":{
+					"success":true,
+					"job_id":"JID43",
+					"ep_version":0,
+					"text":"Oh, that's a tough one! I have so many favourite movies, but if I had to choose just one, I would say \"Toy Story\". It's such a classic and it always makes me laugh.\n",
+					"num_generated_tokens":52,
+					"model_name":"Mistral-Small-3.1-24B-Instruct",
+					"compute_duration":1.8,
+					"total_duration":1.8,
+					"auth":"neo06_NVIDIA A100-PCIE-40GB_0",
+					"worker_interface_version":"AIME-API-Worker-Interface 0.9.10"
+				},
+				"job_state":"done",
+				"progress":{
+					"job_id":"JID43",
+					"start_time":1708257097.326644,
+					"start_time_compute":1708257097.3285873,
+					"progress":45,
+					"progress_data":{
+						"text":"Oh, that's a tough one! I have so many favourite movies, but if I had to choose just one, I would say \"Toy Story\". It's such a classic and it ",
+						"num_generated_tokens":45
+					},
+					"estimate":0,
+					"queue_position":0,
+					"num_workers_online":1
+				}
+			}
+							</code></pre>
+						</div>
+					</div>
+				</div>
+			</div> <!-- /END RIGHT COLUMN -->
+		</div>
+	</div>
+	<footer class="text-xs p-4 mt-20 text-center">
+		<div class="flex items-center justify-center space-x-2">
+			<span>&copy; 2024 AIME GmbH | Powered by <a href="https://api.aime.info" target="_blank" class="text-aime_darkblue font-bold">AIME API</a> | <a href="https://www.aime.info/imprint" target="_blank" class="text-aime_darkblue font-bold">Imprint</a></span>
+		</div>
+		<div class="text-xs text-gray-400 p-5 leading-3 max-w-2xl mx-auto">Disclaimer: The content provided on this platform is for informational and educational purposes only, and its use is at your own risk. We do not assume any liability for the accuracy, completeness, or usefulness of the information provided. Viewer discretion is advised as the content may contain explicit material. This platform is intended for research and demonstration purposes only and should not be used as a substitute for professional advice. By accessing this platform, you agree to these terms and conditions.</div>
+	</footer>
+</body>
+</html>
