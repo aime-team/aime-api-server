@@ -10,4 +10,5 @@ markdown==3.5.1
 Pygments==2.17.0
 
 sanic_sessions==0.9.0
+sanic_ext=23.12.0
 aiomcache==0.8.2   # New for our session cache
