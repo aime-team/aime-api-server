@@ -52,11 +52,11 @@
                     <div id="size_container" class="flex space-x-4 items-center">
                         <div class="w-1/2">
                             <p class="select-label">Width</p>
-                            <input type="number"  min="128" max="2024" step="16" value="1024" class="form-input w-full" id="width_range" onblur="this.value = roundToNearestMultipleOf16(this.value);" />
+                            <input type="number"  min="128" max="2024" step="32" value="1024" class="form-input w-full" id="width_range" onblur="this.value = roundToNearestMultipleOf16(this.value);" />
                         </div>
                         <div class="w-1/2">
                             <p class="select-label">Height</p>
-                            <input type="number"  min="128" max="2024" step="16" value="1024" class="form-input w-full" id="height_range" onblur="this.value = roundToNearestMultipleOf16(this.value);" />
+                            <input type="number"  min="128" max="2024" step="32" value="1024" class="form-input w-full" id="height_range" onblur="this.value = roundToNearestMultipleOf16(this.value);" />
                         </div>
                     </div>
 
@@ -65,8 +65,8 @@
                 <div id="settings_container" class="w100">
                     <p class="label mt-5">Sampling Parameters</p>
                     <p class="select-label">Sampling Steps</p>
-                    <input type="range" min="1" max="50" value="50" class="slider w100" id="steps_range" oninput="document.getElementById('steps_label').innerHTML = this.value">
-                    <label for="steps_range" id="steps_label">50</label>
+                    <input type="range" min="1" max="50" value="40" class="slider w100" id="steps_range" oninput="document.getElementById('steps_label').innerHTML = this.value">
+                    <label for="steps_range" id="steps_label">40</label>
 
                     <p class="select-label">Guidance</p>
                     <input type="range" min="1.0" max="10.0" value="3.5" class="slider w100" step="0.1" id="guidance_range" oninput="document.getElementById('guidance_label').innerHTML = this.value">

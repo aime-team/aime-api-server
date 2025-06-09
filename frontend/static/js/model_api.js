@@ -307,3 +307,9 @@ function doAPIRequest(endpointName, params, resultCallback, user = null, apiKey 
         model.doAPIRequest(params, resultCallback, progressCallback);
     });
 }
+
+// Export the ModelAPI class and doAPIRequest function
+module.exports = {
+    ModelAPI,
+    doAPIRequest
+};
