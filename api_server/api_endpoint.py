@@ -335,6 +335,7 @@ class APIEndpoint():
             }
         )
 
+
     async def client_get_endpoint_details(self, request):
         """Route /api/<endpoint_name> to get details about <endpoint_name>. 
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Examples JavaScript API Client Interface &mdash; AIME API Server 0.8.0 documentation</title>
+  <title>LLM Chat API Examples &mdash; AIME API Server 0.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/aime_override.css?v=56fc6846" />
@@ -17,7 +17,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=486e5634"></script>
+        <script src="../../_static/documentation_options.js?v=39bb1c6d"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -60,7 +60,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../http_interface.html">HTTP</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index_js_api_client_interface.html">JavaScript</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Examples</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">LLM Chat API Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#image-generation-example">Image Generation Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#text-to-speech-generation-example">Text-to-Speech Generation Example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="js_api_client_interface.html">Documentation</a></li>
 </ul>
 </li>
@@ -84,8 +86,8 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="index_js_api_client_interface.html">AIME JavaScript API Client Interface</a></li>
-      <li class="breadcrumb-item active">Examples JavaScript API Client Interface</li>
+          <li class="breadcrumb-item"><a href="index_js_api_client_interface.html">AIME API JavaScript Client Interface</a></li>
+      <li class="breadcrumb-item active">LLM Chat API Examples</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/client_interfaces/js_api_client_interface/examples.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -95,22 +97,256 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="examples-javascript-api-client-interface">
-<h1>Examples JavaScript API Client Interface<a class="headerlink" href="#examples-javascript-api-client-interface" title="Link to this heading"></a></h1>
-<p>Simple single call example:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;/js/model_api.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
-<span class="kd">function</span><span class="w"> </span><span class="nx">onResultCallback</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">text</span><span class="p">)</span><span class="w"> </span><span class="c1">// print generated text to console</span>
-<span class="p">}</span>
-
-<span class="nx">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Object</span><span class="p">({</span>
-<span class="w">    </span><span class="nx">text</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Your text prompt&#39;</span>
-<span class="p">});</span>
-
-<span class="nx">doAPIRequest</span><span class="p">(</span><span class="s1">&#39;llama2_chat&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">params</span><span class="p">,</span><span class="w"> </span><span class="nx">onResultCallback</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;user_name&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;user_key&#39;</span><span class="p">);</span>
-<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+  <section id="llm-chat-api-examples">
+<h1>LLM Chat API Examples<a class="headerlink" href="#llm-chat-api-examples" title="Link to this heading"></a></h1>
+<p>Basic example showing synchronous usage of the AIME API client interface.</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">chat_example.js</span><a class="headerlink" href="#id1" title="Link to this code"></a></div>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">ModelAPI</span><span class="p">,</span><span class="w"> </span><span class="nx">doAPIRequest</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../model_api&#39;</span><span class="p">);</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="c1">// Configuration</span>
+<span class="linenos"> 4</span><span class="kd">const</span><span class="w"> </span><span class="nx">CONFIG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 5</span><span class="w">    </span><span class="nx">BASE_URL</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;https://api.aime.info&#39;</span><span class="p">,</span>
+<span class="linenos"> 6</span><span class="w">    </span><span class="nx">ENDPOINT</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;llama4_chat&#39;</span><span class="p">,</span><span class="w"> </span>
+<span class="linenos"> 7</span><span class="w">    </span><span class="nx">API_EMAIL</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;apiexample@aime.info&#39;</span><span class="p">,</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="nx">API_KEY</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;181e35ac-7b7d-4bfe-9f12-153757ec3952&#39;</span>
+<span class="linenos"> 9</span><span class="p">};</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span><span class="c1">// Set up global fetch to handle base URL</span>
+<span class="linenos">12</span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">fetch</span><span class="o">:</span><span class="w"> </span><span class="nx">originalFetch</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">global</span><span class="p">;</span>
+<span class="linenos">13</span><span class="nb">global</span><span class="p">.</span><span class="nx">fetch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">input</span><span class="p">,</span><span class="w"> </span><span class="nx">init</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">14</span><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">typeof</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;string&#39;</span><span class="w"> </span>
+<span class="linenos">15</span><span class="w">        </span><span class="o">?</span><span class="w"> </span><span class="nx">input</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">BASE_URL</span><span class="si">}${</span><span class="nx">input</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="si">}${</span><span class="nx">input</span><span class="si">}</span><span class="sb">`</span>
+<span class="linenos">16</span><span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="nx">input</span><span class="p">;</span>
+<span class="linenos">17</span><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">originalFetch</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="nx">init</span><span class="p">);</span>
+<span class="linenos">18</span><span class="p">};</span>
+<span class="linenos">19</span>
+<span class="linenos">20</span><span class="c1">// Chat parameters</span>
+<span class="linenos">21</span><span class="kd">const</span><span class="w"> </span><span class="nx">chatContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="linenos">22</span><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">role</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;user&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Hi! How are you?&#39;</span><span class="w"> </span><span class="p">},</span>
+<span class="linenos">23</span><span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">role</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;assistant&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;I\&#39;m doing well, thank you! How can I help you today?&#39;</span><span class="w"> </span><span class="p">}</span>
+<span class="linenos">24</span><span class="p">];</span>
+<span class="linenos">25</span>
+<span class="linenos">26</span><span class="kd">const</span><span class="w"> </span><span class="nx">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">27</span><span class="w">    </span><span class="nx">prompt_input</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Tell me a joke&#39;</span><span class="p">,</span>
+<span class="linenos">28</span><span class="w">    </span><span class="nx">chat_context</span><span class="o">:</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">chatContext</span><span class="p">),</span>
+<span class="linenos">29</span><span class="w">    </span><span class="nx">top_k</span><span class="o">:</span><span class="w"> </span><span class="mf">40</span><span class="p">,</span>
+<span class="linenos">30</span><span class="w">    </span><span class="nx">top_p</span><span class="o">:</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span>
+<span class="linenos">31</span><span class="w">    </span><span class="nx">temperature</span><span class="o">:</span><span class="w"> </span><span class="mf">0.8</span><span class="p">,</span>
+<span class="linenos">32</span><span class="w">    </span><span class="nx">max_gen_tokens</span><span class="o">:</span><span class="w"> </span><span class="mf">1000</span>
+<span class="linenos">33</span><span class="p">};</span>
+<span class="linenos">34</span>
+<span class="linenos">35</span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;💬 Starting chat...&#39;</span><span class="p">);</span>
+<span class="linenos">36</span>
+<span class="linenos">37</span><span class="c1">// Make the API request</span>
+<span class="linenos">38</span><span class="nx">doAPIRequest</span><span class="p">(</span>
+<span class="linenos">39</span><span class="w">    </span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">ENDPOINT</span><span class="p">,</span>
+<span class="linenos">40</span><span class="w">    </span><span class="nx">params</span><span class="p">,</span>
+<span class="linenos">41</span><span class="w">    </span><span class="p">(</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">42</span><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">43</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;❌ Error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;Unknown error&#39;</span><span class="p">);</span>
+<span class="linenos">44</span><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">response</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">45</span><span class="w">                </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Response status:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">response</span><span class="p">.</span><span class="nx">status</span><span class="p">);</span>
+<span class="linenos">46</span><span class="w">                </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Response data:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">));</span>
+<span class="linenos">47</span><span class="w">            </span><span class="p">}</span>
+<span class="linenos">48</span><span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="linenos">49</span><span class="w">        </span><span class="p">}</span>
+<span class="linenos">50</span>
+<span class="linenos">51</span><span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;\n📄 Full API response:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">));</span>
+<span class="linenos">52</span>
+<span class="linenos">53</span><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">54</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;⚠️  No response received from the API&#39;</span><span class="p">);</span>
+<span class="linenos">55</span><span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="linenos">56</span><span class="w">        </span><span class="p">}</span>
+<span class="linenos">57</span>
+<span class="linenos">58</span><span class="w">        </span><span class="c1">// Handle the response</span>
+<span class="linenos">59</span><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">result</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">success</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">60</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;❌ API Error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">error</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;Unknown error&#39;</span><span class="p">);</span>
+<span class="linenos">61</span><span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="linenos">62</span><span class="w">        </span><span class="p">}</span>
+<span class="linenos">63</span>
+<span class="linenos">64</span><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">result</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">text</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">65</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;\n🤖 Assistant:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">text</span><span class="p">);</span>
+<span class="linenos">66</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;\n📊 Stats:&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">67</span><span class="w">                </span><span class="s1">&#39;Generated Tokens&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">num_generated_tokens</span><span class="p">,</span>
+<span class="linenos">68</span><span class="w">                </span><span class="s1">&#39;Compute Duration&#39;</span><span class="o">:</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="nx">result</span><span class="p">.</span><span class="nx">compute_duration</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span><span class="si">}</span><span class="sb">s`</span><span class="p">,</span>
+<span class="linenos">69</span><span class="w">                </span><span class="s1">&#39;Total Duration&#39;</span><span class="o">:</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="nx">result</span><span class="p">.</span><span class="nx">total_duration</span><span class="p">.</span><span class="nx">toFixed</span><span class="p">(</span><span class="mf">2</span><span class="p">)</span><span class="si">}</span><span class="sb">s`</span>
+<span class="linenos">70</span><span class="w">            </span><span class="p">});</span>
+<span class="linenos">71</span><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">72</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;⚠️  Unexpected response format:&#39;</span><span class="p">);</span>
+<span class="linenos">73</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">));</span>
+<span class="linenos">74</span><span class="w">        </span><span class="p">}</span>
+<span class="linenos">75</span><span class="w">        </span>
+<span class="linenos">76</span><span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;\n✨ Chat completed!&#39;</span><span class="p">);</span>
+<span class="linenos">77</span><span class="w">    </span><span class="p">},</span>
+<span class="linenos">78</span><span class="w">    </span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">API_EMAIL</span><span class="p">,</span>
+<span class="linenos">79</span><span class="w">    </span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">API_KEY</span><span class="p">,</span>
+<span class="linenos">80</span><span class="w">    </span><span class="p">(</span><span class="nx">progress</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">81</span><span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">progress</span><span class="p">.</span><span class="nx">progress</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span>
+<span class="linenos">82</span><span class="w">            </span><span class="o">?</span><span class="w"> </span><span class="sb">`Progress: </span><span class="si">${</span><span class="nx">progress</span><span class="p">.</span><span class="nx">progress</span><span class="si">}</span><span class="sb">%`</span><span class="w"> </span>
+<span class="linenos">83</span><span class="w">            </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Thinking...&#39;</span><span class="p">;</span>
+<span class="linenos">84</span><span class="w">        </span><span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="sb">`\r</span><span class="si">${</span><span class="nx">msg</span><span class="si">}${</span><span class="s1">&#39; &#39;</span><span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="mf">20</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<span class="linenos">85</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">86</span><span class="p">);</span>
 </pre></div>
+</div>
+</div>
+</section>
+<section id="image-generation-example">
+<h1>Image Generation Example<a class="headerlink" href="#image-generation-example" title="Link to this heading"></a></h1>
+<p>Example showing how to generate images using the AIME API client interface.</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">image_generation_example.js</span><a class="headerlink" href="#id2" title="Link to this code"></a></div>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">doAPIRequest</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../model_api&#39;</span><span class="p">);</span>
+<span class="linenos"> 2</span><span class="kd">const</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span><span class="c1">// Configuration</span>
+<span class="linenos"> 5</span><span class="kd">const</span><span class="w"> </span><span class="nx">CONFIG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 6</span><span class="w">    </span><span class="nx">BASE_URL</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;https://api.aime.info&#39;</span><span class="p">,</span>
+<span class="linenos"> 7</span><span class="w">    </span><span class="nx">ENDPOINT</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;flux-dev&#39;</span><span class="p">,</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="nx">API_EMAIL</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;apiexample@aime.info&#39;</span><span class="p">,</span>
+<span class="linenos"> 9</span><span class="w">    </span><span class="nx">API_KEY</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;181e35ac-7b7d-4bfe-9f12-153757ec3952&#39;</span>
+<span class="linenos">10</span><span class="p">};</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="c1">// Set up global fetch to handle base URL</span>
+<span class="linenos">13</span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">fetch</span><span class="o">:</span><span class="w"> </span><span class="nx">originalFetch</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">global</span><span class="p">;</span>
+<span class="linenos">14</span><span class="nb">global</span><span class="p">.</span><span class="nx">fetch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">input</span><span class="p">,</span><span class="w"> </span><span class="nx">init</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">15</span><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">typeof</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;string&#39;</span><span class="w"> </span>
+<span class="linenos">16</span><span class="w">        </span><span class="o">?</span><span class="w"> </span><span class="nx">input</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">BASE_URL</span><span class="si">}${</span><span class="nx">input</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="si">}${</span><span class="nx">input</span><span class="si">}</span><span class="sb">`</span>
+<span class="linenos">17</span><span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="nx">input</span><span class="p">;</span>
+<span class="linenos">18</span><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">originalFetch</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="nx">init</span><span class="p">);</span>
+<span class="linenos">19</span><span class="p">};</span>
+<span class="linenos">20</span>
+<span class="linenos">21</span><span class="c1">// Image generation parameters</span>
+<span class="linenos">22</span><span class="kd">const</span><span class="w"> </span><span class="nx">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">23</span><span class="w">    </span><span class="nx">prompt</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;A beautiful sunset over mountains&#39;</span><span class="p">,</span>
+<span class="linenos">24</span><span class="w">    </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="mf">1024</span><span class="p">,</span>
+<span class="linenos">25</span><span class="w">    </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="mf">1024</span><span class="p">,</span>
+<span class="linenos">26</span><span class="w">    </span><span class="nx">steps</span><span class="o">:</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span>
+<span class="linenos">27</span><span class="w">    </span><span class="nx">guidance</span><span class="o">:</span><span class="w"> </span><span class="mf">7.5</span><span class="p">,</span>
+<span class="linenos">28</span><span class="w">    </span><span class="nx">wait_for_result</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="linenos">29</span><span class="p">};</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;🚀 Starting image generation...&#39;</span><span class="p">);</span>
+<span class="linenos">32</span>
+<span class="linenos">33</span><span class="c1">// Make the API request</span>
+<span class="linenos">34</span><span class="nx">doAPIRequest</span><span class="p">(</span>
+<span class="linenos">35</span><span class="w">    </span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">ENDPOINT</span><span class="p">,</span>
+<span class="linenos">36</span><span class="w">    </span><span class="nx">params</span><span class="p">,</span>
+<span class="linenos">37</span><span class="w">    </span><span class="p">(</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">38</span><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">39</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;❌ Error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;Unknown error&#39;</span><span class="p">);</span>
+<span class="linenos">40</span><span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="linenos">41</span><span class="w">        </span><span class="p">}</span>
+<span class="linenos">42</span>
+<span class="linenos">43</span><span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">images</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">images</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">[];</span>
+<span class="linenos">44</span><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">images</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">45</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;⚠️  No images were generated&#39;</span><span class="p">);</span>
+<span class="linenos">46</span><span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="linenos">47</span><span class="w">        </span><span class="p">}</span>
+<span class="linenos">48</span>
+<span class="linenos">49</span><span class="w">        </span><span class="c1">// Save the first image</span>
+<span class="linenos">50</span><span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">imageData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">images</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">images</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mf">1</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">images</span><span class="p">[</span><span class="mf">0</span><span class="p">];</span>
+<span class="linenos">51</span><span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">outputPath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;generated_image.png&#39;</span><span class="p">;</span>
+<span class="linenos">52</span><span class="w">        </span><span class="nx">fs</span><span class="p">.</span><span class="nx">writeFileSync</span><span class="p">(</span><span class="nx">outputPath</span><span class="p">,</span><span class="w"> </span><span class="nx">Buffer</span><span class="p">.</span><span class="kr">from</span><span class="p">(</span><span class="nx">imageData</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;base64&#39;</span><span class="p">));</span>
+<span class="linenos">53</span><span class="w">        </span>
+<span class="linenos">54</span><span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`✅ Image saved as </span><span class="si">${</span><span class="nx">outputPath</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<span class="linenos">55</span><span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;✨ All done!&#39;</span><span class="p">);</span>
+<span class="linenos">56</span><span class="w">    </span><span class="p">},</span>
+<span class="linenos">57</span><span class="w">    </span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">API_EMAIL</span><span class="p">,</span>
+<span class="linenos">58</span><span class="w">    </span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">API_KEY</span><span class="p">,</span>
+<span class="linenos">59</span><span class="w">    </span><span class="p">(</span><span class="nx">progress</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">60</span><span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">progress</span><span class="p">.</span><span class="nx">progress</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span>
+<span class="linenos">61</span><span class="w">            </span><span class="o">?</span><span class="w"> </span><span class="sb">`Progress: </span><span class="si">${</span><span class="nx">progress</span><span class="p">.</span><span class="nx">progress</span><span class="si">}</span><span class="sb">%`</span><span class="w"> </span>
+<span class="linenos">62</span><span class="w">            </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Starting...&#39;</span><span class="p">;</span>
+<span class="linenos">63</span><span class="w">        </span><span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="sb">`\r</span><span class="si">${</span><span class="nx">msg</span><span class="si">}${</span><span class="s1">&#39; &#39;</span><span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="mf">20</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<span class="linenos">64</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">65</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="text-to-speech-generation-example">
+<h1>Text-to-Speech Generation Example<a class="headerlink" href="#text-to-speech-generation-example" title="Link to this heading"></a></h1>
+<p>Example showing text-to-speech generation using the AIME API client interface.</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">tts_example.js</span><a class="headerlink" href="#id3" title="Link to this code"></a></div>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">doAPIRequest</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../model_api&#39;</span><span class="p">);</span>
+<span class="linenos"> 2</span><span class="kd">const</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span><span class="c1">// Configuration</span>
+<span class="linenos"> 5</span><span class="kd">const</span><span class="w"> </span><span class="nx">CONFIG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 6</span><span class="w">    </span><span class="nx">BASE_URL</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;https://api.aime.info&#39;</span><span class="p">,</span>
+<span class="linenos"> 7</span><span class="w">    </span><span class="nx">ENDPOINT</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;tts_tortoise&#39;</span><span class="p">,</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="nx">API_EMAIL</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;apiexample@aime.info&#39;</span><span class="p">,</span>
+<span class="linenos"> 9</span><span class="w">    </span><span class="nx">API_KEY</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;181e35ac-7b7d-4bfe-9f12-153757ec3952&#39;</span><span class="p">,</span>
+<span class="linenos">10</span><span class="w">    </span><span class="nx">OUTPUT_FILE</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;generated_speech.mp3&#39;</span>
+<span class="linenos">11</span><span class="p">};</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="c1">// Set up global fetch to handle base URL</span>
+<span class="linenos">14</span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">fetch</span><span class="o">:</span><span class="w"> </span><span class="nx">originalFetch</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">global</span><span class="p">;</span>
+<span class="linenos">15</span><span class="nb">global</span><span class="p">.</span><span class="nx">fetch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">input</span><span class="p">,</span><span class="w"> </span><span class="nx">init</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">16</span><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">typeof</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;string&#39;</span><span class="w"> </span>
+<span class="linenos">17</span><span class="w">        </span><span class="o">?</span><span class="w"> </span><span class="nx">input</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">input</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">BASE_URL</span><span class="si">}${</span><span class="nx">input</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/&#39;</span><span class="si">}${</span><span class="nx">input</span><span class="si">}</span><span class="sb">`</span>
+<span class="linenos">18</span><span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="nx">input</span><span class="p">;</span>
+<span class="linenos">19</span><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">originalFetch</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span><span class="w"> </span><span class="nx">init</span><span class="p">);</span>
+<span class="linenos">20</span><span class="p">};</span>
+<span class="linenos">21</span>
+<span class="linenos">22</span><span class="c1">// TTS parameters</span>
+<span class="linenos">23</span><span class="kd">const</span><span class="w"> </span><span class="nx">params</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">24</span><span class="w">    </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Hello, this is a test of the text-to-speech system. How are you doing today?&quot;</span><span class="p">,</span>
+<span class="linenos">25</span><span class="w">    </span><span class="nx">voice</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;emma&quot;</span><span class="p">,</span>
+<span class="linenos">26</span><span class="w">    </span><span class="nx">preset</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;fast&quot;</span><span class="p">,</span>
+<span class="linenos">27</span><span class="p">};</span>
+<span class="linenos">28</span>
+<span class="linenos">29</span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;🔊 Starting text-to-speech generation...&#39;</span><span class="p">);</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span><span class="c1">// Make the API request</span>
+<span class="linenos">32</span><span class="nx">doAPIRequest</span><span class="p">(</span>
+<span class="linenos">33</span><span class="w">    </span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">ENDPOINT</span><span class="p">,</span>
+<span class="linenos">34</span><span class="w">    </span><span class="nx">params</span><span class="p">,</span>
+<span class="linenos">35</span><span class="w">    </span><span class="p">(</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">36</span><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">37</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;❌ Error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;Unknown error&#39;</span><span class="p">);</span>
+<span class="linenos">38</span><span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="linenos">39</span><span class="w">        </span><span class="p">}</span>
+<span class="linenos">40</span>
+<span class="linenos">41</span><span class="w">        </span><span class="c1">// Check for audio data in both audio_output and audio_data fields</span>
+<span class="linenos">42</span><span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">audioData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">audio_output</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">audio_data</span><span class="p">;</span>
+<span class="linenos">43</span><span class="w">        </span>
+<span class="linenos">44</span><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">audioData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">45</span><span class="w">            </span><span class="c1">// Extract base64 data if it&#39;s a data URL</span>
+<span class="linenos">46</span><span class="w">            </span><span class="kd">const</span><span class="w"> </span><span class="nx">base64Data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">audioData</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="w"> </span>
+<span class="linenos">47</span><span class="w">                </span><span class="o">?</span><span class="w"> </span><span class="nx">audioData</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mf">1</span><span class="p">]</span><span class="w"> </span>
+<span class="linenos">48</span><span class="w">                </span><span class="o">:</span><span class="w"> </span><span class="nx">audioData</span><span class="p">;</span>
+<span class="linenos">49</span><span class="w">            </span>
+<span class="linenos">50</span><span class="w">            </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">51</span><span class="w">                </span><span class="nx">fs</span><span class="p">.</span><span class="nx">writeFileSync</span><span class="p">(</span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">OUTPUT_FILE</span><span class="p">,</span><span class="w"> </span><span class="nx">Buffer</span><span class="p">.</span><span class="kr">from</span><span class="p">(</span><span class="nx">base64Data</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;base64&#39;</span><span class="p">));</span>
+<span class="linenos">52</span><span class="w">                </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`✅ Audio saved as </span><span class="si">${</span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">OUTPUT_FILE</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<span class="linenos">53</span><span class="w">                </span><span class="k">return</span><span class="p">;</span>
+<span class="linenos">54</span><span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">writeError</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">55</span><span class="w">                </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;❌ Error saving audio file:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">writeError</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+<span class="linenos">56</span><span class="w">            </span><span class="p">}</span>
+<span class="linenos">57</span><span class="w">        </span><span class="p">}</span>
+<span class="linenos">58</span><span class="w">        </span>
+<span class="linenos">59</span><span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;⚠️  No audio data received in the response&#39;</span><span class="p">);</span>
+<span class="linenos">60</span><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">61</span><span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;API response:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">));</span>
+<span class="linenos">62</span><span class="w">        </span><span class="p">}</span>
+<span class="linenos">63</span><span class="w">        </span>
+<span class="linenos">64</span><span class="w">        </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;✨ All done!&#39;</span><span class="p">);</span>
+<span class="linenos">65</span><span class="w">    </span><span class="p">},</span>
+<span class="linenos">66</span><span class="w">    </span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">API_EMAIL</span><span class="p">,</span>
+<span class="linenos">67</span><span class="w">    </span><span class="nx">CONFIG</span><span class="p">.</span><span class="nx">API_KEY</span><span class="p">,</span>
+<span class="linenos">68</span><span class="w">    </span><span class="p">(</span><span class="nx">progress</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">69</span><span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">progress</span><span class="p">.</span><span class="nx">progress</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span>
+<span class="linenos">70</span><span class="w">            </span><span class="o">?</span><span class="w"> </span><span class="sb">`Progress: </span><span class="si">${</span><span class="nx">progress</span><span class="p">.</span><span class="nx">progress</span><span class="si">}</span><span class="sb">%`</span><span class="w"> </span>
+<span class="linenos">71</span><span class="w">            </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Processing...&#39;</span><span class="p">;</span>
+<span class="linenos">72</span><span class="w">        </span><span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="sb">`\r</span><span class="si">${</span><span class="nx">msg</span><span class="si">}${</span><span class="s1">&#39; &#39;</span><span class="p">.</span><span class="nx">repeat</span><span class="p">(</span><span class="mf">20</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<span class="linenos">73</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">74</span><span class="p">);</span>
+</pre></div>
+</div>
 </div>
 </section>
 
@@ -125,7 +361,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, AIME GmbH.</p>
+    <p>&#169; Copyright 2025, AIME GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
