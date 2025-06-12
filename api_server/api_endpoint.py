@@ -212,53 +212,67 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client
         """
+
+        self.__status_data['last_request_time'] = time.time()
+        input_args = request.json if request.method == "POST" else request.args
         if self.__status_data.get('enabled'):
-            self.__status_data['last_request_time'] = time.time()
             if self.app.job_handler.get_free_queue_slots(self.endpoint_name):
                 self.__status_data['num_requests'] += 1
 
                 validation_errors, error_code = await self.validate_client(request)
 
-                # fast exit if not authorized for request
-                if validation_errors:
-                    self.__status_data['num_unauthorized_requests'] += 1
-                    return self.handle_validation_errors(validation_errors, error_code)
+                if not validation_errors:
+                    job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
+                    if not validation_errors:
+                        job_data = self.add_session_variables_to_job_data(request, job_data)
+                        job_data['endpoint_name'] = self.endpoint_name
 
-                input_args = request.json if request.method == "POST" else request.args
-                job_data, validation_errors = await self.validate_input_parameters_for_job_data(input_args)
-                if validation_errors:
-                    self.__status_data['num_failed_requests'] += 1
-                    return self.handle_validation_errors(validation_errors)
-
-                job_data = self.add_session_variables_to_job_data(request, job_data)
-                job_data['endpoint_name'] = self.endpoint_name
-
-                job = await self.app.job_handler.endpoint_new_job(job_data)
-                if self.app.admin_backend:
-                    await self.app.admin_backend.admin_log_request_start(
-                        job.id,
-                        input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
-                        self.endpoint_name,
-                        job.start_time,
-                        request.headers.get('x-forwarded-for') or request.ip,
-                        dict(request.headers)
-                    )
-                if input_args.get('wait_for_result', True):
-                    response = await self.finalize_request(request, job) 
+                        job = await self.app.job_handler.endpoint_new_job(job_data)
+                        if self.app.admin_backend:
+                            await self.app.admin_backend.admin_log_request_start(
+                                job.id,
+                                input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
+                                self.endpoint_name,
+                                job.start_time,
+                                request.headers.get('x-forwarded-for') or request.ip,
+                                dict(request.headers)
+                            )
+                        if input_args.get('wait_for_result', True):
+                            response = await self.finalize_request(request, job) 
+                        else:
+                            response = {
+                                'success': True,
+                                'job_id': job.id,
+                                'ep_version': self.version
+                            }
+                        APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
+                    else:
+                        error_code = 400 # TODO Define error code for invalid input parameters
                 else:
-                    response = {
-                        'success': True,
-                        'job_id': job.id,
-                        'ep_version': self.version
-                    }
-                APIEndpoint.logger.debug(f'Response to client on /{self.endpoint_name}: {str(shorten_strings(response))}')
+                    self.__status_data['num_unauthorized_requests'] += 1
             else:
-                response = {
-                    'success': False,
-                    'error': f'Job queue reached max length {self.max_queue_length}!'
-                }
+                validation_errors = f'Job queue reached max length {self.max_queue_length}!'
+                error_code = 400 # # TODO Define error code for Full job queue
         else:
-            response = {'success': False, 'error': 'Endpoint disabled!'}
+            validation_errors = 'Endpoint disabled!'
+            error_code = 400 # # TODO Define error code for disabled endpoint
+            
+
+        if validation_errors:
+            self.__status_data['num_invalid_requests'] += 1
+            response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
+            APIEndpoint.logger.warning(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
+            if self.app.admin_backend:
+                await self.app.admin_backend.admin_log_invalid_request(
+                    input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
+                    self.endpoint_name,
+                    time.time(),
+                    validation_errors,
+                    request.headers.get('x-forwarded-for') or request.ip,
+                    dict(request.headers)
+                )
+            return sanic_json(response, status=error_code)
+
         return sanic_json(response)
 
 
@@ -277,9 +291,10 @@ class APIEndpoint():
         Returns:
             sanic.response.types.JSONResponse: Response to client with progress result and end result
         """        
+        
         validation_errors, error_code = await self.validate_progress_request(request)
         if validation_errors:
-            return self.handle_validation_errors(validation_errors, error_code)
+            return await self.handle_invalid_progress_request(validation_errors, request, error_code)
         input_args = request.json if request.method == "POST" else request.args
         job = self.app.job_handler.get_job(input_args.get('job_id'))
         response = {"success": True, 'job_id': job.id, 'ep_version': self.version}
@@ -289,8 +304,8 @@ class APIEndpoint():
                 response['job_result'] = await self.finalize_request(request, job)
                 APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
         elif await job.state == JobState.LAPSED:
-            validation_errors.append(f'Job {job.id} on {self.endpoint_name} lapsed!')
-            return self.handle_validation_errors(validation_errors, 400)
+            error_code = 400 # Define error code for lapsed job
+            return await self.handle_invalid_progress_request(f'Job {job.id} on {self.endpoint_name} lapsed!', request, error_code)
         response['job_state'] = await job.state
         if await job.state != JobState.DONE:
             response['progress'] = await self.get_and_validate_progress_data(job)
@@ -430,9 +445,20 @@ class APIEndpoint():
         )
 
 
-    def handle_validation_errors(self, validation_errors, error_code=400):
+    async def handle_invalid_progress_request(self, validation_errors, request, error_code=400):
+        input_args = request.json if request.method == "POST" else request.args
+        self.__status_data['num_invalid_progress_requests'] += 1
         response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
-        APIEndpoint.logger.warning(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
+        APIEndpoint.logger.warning(f'Aborted progress request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
+        await self.app.admin_backend.admin_log_invalid_progress_request(
+            input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
+            self.endpoint_name,
+            time.time(),
+            validation_errors,
+            request.headers.get('x-forwarded-for') or request.ip,
+            dict(request.headers)
+        )
+
         return sanic_json(response, status=error_code)
 
 
@@ -442,10 +468,10 @@ class APIEndpoint():
         job_id = input_args.get('job_id')
         if not job_id:
             validation_errors.append(f'No job_id given')
-            error_code = 402 # TODO Define error codes
+            error_code = 402 # TODO Define error codes for missing job id
         elif not self.app.job_handler.get_job(job_id):
             validation_errors.append(f'Client has no active request with this job id')
-            error_code = 402 # TODO Define error codes
+            error_code = 402 # TODO Define error codes for invalid job id
         return validation_errors, error_code
 
 
@@ -524,10 +550,10 @@ class APIEndpoint():
                 )
                 if not response.get('valid'):
                     validation_errors.append(response.get('error_msg'))
-                    error_code = 401
+                    error_code = 401 # TODO Define error codes for invalid key
                 elif not await self.app.admin_backend.admin_is_api_key_authorized_for_endpoint(api_key, self.endpoint_name):
                     validation_errors.append(f'Client not authorized for endpoint {self.endpoint_name}!')
-                    error_code = 402 # TODO Define error codes
+                    error_code = 402 # TODO Define error codes for unauthorized endpoint
             elif client_session_auth_key not in self.app.registered_keys:
                 validation_errors.append(f'API Key missing and client session authentication key not registered in API Server')
                 error_code = 401
@@ -553,6 +579,8 @@ class APIEndpoint():
             'last_request_time': None,
             'num_requests': 0,
             'num_finished_requests': 0,
+            'num_invalid_requests': 0,
+            'num_invalid_progress_requests': 0,
             'num_failed_requests': 0,
             'num_unauthorized_requests': 0,
             'num_canceled_requests': 0,

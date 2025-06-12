@@ -179,6 +179,32 @@ class AdminInterface():
         pass
 
 
+    async def admin_log_invalid_request(
+        self,
+        time_utc,
+        endpoint_name,
+        api_key=None,
+        request_error_msg=None,
+        ip_address=None, 
+        http_request_header:dict=None
+        ):
+        # Implemented by Admin BE
+        pass
+
+
+    async def admin_log_invalid_progress_request(
+        self,
+        time_utc,
+        endpoint_name,
+        api_key=None,
+        request_error_msg=None,
+        ip_address=None, 
+        http_request_header:dict=None
+        ):
+        # Implemented by Admin BE
+        pass
+
+
     async def api_get_worker_list(self):
         """Retrieve list of all worker names.
 
@@ -317,6 +343,49 @@ class MinimumAdminBackendImplementation(AdminInterface):
             f'metrics: {metrics}, '
             f'request_error_msg: {request_error_msg}'
         )
+
+
+    async def admin_log_invalid_request(
+        self,
+        api_key,
+        endpoint_name,
+        time_utc,
+        request_error_msg=None,
+        ip_address=None, 
+        http_request_header:dict=None
+        ):
+        # Implemented by Admin BE
+        self.app.logger.debug(
+            f'Admin Backend call to admin_log_invalid_request '
+            f'key: {api_key}, '
+            f'endpoint_name: {endpoint_name}, '
+            f'ip_address: {ip_address}, '
+            f'time_utc: {time_utc}'
+            f'header: {http_request_header}'
+            f'request_error_msg: {request_error_msg}'
+            )
+
+
+    async def admin_log_invalid_progress_request(
+        self,
+        api_key,
+        endpoint_name,
+        time_utc,
+        request_error_msg=None,
+        ip_address=None, 
+        http_request_header:dict=None
+        ):
+        # Implemented by Admin BE
+        self.app.logger.debug(
+            f'Admin Backend call to admin_log_invalid_progress_request '
+            f'key: {api_key}, '
+            f'endpoint_name: {endpoint_name}, '
+            f'ip_address: {ip_address}, '
+            f'time_utc: {time_utc}'
+            f'header: {http_request_header}'
+            f'request_error_msg: {request_error_msg}'
+            )
+
 
     async def admin_notify_worker_status_changed (
         self,
