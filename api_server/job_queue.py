@@ -19,7 +19,7 @@ class JobState():
     PROCESSING = 'processing'
     DONE = 'done'
     CANCELED = 'canceled'
-    ELAPSED = 'elapsed'
+    LAPSED = 'lapsed'
 
 
 class WorkerState():
@@ -64,7 +64,7 @@ class JobQueue(asyncio.Queue):
         Returns:
             dict: Job object of the next job in the queue
         """        
-        await self.remove_elapsed_jobs()
+        await self.remove_lapsed_jobs()
         return await asyncio.wait_for(super().get(), timeout=timeout)
 
 
@@ -87,7 +87,7 @@ class JobQueue(asyncio.Queue):
 
 
     async def get_rank(self, job_id):
-        await self.remove_elapsed_jobs()
+        await self.remove_lapsed_jobs()
         for rank, job in enumerate(self._queue):
             if job.id == job_id:
                 return rank +1
@@ -103,10 +103,10 @@ class JobQueue(asyncio.Queue):
         return len(self._queue)
 
 
-    async def remove_elapsed_jobs(self):
+    async def remove_lapsed_jobs(self):
         while self._queue:
             job = self.peek()
-            if job and await job.state == JobState.ELAPSED:
+            if job and await job.state == JobState.LAPSED:
                 self.get_nowait()
                 self.task_done()
             else:
@@ -513,7 +513,7 @@ class JobHandler():
     async def clean_up_jobs(self):
         for job_type in self.job_types.values():
             await job_type.clean_up_old_jobs()
-            await job_type.clean_up_elapsed_jobs_in_all_workers()
+            await job_type.clean_up_lapsed_jobs_in_all_workers()
 
 
     async def check_for_offline_workers(self):
@@ -785,9 +785,9 @@ class JobType():
                 del self.jobs[job.id]
 
 
-    async def clean_up_elapsed_jobs_in_all_workers(self):
+    async def clean_up_lapsed_jobs_in_all_workers(self):
         for worker in self.workers.values():
-            await worker.clean_up_elapsed_jobs()
+            await worker.clean_up_lapsed_jobs()
 
 
     def add_start_times(self, job):
@@ -817,7 +817,7 @@ class Worker():
         self.lock = asyncio.Lock()
         self.state = WorkerState.WAITING
         self.num_finished_jobs = 0
-        self.num_elapsed_jobs = 0
+        self.num_lapsed_jobs = 0
         self.retry = False
         self.max_batch_size = 0
         self.free_slots = 0
@@ -909,11 +909,11 @@ class Worker():
             await self.set_state(WorkerState.WAITING)
 
 
-    async def clean_up_elapsed_jobs(self):
+    async def clean_up_lapsed_jobs(self):
         for job_id, job in self.running_jobs.copy().items():
-            if await job.state == JobState.ELAPSED:
+            if await job.state == JobState.LAPSED:
                 self.running_jobs.pop(job_id, None)
-                self.num_elapsed_jobs += 1
+                self.num_lapsed_jobs += 1
 
 
     async def check_for_offline_workers(self):
@@ -968,8 +968,8 @@ class Job():
 
     @property
     async def state(self):
-        if not self.__state == JobState.ELAPSED and self.is_elapsed():
-            self.__state = JobState.ELAPSED
+        if not self.__state == JobState.LAPSED and self.is_lapsed():
+            self.__state = JobState.LAPSED
             self.result_received_time = time.time()
             if self.app.admin_backend:
                 await self.app.admin_backend.admin_log_request_end(
@@ -981,7 +981,7 @@ class Job():
         return self.__state
 
 
-    def is_elapsed(self):
+    def is_lapsed(self):
         now = time.time()
         if self.__state == JobState.QUEUED and (now - self.start_time) > self.max_time_in_queue:
             return True

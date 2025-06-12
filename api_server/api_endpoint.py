@@ -288,8 +288,8 @@ class APIEndpoint():
             if self.app.job_handler.is_job_future_done(job):
                 response['job_result'] = await self.finalize_request(request, job)
                 APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
-        elif await job.state == JobState.ELAPSED:
-            validation_errors.append(f'Job {job.id} on {self.endpoint_name} elapsed!')
+        elif await job.state == JobState.LAPSED:
+            validation_errors.append(f'Job {job.id} on {self.endpoint_name} lapsed!')
             return self.handle_validation_errors(validation_errors, 400)
         response['job_state'] = await job.state
         if await job.state != JobState.DONE:
