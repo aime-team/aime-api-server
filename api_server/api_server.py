@@ -147,17 +147,20 @@ class APIServer(Sanic):
                     'msg': 'Message'
                 }
         """
-        req_json = request.json
-        APIServer.logger.debug(f'Request on /worker_job_request: {shorten_strings(req_json)}')
-        response_cmd = APIServer.job_handler.validate_worker_request(req_json)
-        if response_cmd.get('cmd') != 'ok':
-            APIServer.logger.warning(
-                f"Worker {req_json.get('auth')} tried a job request for job type {req_json.get('job_type')}, "
-                f"but following error occured: {response_cmd.get('msg')}"
-            )
-            return sanic_json(response_cmd)
-             
-        response_cmd = await APIServer.job_handler.worker_job_request(req_json)
+        try:
+            req_json = request.json
+            APIServer.logger.debug(f'Request on /worker_job_request: {shorten_strings(req_json)}')
+            response_cmd = APIServer.job_handler.validate_worker_request(req_json)
+            if response_cmd.get('cmd') != 'ok':
+                APIServer.logger.warning(
+                    f"Worker {req_json.get('auth')} tried a job request for job type {req_json.get('job_type')}, "
+                    f"but following error occured: {response_cmd.get('msg')}"
+                )
+                return sanic_json(response_cmd)
+                
+            response_cmd = await APIServer.job_handler.worker_job_request(req_json)
+        except (asyncio.CancelledError, BrokenPipeError, ConnectionResetError):
+            await APIServer.job_handler.set_worker_offline(req_json.get('auth'))
         return sanic_json(response_cmd)
 
 
@@ -172,15 +175,18 @@ class APIServer(Sanic):
         Returns:
             sanic.response.types.JSONResponse: Response to API worker interface with 'cmd': 'ok' when API server received data.
         """
-        req_json = request.json
-        response_cmd = APIServer.job_handler.validate_worker_request(req_json)
-        if response_cmd.get('cmd') != 'ok':
-            APIServer.logger.warning(
-                f"Worker {req_json.get('auth')} tried to send job result for job {progress_result.get('job_id')} "
-                f"with job type {req_json.get('job_type')}, but following error occured: {response_cmd.get('msg')}"
-            )
-            return sanic_json(response_cmd)
-        response_cmd = await APIServer.job_handler.worker_set_job_result(req_json)
+        try:
+            req_json = request.json
+            response_cmd = APIServer.job_handler.validate_worker_request(req_json)
+            if response_cmd.get('cmd') != 'ok':
+                APIServer.logger.warning(
+                    f"Worker {req_json.get('auth')} tried to send job result for job {progress_result.get('job_id')} "
+                    f"with job type {req_json.get('job_type')}, but following error occured: {response_cmd.get('msg')}"
+                )
+                return sanic_json(response_cmd)
+            response_cmd = await APIServer.job_handler.worker_set_job_result(req_json)
+        except (asyncio.CancelledError, BrokenPipeError, ConnectionResetError):
+            await APIServer.job_handler.set_worker_offline(req_json.get('auth'))
         return sanic_json(response_cmd)
     
 
@@ -210,23 +216,25 @@ class APIServer(Sanic):
                     'start_time': 1700424731.952994
                 }]
         """
-        req_json = request.json
-        APIServer.logger.debug(f'Request on /worker_job_progress: {shorten_strings(req_json)}')
+        try:
+            req_json = request.json
+            APIServer.logger.debug(f'Request on /worker_job_progress: {shorten_strings(req_json)}')
 
-        if not isinstance(req_json, list): # compatibility fix: api_worker_interface < version 0.70
-            req_json = [req_json]
-        response_cmd_list = list()
-        for progress_result in req_json:
-            response_cmd = APIServer.job_handler.validate_worker_request(progress_result)
-            if response_cmd.get('cmd') not in ('ok'):
-                APIServer.logger.warning(
-                    f"Worker {progress_result.get('auth')} tried to send progress for job {progress_result.get('job_id')} "
-                    f"with job type {progress_result.get('job_type')}, but following error occured: {response_cmd.get('msg')}"
-                )
-                return sanic_json(response_cmd) # Fast exit if worker is not authorized or wrong job type.
-            response_cmd = await APIServer.job_handler.worker_update_progress_state(progress_result)
-            response_cmd_list.append(response_cmd)
-       
+            if not isinstance(req_json, list): # compatibility fix: api_worker_interface < version 0.70
+                req_json = [req_json]
+            response_cmd_list = list()
+            for progress_result in req_json:
+                response_cmd = APIServer.job_handler.validate_worker_request(progress_result)
+                if response_cmd.get('cmd') not in ('ok'):
+                    APIServer.logger.warning(
+                        f"Worker {progress_result.get('auth')} tried to send progress for job {progress_result.get('job_id')} "
+                        f"with job type {progress_result.get('job_type')}, but following error occured: {response_cmd.get('msg')}"
+                    )
+                    return sanic_json(response_cmd) # Fast exit if worker is not authorized or wrong job type.
+                response_cmd = await APIServer.job_handler.worker_update_progress_state(progress_result)
+                response_cmd_list.append(response_cmd)
+        except (asyncio.CancelledError, BrokenPipeError, ConnectionResetError):
+            await APIServer.job_handler.set_worker_offline(req_json.get('auth'))
         return sanic_json(response_cmd_list)
 
 
@@ -452,6 +460,7 @@ class APIServer(Sanic):
         self.register_listener(self.init_job_handler, 'after_server_start')
         self.register_listener(FFmpeg.is_ffmpeg_installed, 'after_server_start')
         self.register_listener(self.start_job_clean_up_background_task, 'after_server_start')
+        self.register_listener(self.start_worker_watchdog, 'after_server_start')
 
 
     def __setup_worker_interface(self):
@@ -482,6 +491,16 @@ class APIServer(Sanic):
     async def periodically_clean_up_jobs(self, update_interval=5):
         while True:
             await self.job_handler.clean_up_jobs()
+            await asyncio.sleep(update_interval)
+
+
+    async def start_worker_watchdog(self, app, loop):
+        loop.create_task(self.periodically_check_for_offline_workers())
+        
+
+    async def periodically_check_for_offline_workers(self, update_interval=5):
+        while True:
+            workers = await self.job_handler.check_for_offline_workers()
             await asyncio.sleep(update_interval)
 
 

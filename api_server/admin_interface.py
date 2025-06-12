@@ -87,6 +87,14 @@ class AdminInterface():
         pass
 
 
+    async def admin_notify_worker_status_changed (
+        self,
+        worker_name:str,
+        status:str
+        ):
+        pass
+
+
     async def api_set_endpoint_enabled(self, endpoint_name):
         """Enable endpoint with given endpoint name
 
@@ -309,3 +317,13 @@ class MinimumAdminBackendImplementation(AdminInterface):
             f'metrics: {metrics}, '
             f'request_error_msg: {request_error_msg}'
         )
+
+    async def admin_notify_worker_status_changed (
+        self,
+        worker_name:str,
+        status:str
+        ):
+        self.app.logger.debug(
+            f'Worker {worker_name} changed it\'s state to {status}'
+        )
+        

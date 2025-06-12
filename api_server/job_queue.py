@@ -22,7 +22,7 @@ class JobState():
     ELAPSED = 'elapsed'
 
 
-class WorkerState(Enum):
+class WorkerState():
     PROCESSING = 'processing'
     WAITING = 'waiting'
     OFFLINE = 'offline'
@@ -514,6 +514,17 @@ class JobHandler():
         for job_type in self.job_types.values():
             await job_type.clean_up_old_jobs()
             await job_type.clean_up_elapsed_jobs_in_all_workers()
+
+
+    async def check_for_offline_workers(self):
+        workers = await self.get_all_workers() # Check for offline workers already in get_all_workers
+
+
+    async def set_worker_offline(self, auth):
+        worker = self.get_worker(auth)
+        await worker.set_state(WorkerState.OFFLINE)
+
+
           
 
 class JobType():
@@ -726,22 +737,22 @@ class JobType():
 
 
     async def get_num_workers_online(self):
-        await self.update_offline_workers_state()
+        await self.check_for_offline_workers()
         return sum(worker.state is not WorkerState.OFFLINE for worker in self.workers.values())
        
 
-    async def update_offline_workers_state(self):
+    async def check_for_offline_workers(self):
         for worker in self.workers.values():
-            await worker.update_offline_state()
+            await worker.check_for_offline_workers()
 
 
     async def get_all_workers(self):
-        await self.update_offline_workers_state()
+        await self.check_for_offline_workers()
         return [worker for worker in self.workers.values()]
 
 
     async def get_all_active_workers(self):
-        await self.update_offline_workers_state()
+        await self.check_for_offline_workers()
         return [worker for worker in self.workers.values() if not worker.state == WorkerState.OFFLINE]
 
 
@@ -817,13 +828,19 @@ class Worker():
         self.mean_compute_duration = int()
 
 
+    async def set_state(self, new_state):
+        if self.state != new_state:
+            await self.app.admin_backend.admin_notify_worker_status_changed(self.auth, new_state)
+            self.state = new_state
+
+
     async def enable(self):
-        self.state = WorkerState.WAITING
-        await self.update_offline_state()
+        await self.set_state(WorkerState.WAITING)
+        await self.check_for_offline_workers()
 
 
     async def disable(self):
-        self.state = WorkerState.DISABLED
+        await self.set_state(WorkerState.DISABLED)
 
 
     def get_num_running_jobs(self, endpoint_name):
@@ -859,7 +876,7 @@ class Worker():
             async with self.lock:
                 self.free_slots += -1
                 await self.check_and_update_state()
-                self.state = WorkerState.PROCESSING
+                await self.set_state(WorkerState.PROCESSING)
                 self.running_jobs[job.id] = job
 
 
@@ -871,7 +888,7 @@ class Worker():
             if job_id:
                 job = self.running_jobs.get(job_id)
                 if job:
-                    self.state = WorkerState.PROCESSING
+                    await self.set_state(WorkerState.PROCESSING)
                     response_cmd = {'cmd': 'ok'}
             await self.check_and_update_state()
         return response_cmd
@@ -889,7 +906,7 @@ class Worker():
     async def check_and_update_state(self):
         self.last_request_time = time.time()
         if not self.running_jobs and not self.state == WorkerState.DISABLED:
-            self.state = WorkerState.WAITING
+            await self.set_state(WorkerState.WAITING)
 
 
     async def clean_up_elapsed_jobs(self):
@@ -899,10 +916,10 @@ class Worker():
                 self.num_elapsed_jobs += 1
 
 
-    async def update_offline_state(self):
+    async def check_for_offline_workers(self):
         async with self.lock:
             if time.time() - self.last_request_time > 2 * self.job_request_timeout and not self.state == WorkerState.DISABLED:
-                self.state = WorkerState.OFFLINE
+                await self.set_state(WorkerState.OFFLINE)
 
 
     def get_estimate_time(self, job):
