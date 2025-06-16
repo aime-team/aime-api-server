@@ -1027,7 +1027,6 @@ class Job():
             return 0
         else:
             queue = self.app.job_handler.get_queue(self.endpoint_name)
-            pos = await queue.get_rank(self.id)
             if queue is not None:
                 return await queue.get_rank(self.id)
             else:
