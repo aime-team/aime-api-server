@@ -367,6 +367,7 @@ class APIEndpoint():
                 'version': 2,
                 'max_queue_length': 1000,
                 'max_time_in_queue': 3600,
+                'free_queue_slots': 1000,
                 'category': 'chat',
                 'num_active_workers': 1,
                 'num_workers': 1,
@@ -374,7 +375,8 @@ class APIEndpoint():
                     {
                         'name': 'hostname#0_2xNVIDIA_GeForce_RTX_3090',
                         'state': 'online',
-                        'max_batch_size': 1,
+                        'max_batch_size': 128,
+                        'free_slots': 128,
                         'model': {
                             'label': 'Meta-Llama-3-8B-Instruct',
                             'quantization': 'fp16',
@@ -427,6 +429,7 @@ class APIEndpoint():
                 'version': self.version,
                 'max_queue_length': self.max_queue_length,
                 'max_time_in_queue': self.max_time_in_queue,
+                'free_queue_slots': self.app.job_handler.get_free_queue_slots(self.endpoint_name),
                 'category': self.category,
                 'num_active_workers': len(await self.app.job_handler.get_all_active_workers(self.worker_job_type)),
                 'num_workers': len(workers),
@@ -435,6 +438,7 @@ class APIEndpoint():
                         'name': worker.auth,
                         'state': worker.state if worker.state in (WorkerState.OFFLINE, WorkerState.DISABLED) else 'online',
                         'max_batch_size': worker.max_batch_size,
+                        'free_slots': worker.free_slots,
                         'model' : vars(worker.model)
                     }
                     for worker in workers
