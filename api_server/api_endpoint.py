@@ -234,6 +234,7 @@ class APIEndpoint():
                                 input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
                                 self.endpoint_name,
                                 job.start_time,
+                                await job.state,
                                 request.headers.get('x-forwarded-for') or request.ip,
                                 dict(request.headers)
                             )
