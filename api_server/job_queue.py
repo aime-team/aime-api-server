@@ -786,6 +786,7 @@ class JobType():
     async def clean_up_old_jobs(self):
         for job in self.jobs.copy().values():
             if job.result_received_time and (time.time() - job.result_received_time) > job.result_lifetime:
+                await self.app.admin_backend.admin_log_request_deleted(job.id)
                 del self.jobs[job.id]
 
 

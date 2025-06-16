@@ -180,6 +180,11 @@ class AdminInterface():
         pass
 
 
+    async def admin_log_request_deleted(self, job_id):
+        # Implemented by Admin BE
+        pass
+
+
     async def admin_log_invalid_request(
         self,
         api_key,
@@ -348,6 +353,13 @@ class MinimumAdminBackendImplementation(AdminInterface):
             f'request_state: {request_state}, '
             f'metrics: {metrics}, '
             f'request_error_msg: {request_error_msg}'
+        )
+
+
+    async def admin_log_request_deleted(self, job_id):
+        self.app.logger.debug(
+            f'Admin Backend call to admin_log_request_deleted from '
+            f'job: {get_job_counter_id(job_id)}, '
         )
 
 
