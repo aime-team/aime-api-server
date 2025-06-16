@@ -261,7 +261,9 @@ class APIEndpoint():
         if validation_errors:
             self.__status_data['num_invalid_requests'] += 1
             response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
-            APIEndpoint.logger.warning(f'Aborted request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
+            if isinstance(validation_errors, list):
+                validation_errors = ', '.join(error_msg for error_msg in validation_errors)
+            APIEndpoint.logger.warning(f'Aborted request on endpoint {self.endpoint_name}: {validation_errors}')
             if self.app.admin_backend:
                 await self.app.admin_backend.admin_log_invalid_request(
                     input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
@@ -449,7 +451,9 @@ class APIEndpoint():
         input_args = request.json if request.method == "POST" else request.args
         self.__status_data['num_invalid_progress_requests'] += 1
         response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
-        APIEndpoint.logger.warning(f'Aborted progress request on endpoint {self.endpoint_name}: {", ".join(validation_errors)}')
+        if isinstance(validation_errors, list):
+            validation_errors = ', '.join(error_msg for error_msg in validation_errors)
+        APIEndpoint.logger.warning(f'Aborted progress request on endpoint {self.endpoint_name}: {validation_errors}')
         await self.app.admin_backend.admin_log_invalid_progress_request(
             input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
             self.endpoint_name,
