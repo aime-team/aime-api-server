@@ -80,9 +80,12 @@ class InputValidationHandler():
 
     
     def check_for_unknown_parameters(self):
+        unknown_params = list()
         for param in self.input_params.keys():
             if param not in self.ep_input_param_config:
-                self.validation_errors.append(f'Invalid parameter: {param}')
+                unknown_params.append(param)
+        if unknown_params:
+            self.validation_errors.append(f'Invalid input parameter(s): {", ".join(unknown_params)}')
 
 
     def validate_required_argument(self, value):

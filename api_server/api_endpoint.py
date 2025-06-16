@@ -474,7 +474,7 @@ class APIEndpoint():
             validation_errors.append(f'No job_id given')
             error_code = 402 # TODO Define error codes for missing job id
         elif not self.app.job_handler.get_job(job_id):
-            validation_errors.append(f'Client has no active request with this job id')
+            validation_errors.append(f'Client has no active request with this job id {job_id}')
             error_code = 402 # TODO Define error codes for invalid job id
         return validation_errors, error_code
 
