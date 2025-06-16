@@ -976,7 +976,8 @@ class Job():
                     self.id,
                     self.start_time_compute,
                     self.result_received_time,
-                    self.__state
+                    self.__state,
+                    request_error_msg=f'Job lapsed'
                 )
         return self.__state
 
