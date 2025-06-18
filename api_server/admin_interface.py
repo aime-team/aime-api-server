@@ -285,13 +285,10 @@ class AdminInterface():
 
 class MinimumAdminBackendImplementation(AdminInterface):
 
-
-
     async def admin_is_api_key_authorized_for_endpoint(self, api_key, endpoint_name):
         endpoint_config = await self.api_get_endpoint_config(endpoint_name)
         return True if api_key in endpoint_config.get('CLIENTS', {}).get('authorization_keys').values() else False
     
-
     # API Key Management
     async def admin_is_api_key_valid(self, api_key, ip_address):
         for endpoint_name in await self.api_get_endpoint_list():

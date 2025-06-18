@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; AIME API Server 0.8.0 documentation</title>
+  <title>Index &mdash; AIME API Server 0.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="_static/aime_override.css?v=56fc6846" />
@@ -16,7 +16,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=486e5634"></script>
+        <script src="_static/documentation_options.js?v=39bb1c6d"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -99,8 +99,10 @@
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#J"><strong>J</strong></a>
+ | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
@@ -150,10 +152,12 @@
 </li>
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.check_periodically_if_server_online">check_periodically_if_server_online() (aime_api_worker_interface.APIWorkerInterface method)</a>
 </li>
-      <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.client_login">client_login() (api_server.api_endpoint.APIEndpoint method)</a>
+      <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.client_get_endpoint_details">client_get_endpoint_details() (api_server.api_endpoint.APIEndpoint method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.client_login">client_login() (api_server.api_endpoint.APIEndpoint method)</a>
+</li>
       <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.client_session_auth_key">client_session_auth_key (aime_api_client_interface.ModelAPI attribute)</a>
 </li>
       <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.close_session">close_session() (aime_api_client_interface.ModelAPI method)</a>
@@ -232,10 +236,12 @@
 </li>
       <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.get_endpoint_description">get_endpoint_description() (api_server.api_endpoint.APIEndpoint method)</a>
 </li>
-      <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.get_http_methods">get_http_methods() (api_server.api_endpoint.APIEndpoint method)</a>
+      <li><a href="aime_api_server.html#api_server.api_server.APIServer.get_endpoints">get_endpoints() (api_server.api_server.APIServer method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.get_http_methods">get_http_methods() (api_server.api_endpoint.APIEndpoint method)</a>
+</li>
       <li><a href="api_worker_interface/api_worker_interface.html#aime_api_worker_interface.APIWorkerInterface.get_job_batch_parameter">get_job_batch_parameter() (aime_api_worker_interface.APIWorkerInterface method)</a>
 </li>
       <li><a href="aime_api_server.html#api_server.api_endpoint.APIEndpoint.get_param_config">get_param_config() (api_server.api_endpoint.APIEndpoint method)</a>
@@ -301,6 +307,14 @@
   </ul></td>
 </tr></table>
 
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.key">key (aime_api_client_interface.ModelAPI attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -337,6 +351,18 @@
       <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.pollProgress">ModelAPI.pollProgress() (ModelAPI method)</a>
 </li>
       <li><a href="client_interfaces/js_api_client_interface/js_api_client_interface.html#ModelAPI.setupProgressStream">ModelAPI.setupProgressStream() (ModelAPI method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.output_format">output_format (aime_api_client_interface.ModelAPI attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.output_type">output_type (aime_api_client_interface.ModelAPI attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -387,6 +413,10 @@
       <li><a href="benchmark/doc_benchmark.html#run_api_benchmark.BenchmarkApiEndpoint.update_header">update_header() (run_api_benchmark.BenchmarkApiEndpoint method)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="client_interfaces/python_api_client_interface/python_api_client_interface.html#aime_api_client_interface.ModelAPI.user">user (aime_api_client_interface.ModelAPI attribute)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="V">V</h2>
@@ -432,7 +462,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024, AIME GmbH.</p>
+    <p>&#169; Copyright 2025, AIME GmbH.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

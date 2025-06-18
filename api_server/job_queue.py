@@ -278,7 +278,6 @@ class JobHandler():
                     'num_workers_online': 1,
                     'num_processing_requests': 1,
                     'num_pending_requests': 2,
-                    'mean_request_duration': 12.4,
                     'num_free_slots': 0
                 }
 
@@ -289,7 +288,6 @@ class JobHandler():
                 'num_workers_online': await job_type.get_num_workers_online(),
                 'num_processing_requests': job_type.get_num_running_jobs(),
                 'num_pending_requests': len(job_type.queue),
-                'mean_request_duration': job_type.mean_duration,
                 'num_free_slots': job_type.free_slots
             }
 

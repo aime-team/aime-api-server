@@ -1,7 +1,7 @@
 .. Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
    This software may be used and distributed according to the terms of the AIME COMMUNITY LICENSE AGREEMENT
 
-AIME JavaScript API Client Interface
+AIME API JavaScript Client Interface
 ====================================
 
 A Javascript interface to connect your client with an AIME API server
