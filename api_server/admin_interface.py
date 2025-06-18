@@ -253,9 +253,7 @@ class AdminInterface():
         Returns:
             str: Current worker status: 'processing', 'waiting', 'offline' or 'disabled'
         """        
-        status = await self.app.job_handler.get_worker_state(worker_name)
-        if status:
-            return status.value
+        return await self.app.job_handler.get_worker_state(worker_name)
 
 
     async def admin_set_worker_enabled(self, worker_name):
