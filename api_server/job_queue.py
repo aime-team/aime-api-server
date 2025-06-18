@@ -835,7 +835,7 @@ class Worker():
 
     async def set_state(self, new_state):
         if self.state != new_state:
-            await self.app.admin_backend.admin_notify_worker_status_changed(self.auth, new_state)
+            await self.app.admin_backend.admin_notify_worker_state_changed(self.auth, new_state)
             self.state = new_state
 
 

@@ -87,10 +87,10 @@ class AdminInterface():
         pass
 
 
-    async def admin_notify_worker_status_changed (
+    async def admin_notify_worker_state_changed (
         self,
         worker_name:str,
-        status:str
+        state:str
         ):
         pass
 
@@ -244,7 +244,7 @@ class AdminInterface():
 
 
 
-    async def api_get_worker_status(self, worker_name):
+    async def api_get_worker_state(self, worker_name):
         """Retrieve the current status of the worker with given worker name.
 
         Args:
@@ -405,12 +405,12 @@ class MinimumAdminBackendImplementation(AdminInterface):
             )
 
 
-    async def admin_notify_worker_status_changed (
+    async def admin_notify_worker_state_changed (
         self,
         worker_name:str,
-        status:str
+        state:str
         ):
         self.app.logger.debug(
-            f'Worker {worker_name} changed it\'s state to {status}'
+            f'Worker {worker_name} changed it\'s state to {state}'
         )
         
