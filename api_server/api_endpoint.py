@@ -560,7 +560,7 @@ class APIEndpoint():
                     request.headers.get('x-forwarded-for') or request.ip
                 )
                 if not response.get('valid'):
-                    validation_errors.append(response.get('error_msg'))
+                    validation_errors.append(response.get('error_msg') or 'API key not valid')
                     error_code = 401 # TODO Define error codes for invalid key
                 elif not await self.app.admin_backend.admin_is_api_key_authorized_for_endpoint(api_key, self.endpoint_name):
                     validation_errors.append(f'Client not authorized for endpoint {self.endpoint_name}!')
