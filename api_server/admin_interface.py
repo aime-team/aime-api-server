@@ -188,8 +188,9 @@ class AdminInterface():
     async def admin_log_invalid_request(
         self,
         api_key,
+        request_type:str, 
         endpoint_name,
-        time_utc,
+        start_time_utc,
         request_error_msg,
         ip_address=None, 
         http_request_header:dict=None
@@ -201,8 +202,9 @@ class AdminInterface():
     async def admin_log_invalid_progress_request(
         self,
         api_key,
+        request_type:str, 
         endpoint_name,
-        time_utc,
+        start_time_utc,
         request_error_msg,
         ip_address=None, 
         http_request_header:dict=None
