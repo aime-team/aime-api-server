@@ -268,6 +268,7 @@ class APIEndpoint():
             if self.app.admin_backend:
                 await self.app.admin_backend.admin_log_invalid_request(
                     input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
+                    'request',
                     self.endpoint_name,
                     time.time(),
                     validation_errors,
@@ -460,8 +461,9 @@ class APIEndpoint():
         if isinstance(validation_errors, list):
             validation_errors = ', '.join(error_msg for error_msg in validation_errors)
         APIEndpoint.logger.warning(f'Aborted progress request on endpoint {self.endpoint_name}: {validation_errors}')
-        await self.app.admin_backend.admin_log_invalid_progress_request(
+        await self.app.admin_backend.admin_log_invalid_request(
             input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
+            'progress_request',
             self.endpoint_name,
             time.time(),
             validation_errors,
