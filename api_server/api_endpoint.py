@@ -475,7 +475,8 @@ class APIEndpoint():
 
 
     async def validate_progress_request(self, request):
-        validation_errors, error_code = await self.validate_client(request)
+        validation_errors = list()
+        error_code = None
         input_args = request.json if request.method == "POST" else request.args
         job_id = input_args.get('job_id')
         if not job_id:
