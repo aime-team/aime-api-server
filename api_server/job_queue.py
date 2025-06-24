@@ -1037,8 +1037,9 @@ class Job():
             self.progress_state = req_json
             self.last_update = time.time()
             self.__state = JobState.PROCESSING
-            if req_json:
-                self.metrics = req_json.get('progress_data', {}).get('metrics', {})
+            progress_data = req_json.get('progress_data', None)
+            if progress_data:
+                self.metrics = progress_data.get('metrics', {})
             else:
                 self.metrics = {}
 
