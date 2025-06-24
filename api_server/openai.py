@@ -185,8 +185,7 @@ class OpenAI():
             job_running = True
             prev_len = 0
             while job_running:
-                validation_errors = {}
-                response = await endpoint.process_api_progress(request, job, validation_errors)
+                response = await endpoint.process_api_progress(request, job)
                 if response['job_state'] == JobState.PROCESSING or response['job_state'] == JobState.QUEUED:
                     progress_data = response['progress'].get('progress_data', {})
                     text = progress_data.get('text', "")
