@@ -677,7 +677,7 @@ class JobType():
             while (len(job_batch_data) < max_job_batch):
                 job = self.fetch_waiting_job()
                 if job:
-                    if self.is_job_queued(job.id):
+                    if await self.is_job_queued(job.id):
                         job = self.add_start_times(job) # backward compatibility for awi < 0.9.7. To be removed in future versions
                         job_batch_data.append(job.job_data)
                         await self.start_job(job, req_json)
