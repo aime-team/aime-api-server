@@ -521,15 +521,6 @@ class APIEndpoint():
             response.update({key: result[key] for key in WORKER_META_PARAMETERS if key in result})
         response.update({key: result[key] for key in STATISTIC_PARAMETERS if key in result})
         self.__status_data['num_finished_requests'] += 1
-        if self.app.admin_backend:
-            await self.app.admin_backend.admin_log_request_end(
-                job.id,
-                job.start_time_compute,
-                job.result_received_time,
-                'success' if not result.get('error') else 'failed',
-                job.metrics,
-                result.get('error')
-            )
         return response
 
 

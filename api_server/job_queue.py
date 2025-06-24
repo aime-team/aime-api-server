@@ -1048,6 +1048,15 @@ class Job():
             self.pending_duration = self.start_time - self.start_time_compute
             self.metrics = req_json.get('metrics', {})
             self.result_future.set_result(self.add_meta_data(req_json))
+        if self.app.admin_backend:
+            await self.app.admin_backend.admin_log_request_end(
+                self.id,
+                self.start_time_compute,
+                self.result_received_time,
+                'success' if not req_json.get('error') else 'failed',
+                self.metrics,
+                req_json.get('error')
+            )
 
 
 
