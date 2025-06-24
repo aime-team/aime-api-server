@@ -988,10 +988,10 @@ class Job():
 
     def is_lapsed(self):
         now = time.time()
+        worker = self.app.job_handler.get_worker(self.worker_auth)
         if self.__state == JobState.QUEUED and (now - self.start_time) > self.max_time_in_queue:
             return True
-        elif self.__state == JobState.PROCESSING and (now - self.last_update) > self.job_inactivity_timeout:
-            worker = self.app.job_handler.get_worker(self.worker_auth)
+        elif self.__state == JobState.PROCESSING and ((now - self.last_update) > self.job_inactivity_timeout or worker.state == WorkerState.OFFLINE):
             worker.running_jobs.pop(self.id)
             return True
         else:

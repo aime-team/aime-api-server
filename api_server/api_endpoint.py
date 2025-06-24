@@ -279,19 +279,20 @@ class APIEndpoint():
 
         return sanic_json(response)
 
-    async def process_api_progress(self, request, job, validation_errors):
+    async def process_api_progress(self, request, job):
         response = {"success": True, 'job_id': job.id, 'ep_version': self.version}
+        error_code = 200
         if await job.state == JobState.PROCESSING:
             if self.app.job_handler.is_job_future_done(job):
                 response['job_result'] = await self.finalize_request(request, job)
                 APIEndpoint.logger.debug(f'Final response to client on /{self.endpoint_name}/progress: {str(shorten_strings(response))}')
         elif await job.state == JobState.LAPSED:
             error_code = 400 # Define error code for lapsed job
-            return await self.handle_invalid_progress_request(f'Job {job.id} on {self.endpoint_name} lapsed!', request, error_code)
+            response = await self.handle_invalid_progress_request(f'Job {job.id} on {self.endpoint_name} lapsed!', request)
         response['job_state'] = await job.state
         if await job.state != JobState.DONE:
             response['progress'] = await self.get_and_validate_progress_data(job)
-        return response
+        return response, error_code
 
     async def api_progress(self, request):
         """Client request on route /self.endpoint_name/progress called periodically by the client interface 
@@ -311,11 +312,12 @@ class APIEndpoint():
         
         validation_errors, error_code = await self.validate_progress_request(request)
         if validation_errors:
-            return await self.handle_invalid_progress_request(validation_errors, request, error_code)
-        input_args = request.json if request.method == "POST" else request.args
-        job = self.app.job_handler.get_job(input_args.get('job_id'))
-        response = await self.process_api_progress(request, job, validation_errors)
-        return sanic_json(response)
+            response = await self.handle_invalid_progress_request(validation_errors, request)
+        else:
+            input_args = request.json if request.method == "POST" else request.args
+            job = self.app.job_handler.get_job(input_args.get('job_id'))
+            response, error_code = await self.process_api_progress(request, job)
+        return sanic_json(response, status=error_code)
 
 
     async def client_login(self, request):
@@ -454,7 +456,7 @@ class APIEndpoint():
         )
 
 
-    async def handle_invalid_progress_request(self, validation_errors, request, error_code=400):
+    async def handle_invalid_progress_request(self, validation_errors, request):
         input_args = request.json if request.method == "POST" else request.args
         self.__status_data['num_invalid_progress_requests'] += 1
         response = {'success': False, 'error': validation_errors, 'ep_version': self.version}
@@ -471,7 +473,7 @@ class APIEndpoint():
             dict(request.headers)
         )
 
-        return sanic_json(response, status=error_code)
+        return response
 
 
     async def validate_progress_request(self, request):
