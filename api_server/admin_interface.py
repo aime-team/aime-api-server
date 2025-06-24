@@ -363,8 +363,9 @@ class MinimumAdminBackendImplementation(AdminInterface):
     async def admin_log_invalid_request(
         self,
         api_key,
+        request_type,
         endpoint_name,
-        time_utc,
+        start_time_utc,
         request_error_msg,
         ip_address=None, 
         http_request_header:dict=None
@@ -373,9 +374,10 @@ class MinimumAdminBackendImplementation(AdminInterface):
         self.app.logger.debug(
             f'Admin Backend call to admin_log_invalid_request '
             f'key: {api_key}, '
+            f'request_type: {request_type}, '
             f'endpoint_name: {endpoint_name}, '
             f'ip_address: {ip_address}, '
-            f'time_utc: {time_utc}'
+            f'start_time_utc: {start_time_utc}'
             f'header: {http_request_header}'
             f'request_error_msg: {request_error_msg}'
             )

@@ -980,7 +980,8 @@ class Job():
                     self.start_time_compute,
                     self.result_received_time,
                     self.__state,
-                    request_error_msg=f'Job lapsed'
+                    self.metrics,
+                    f'Job lapsed'
                 )
         return self.__state
 
@@ -1036,6 +1037,7 @@ class Job():
             self.progress_state = req_json
             self.last_update = time.time()
             self.__state = JobState.PROCESSING
+            self.metrics = req_json.get('progress_data', {}).get('metrics', {})
 
 
     async def set_job_result(self, req_json):
