@@ -153,6 +153,7 @@ class AdminInterface():
         job_id,
         api_key,
         endpoint_name,
+        url_path,
         start_time_utc,
         request_state,
         ip_address=None, 
@@ -285,6 +286,11 @@ class AdminInterface():
 
 class MinimumAdminBackendImplementation(AdminInterface):
 
+    def __init__(self, app, args, server_configuration):
+        # overwritten and implemented by Admin BE
+        super().__init__(app, args, server_configuration)
+        self.jobs = dict()
+
     async def admin_is_api_key_authorized_for_endpoint(self, api_key, endpoint_name):
         endpoint_config = await self.api_get_endpoint_config(endpoint_name)
         return True if api_key in endpoint_config.get('CLIENTS', {}).get('authorization_keys').values() else False
@@ -308,24 +314,31 @@ class MinimumAdminBackendImplementation(AdminInterface):
         job_id:str,
         api_key:str,
         endpoint_name:str,
+        url_path:str,
         start_time_utc:float,
         request_state:str,
         ip_address:str=None,
         http_request_header:dict=None
         ):
+        self.jobs[job_id] = True
         self.app.logger.debug(
             f'Admin Backend call to admin_log_request_start from '
             f'job: {get_job_counter_id(job_id)}, '
             f'key: {api_key}, '
             f'endpoint_name: {endpoint_name}, '
+            f'url_path: {url_path}, '
             f'start_time_utc: {start_time_utc}, '
             f'request_state: {request_state}, '
             f'ip_address: {ip_address}, '
             f'header: {http_request_header}'
-            )
+        )
 
 
     async def admin_log_request_start_processing(self, job_id, start_time_compute_utc, request_state):
+        if not self.jobs.get(job_id):
+            self.app.logger.error(f'admin_log_request_start not called before calling admin_log_request_start_processing with job {job_id}')
+        if request_state != 'processing':
+            self.app.logger.error(f'Wrong state {request_state} when calling admin_log_request_start_processing with job {job_id}')
         self.app.logger.debug(
             f'Admin Backend call to admin_log_request_start_processing from job: {get_job_counter_id(job_id)}'
             f'start_time_compute_utc: {start_time_compute_utc}, '
