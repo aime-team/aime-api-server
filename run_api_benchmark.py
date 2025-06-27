@@ -70,22 +70,14 @@ class BenchmarkApiEndpoint():
     """Benchmark tool to measure and monitor the performance of GPUs with multiple asynchronous requests on chat and stable_diffusion_xl_txt2img endpoints.
     """    
 
-    def __init__(self):
+    def __init__(self, args, model_api, endpoint_details):
         
-        self.args = self.load_flags()
-        self.model_api = ModelAPI(
-            self.args.api_server,
-            self.args.endpoint_name,
-            self.args.user_name,
-            self.args.login_key
-        )
-        try:
-            self.model_api.init_api_key()
-        except ConnectionError as error:
-            exit(error)
+        self.args = args
+        self.model_api = model_api
+        self.endpoint_details = endpoint_details
+        self.gpu_name, self.model_name = BenchmarkRoutineHandler.get_gpu_and_model_name(endpoint_details)
         self.params = self.get_job_parameter()
-
-        self.loop = asyncio.new_event_loop()
+        self.loop = asyncio.get_event_loop()
         self.lock = asyncio.Lock()
         self.error_event = asyncio.Event()
         self.error = None
@@ -97,115 +89,59 @@ class BenchmarkApiEndpoint():
         self.first_batch = True
         self.jobs = JobHandler(self.args, self.lock)
 
-        self.worker_names = set()
-        self.endpoint_version = int()
-        self.model_name = str()
         self.worker_interface_version = str()
-        self.print_start_message()
-        
-        self.header = self.init_header()
         self.unit, _, _ = self.get_unit(self.args)
+        self.print_start_message()
+        self.header = list()
         self.progress_bars = ProgressBarHandler(self.args, self.header_height, self.lock)      
         
         self.first_batch_jobs_added = False
         self.request_id = 0
         self.registered_jobs = list()
         self.last_update = dict()
+        self.batch_size_too_big = False
+        self.current_screen_width = int()
+        self.dot_string = dot_string_generator()
 
 
-    def load_flags(self):
-        """Parsing the command line arguments.
-
-        Returns:
-            argparse.Namespace: The argparse object containing the command line arguments
-        """        
-        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-        parser.add_argument(
-            '-as', '--api_server', type=str, default="http://0.0.0.0:7777", required=False, help='Address of the AIME API Server'
-        )
-        parser.add_argument(
-            '-tr', '--total_requests', type=int, default=4, required=False, help='Total number of requests. Choose a multiple of the worker\'s batchsize to have a full last batch'
-        )
-        parser.add_argument(
-            '-cr', '--concurrent_requests', type=int, default=40, required=False, 
-            help='Number of concurrent asynchronous requests limited with asyncio.Semaphore().' \
-                 'With serially processing workers choose at least twice the global batch size of all workers, to have full batches.'
-        )
-        parser.add_argument(
-            '-cf', '--config_file', type=str, required=False, help='To change address of endpoint config file to get the default values of the job parameters'
-        )
-        parser.add_argument(
-            '-ep', '--endpoint_name', type=str, default='llama3_chat', required=False, help='Name of the endpoint'
-        )
-        parser.add_argument(
-            '-ut', '--unit', type=str, required=False, help='Unit of the generated objects. Default: "tokens" if endpoint_name contains "chat" else  "images"'
-        )
-        parser.add_argument(
-            '-t', '--time_to_get_first_batch_jobs', type=int, default=4, required=False, help='Time in seconds after start to get the number of jobs in the first batch'
-        )
-        parser.add_argument(
-            '-u', '--user_name', type=str, default='aime', required=False, help='User name to login on AIME API Server'
-        )
-        parser.add_argument(
-            '-k', '--login_key', type=str, default='6a17e2a5-b706-03cb-1a32-94b4a1df67da', required=False, help='Login key related to the user name received from AIME to login on AIME API Server'
-        )
-        parser.add_argument(
-            '-nu', '--num_units', default=1, type=int, required=False, help='Number of units to generate. Images for stable_diffusion_xl_txt2img'
-        )
-        parser.add_argument(
-            '-ml', '--max_tok_len', default=1024, type=int, required=False, help='Maximum length showed in the first batch.'
-        )
-        parser.add_argument(
-            '-i', '--prompt_input_from_files', type=str, required=False, help='Load prompt input from text files.'
-        )
-        parser.add_argument(
-            '-nw', '--no_warmup', action='store_true', required=False, help='If not set, the first batch doesn\'t count for benchmark result.'
-        )
-        parser.add_argument(
-            '-lf', '--log_file', type=str, required=False, help='Add results to given log file. Generates it if not existing.'
-        )
-        parser.add_argument(
-            '-js', '--json', type=str, required=False, help='Write benchmark result in given json File.'
-        )
-        parser.add_argument(
-            '-pt', '--prompt_template', choices=['2K', '4K', '8K', '16K', '32K', '128K'], help='Download long prompt approximately containing the given number of tokens from AIME'
-        )
-        parser.add_argument(
-            '-dev', '--debug', action='store_true', help='Write debug logs in debug_log.txt.'
-        )
-        parser.add_argument(
-            '-sw', '--serial_processing_worker', action='store_true', help='If the worker processes requests only serially.'
-        )
-        parser.add_argument(
-            '-r', '--resolution', type=str, required=False, help='For Image Generators like SD: The target resolution of the generated image. Format: <width>x<height>'
-        )
-        
-        args = parser.parse_args()
-        if not args.config_file:
-            endpoint_dir = Path(__file__).resolve().parent / 'endpoints'
-            if args.endpoint_name == 'sdxl_txt2img':
-                args.endpoint_name = 'stable_diffusion_xl_txt2img'
-                args.config_file = endpoint_dir / args.endpoint_name / 'aime_api_endpoint.cfg'
-            elif args.endpoint_name == 'stable_diffusion_xl_txt2img':
-                args.config_file = endpoint_dir / 'stable_diffusion_xl' / 'txt2img' / 'aime_api_endpoint.cfg'
-            else:
-                args.config_file = endpoint_dir / args.endpoint_name / 'aime_api_endpoint.cfg'
-                if 'chat' in args.endpoint_name and args.num_units == 1:
-                    args.num_units = 1024
-        return args
-
+    def update_endpoint_details(self):
+        self.endpoint_details = self.model_api.get_endpoint_details(self.args.endpoint_name)       
     
+
     def run(self):
         """Starting the benchmark.
         """
-        self.hide_cursor()
-        asyncio.ensure_future(self.run_all_jobs(), loop=self.loop)
-        self.loop.run_forever()
+        try:
+            if self.args.wait_for_idling_worker:
+                while True:
+                    self.update_endpoint_details()
+                    workers = self.endpoint_details.get('workers') or [{}]
+                    if workers[0].get('state') != 'waiting':
+                        print(
+                            BenchmarkApiEndpoint.coloured_output(
+                                f'Waiting until worker is idling {next(self.dot_string)}',
+                                YELLOW
+                            ),
+                            end='\r'
+                        )
+                        time.sleep(1)
+                    else:
+                        break
+            asyncio.ensure_future(self.run_all_jobs(), loop=self.loop)
+            self.loop.run_forever()
+            return True
+        except (KeyboardInterrupt, asyncio.exceptions.CancelledError):
+            if self.args.save_checkpoint and (self.args.run_routine or self.args.run_spectrum):
+                self.save_checkpoint()
+            self.error = 'Canceled'
+            self.error_event.set()
+            self.all_jobs_done_event.set()
+            asyncio.run(self.finish_benchmark())
 
 
     async def run_all_jobs(self):
         _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=self.loop) for _ in range(self.args.total_requests)]
-        await self.all_jobs_done_event.wait() 
+        await self.all_jobs_done_event.wait()
         await self.finish_benchmark()
 
 
@@ -252,6 +188,7 @@ class BenchmarkApiEndpoint():
                         finish_time=result_received_time
                     )
                     await self.update_header(result_data)
+                    self.worker_interface_version = result_data.get('worker_interface_version') or self.worker_interface_version
                 else:
                     self.error = result_data.get('error')
                     self.error_event.set()
@@ -276,41 +213,50 @@ class BenchmarkApiEndpoint():
         for progress_bar in self.progress_bars.current_jobs.values():
             progress_bar.clear()
         now = datetime.now().isoformat(sep=" ", timespec="seconds")
-        if self.args.json:
-            self.make_json_output(now)
+        warning_str = ''
         if self.error:
-            summary_string = f'\nError: {self.error}'
+            
+            summary_string = f'\nError: {str(self.error)}'
         else:
             result_table = self.make_benchmark_result_table(final=True)
-            time_string = f'Benchmark finished at {now}'         
-            warning_str = self.coloured_output(
-                f'Attention: Concurrent request = {self.args.concurrent_requests} is not equal to the actual batch size of the worker {self.jobs.max_num_running}', YELLOW
-                ) if self.args.concurrent_requests != self.jobs.max_num_running and not self.args.serial_processing_worker else ''
+            time_string = f'Benchmark finished at {now}'    
+            if self.args.concurrent_requests != self.jobs.max_num_running and not self.args.serial_processing_worker:
+                if self.jobs.mean_durations.get('worker_generation') < 1.2:
+                    warning_str = self.coloured_output(
+                        'Job too short for proper benchmark! Choose higher --num_units',
+                        YELLOW
+                    )
+                else:
+                    self.batch_size_too_big = True
+                    warning_str = self.coloured_output(
+                        f'Attention: Concurrent request = {self.args.concurrent_requests} is not equal to the actual batch size of the worker {self.jobs.max_num_running}',
+                        YELLOW
+                    )
             summary_string = '\n'.join((
                 '-' * len(time_string),
                 time_string,
                 '-' * len(time_string) + '\n',
                 'Result:',
                 f'Number of jobs in first batch: {self.jobs.num_first_batch}' if not self.args.no_warmup else '',
-                f'Estimated global batchsize of all workers: {self.jobs.max_num_running}',
-                f'Number of generated {self.unit} per job: {self.progress_bars.num_generated_units}',
-                *self.get_worker_and_endpoint_descriptions(),
+                f'Maximum parallel running jobs: {self.jobs.max_num_running}',
+                f'Worker Interface version: {self.worker_interface_version}',
+                f'Endpoint version: {self.endpoint_details.get("version")}',
                 f'{self.args.total_requests} requests with maximum {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
                 warning_str,
                 *result_table 
             ))
+        if self.args.json:
+            self.make_json_output(now, warning_str)
         print(summary_string)
-        self.show_cursor()
         self.add_to_logfile(summary_string)
-        await self.close_all_tasks()     
-        await self.model_api.close_session()
+        await self.close_all_tasks()
         self.loop.stop()
-        
 
 
-    def make_json_output(self, date_time):
+    def make_json_output(self, date_time, warning_str):
+        workers = self.endpoint_details.get('workers') or [{}]
         output_dict = {
-            **self.params,
+            **{key: (value[:30] + '...' if isinstance(value, str) else value) for key, value in self.params.items()},
             'total_requests': self.args.total_requests,
             'concurrent_requests': self.args.concurrent_requests,
             'finish_time': date_time,
@@ -319,20 +265,24 @@ class BenchmarkApiEndpoint():
             'mean_single_rates': self.jobs.mean_single_rates,
             'num_jobs_first_batch': self.jobs.num_first_batch if not self.args.no_warmup else 0,
             'max_num_jobs_running': self.jobs.max_num_running,
+            'max_worker_batch_size': workers[0].get('max_batch_size'),
             'num_units': self.progress_bars.num_generated_units,
             'prompt_template': self.args.prompt_template,
-            'num_workers': len(self.worker_names) if self.worker_names else None,
-            'Worker names': ', '.join(self.worker_names) if self.worker_names else None,
-            'worker_interface_version': self.worker_interface_version or None,
-            'endpoint_version': self.endpoint_version or None,
-            'model_name': self.model_name or None,
-            'error': str(self.error)
+            'num_workers': len(workers),
+            'Worker names': ', '.join([worker.get('name') for worker in workers]),
+            'worker_interface_version': self.worker_interface_version or 'Unknown',
+            'endpoint_version': self.endpoint_details.get('version'),
+            'gpu_name': self.gpu_name,
+            'model_name': self.model_name,
+            'model_quantization': workers[0].get('model', {}).get('quantization', 'Unknown'),
+            'error': str(self.error) if self.error else None,
+            'warning': warning_str or None
         }
         json_file = Path(self.args.json)
         if not json_file.parent.is_dir():
             json_file.parent.mkdir()
         with open(json_file, 'w') as file: 
-            json.dump(output_dict, file)
+            json.dump(output_dict, file, indent=4)
 
 
     def add_to_logfile(self, content):
@@ -345,11 +295,13 @@ class BenchmarkApiEndpoint():
 
 
     async def close_all_tasks(self):
-        pending_tasks = [task for task in asyncio.all_tasks() if not task.done()]
-        pending_tasks.remove(asyncio.current_task())
-        for task in pending_tasks:
-            task.cancel()
-        await asyncio.gather(*pending_tasks, return_exceptions=True)
+
+        if not self.loop.is_closed():
+            pending_tasks = [task for task in asyncio.all_tasks() if not task.done()]
+            pending_tasks.remove(asyncio.current_task())
+            for task in pending_tasks:
+                task.cancel()
+            await asyncio.gather(*pending_tasks, return_exceptions=True)
 
 
     async def handle_first_batch(self, progress_info):
@@ -366,7 +318,6 @@ class BenchmarkApiEndpoint():
                 else:
                     for progress_bar in self.progress_bars.current_jobs.values():
                         progress_bar.close()
-                    self.show_cursor()
                     self.error = f'First batch finished before --time_to_get_first_batch_jobs = {self.args.time_to_get_first_batch_jobs}. Choose a shorter time via command line argument!'
                     self.error_event.set()
             else:
@@ -388,28 +339,14 @@ class BenchmarkApiEndpoint():
                 _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=self.loop) for _ in range(self.jobs.num_first_batch)]
                 self.first_batch_jobs_added = True
 
-    def init_header(self):
-        header = self.get_worker_and_endpoint_descriptions()
-        header.extend(['', ''])
-        return [
-            tqdm(
-                total=0,
-                bar_format='{desc}',
-                desc=line,
-                leave=False,
-                position=idx,
-                dynamic_ncols=True
-            ) for idx, line in enumerate(header)
-        ]
         
     async def update_header(self, result={}, init=False):
         """Updating the title bars for the header containing information about the benchmark.
         """
         
-        header = self.get_worker_and_endpoint_descriptions(result)
-        header.append('')
+        header = list()
         if not self.start_time and not self.start_time_second_batch:
-            header.append(self.coloured_output('Waiting for available workers...', YELLOW))
+            header.append(self.coloured_output(f'Waiting for available workers{next(self.dot_string)}', YELLOW))
         elif self.first_batch:
             first_line = self.coloured_output(f'Processing first batch for warmup! Results not taken into account for benchmark!', YELLOW)
             if self.jobs.num_first_batch:
@@ -419,15 +356,12 @@ class BenchmarkApiEndpoint():
                 header.append(
                     self.coloured_output(f'{self.args.time_to_get_first_batch_jobs}s have passed and first batch jobs are added.', YELLOW)
                 )
-            else:
-                header.append('')
             remaining_jobs = f'{self.coloured_output(self.jobs.num_first_batch, GREEN)} + {self.args.total_requests - self.jobs.num_finished} / {self.args.total_requests}'
             line = f'Remaining jobs: {remaining_jobs} | Current running jobs: {self.coloured_output(self.jobs.num_running, GREEN)}'
             if self.jobs.max_num_running:
                 line += f' | Maximum running jobs: {self.jobs.max_num_running}'
             header.append(line)
         else:
-            
             line = f'Warmup stage with first batch containing {self.jobs.num_first_batch} jobs finished. ' if not self.args.no_warmup else 'No warmup batch! '
             line += f'Benchmark running for {tqdm.format_interval(time.time() - self.start_time_second_batch)}'
 
@@ -457,6 +391,7 @@ class BenchmarkApiEndpoint():
                     self.header[idx].clear()
                     self.header[idx].set_description_str(description)
                     self.header[idx].refresh()
+            self.current_screen_width = screen_width
 
 
     def adjust_header(self, height):
@@ -473,24 +408,7 @@ class BenchmarkApiEndpoint():
             ]
         else:
             self.header = self.header[:height]
-  
 
-    def get_worker_and_endpoint_descriptions(self, result={}):
-        
-        unavailable = 'Available after first job result...' if not self.jobs.num_finished else 'Missing! Maybe provide_worker_meta_data is set to False in endpoint config file'
-        self.endpoint_version = result.get('ep_version') or self.endpoint_version
-        self.model_name = result.get('model_name') or self.model_name
-        if result.get('auth'):
-            self.worker_names.add(result.get('auth'))
-        self.worker_interface_version = result.get('worker_interface_version') or self.worker_interface_version
-        return [
-            f'Number of detected workers: {len(self.worker_names) if self.worker_names else unavailable}',
-            f'Worker names: {", ".join(self.worker_names) if self.worker_names else unavailable}',
-            f'Worker Interface version: {self.worker_interface_version or unavailable}',
-            f'Endpoint version: {self.endpoint_version or unavailable}',
-            f'Model name: {self.model_name or unavailable}'
-        ]
-       
 
     def make_benchmark_result_table(self, final=False):
         mean_durations = self.jobs.mean_durations
@@ -550,46 +468,43 @@ class BenchmarkApiEndpoint():
     def print_start_message(self):
         """Printing benchmark parameters at the start.
         """
-        start_message = \
-            f'\nStarting Benchmark on {self.args.api_server}/{self.args.endpoint_name} with\n' +\
-            f'{self.args.total_requests} total requests\n' +\
-            f'{self.args.concurrent_requests} concurrent requests\n'
-        start_message += f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s\n' if not self.args.no_warmup else ''
-        start_message += f'Job parameters:\n'
-        
-        for key, value in self.params.items():
-            if isinstance(value, str) and len(value) >= 40:
-                value = value[:40].replace('\n', '') + '...'
-            start_message += (f'{key}: {value}\n')
+        workers = self.endpoint_details.get('workers') or [{}]
 
-        if self.args.prompt_template:
-            start_message += f'Prompt length in tokens: {self.args.prompt_template}\n'
-        prompt = self.params.get("text") or self.params.get("prompt_input")
-        if prompt:
-            start_message += f'Number of characters in prompt: {len(prompt)}'
+        start_message = '\n'.join([
+            f'\nStarting Benchmark on {self.args.api_server}/{self.args.endpoint_name} with',
+            f'Total requests: {self.args.total_requests}',
+            f'Concurrent requests: {self.args.concurrent_requests}',
+            f'Number of detected workers: {len(workers)}',
+            f'Worker names: {", ".join([worker.get("name") for worker in workers])}',
+            f'Maximum worker batch size: {", ".join([str(worker.get("max_batch_size")) for worker in workers])}',
+            f'Model name: {self.model_name}',
+            f'GPU(s): {self.gpu_name}',
+            f'Number of {self.unit} to generate: {self.args.num_units}',
+            f'Prompt input length: {self.args.prompt_template or "0K"} {self.unit}'
+        ])
+        if not self.args.no_warmup:
+            start_message += f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s'
         print(start_message)
+        start_message += f'\nEndpoint version: {self.endpoint_details.get("version", "Unknown")}\n'
         self.add_to_logfile(start_message)
         if sys.version_info < (3, 10):
             print(self.coloured_output(f'WARNING! You are running python version {sys.version}. High numbers of --total_requests are supported only from Python version 3.10 onwards', YELLOW))
-        else:
-            print()
 
 
     def get_job_parameter(self):
-        params = self.get_default_values_from_config()
-        
-
-        if params.get('seed'):
+        input_param_description = self.endpoint_details.get('parameter_description', {}).get('input', {})
+        params = dict()
+        if input_param_description.get('seed'):
             params['seed'] = 1
-        if params.get('top_k'):
+        if input_param_description.get('top_k'):
             params['top_k'] = 1
             params['top_p'] = 1
-        if params.get('num_samples'):
+        if input_param_description.get('num_samples'):
             params['num_samples'] = self.args.num_units
-        if params.get('max_gen_tokens'):
+        if input_param_description.get('max_gen_tokens'):
             params['max_gen_tokens'] = self.args.num_units
         for prompt_key in ('text', 'prompt_input'):
-            if params.get(prompt_key) is not None:
+            if input_param_description.get(prompt_key):
                 if self.args.prompt_input_from_files:
                     params[prompt_key] = self.read_prompt_from_files()
                 elif self.args.prompt_template:
@@ -625,33 +540,13 @@ class BenchmarkApiEndpoint():
         return input_data
 
 
-    def get_default_values_from_config(self):
-        """Parsing the default job parameters from the related endpoint config file.
-
-        Returns:
-            dict: Job parameters for API request.
-        """
-        try:
-            with open(self.args.config_file, "r") as f:
-                config = toml.load(f)
-            ep_inputs = config.get('INPUTS', {})
-            params = dict()
-            for ep_input in ep_inputs:
-                if ep_inputs[ep_input].get('required') or ep_inputs[ep_input].get('default') is not None:
-                    params[ep_input] = ep_inputs[ep_input].get('default')
-            return params
-
-        except FileNotFoundError:
-            params = input('No config file found. Type the input params in json:')
-            return json.loads(params)
-
-
     async def do_request_with_semaphore(self):
         """Limiting the concurrent requests using asyncio.Semaphore().
         """
-        async with self.semaphore:
-            start_time = time.time()
-            try:
+        try:
+            async with self.semaphore:
+                start_time = time.time()
+
                 output_generator = self.model_api.get_api_request_generator(self.params)
                 async for result in output_generator:
                     if result.get('job_state') == 'done':
@@ -661,19 +556,33 @@ class BenchmarkApiEndpoint():
                         await self.process_progress_result(result)
                     if self.error_event.is_set():
                         break
-            except AttributeError:
-                self.error = 'You need version >= 0.8.4 of AIME API Client Interface'
-                self.error_event.set()
+        except AttributeError:
+            self.error = 'You need version >= 0.8.4 of AIME API Client Interface'
+            self.error_event.set()
+            self.all_jobs_done_event.set()
+        except Exception as error:
+            self.error = error
+            self.error_event.set()
+            self.all_jobs_done_event.set()
+            if self.args.debug:
+                raise error
+        finally:
+            if self.jobs.final_job_finished or self.error_event.is_set():
                 self.all_jobs_done_event.set()
-            except Exception as error:
-                self.error_event.set()
-                self.all_jobs_done_event.set()
-                self.error = error
-                if self.args.debug:
-                    raise error
-            finally:
-                if self.jobs.final_job_finished or self.error_event.is_set():
-                    self.all_jobs_done_event.set()
+
+
+    def save_checkpoint(self):
+        file_name = Path.cwd() / self.args.save_checkpoint
+        with open(file_name, 'w') as file: 
+            json.dump(
+                {
+                    'prompt_template': self.args.prompt_template,
+                    'batch_size': self.args.batch_size,
+                },
+                file,
+                indent=4
+            )
+            print(f'\nCheckpoint saved to {file_name}')
 
 
     @property
@@ -766,39 +675,6 @@ class BenchmarkApiEndpoint():
         return ansi_escape.sub('', input_string)
 
 
-    async def request_error_callback(self, response):
-        print(response)
-        self.show_cursor()
-        self.loop.stop()
-
-    
-    def hide_cursor(self):
-        if HIDE_CURSOR:
-            if os.name == 'nt':
-                ci = _CursorInfo()
-                handle = ctypes.windll.kernel32.GetStdHandle(-11)
-                ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
-                ci.visible = False
-                ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
-            elif os.name == 'posix':
-                sys.stdout.write("\033[?25l")
-                sys.stdout.flush()
-
-
-    def show_cursor(self):
-        if HIDE_CURSOR:
-            if os.name == 'nt':
-                ci = _CursorInfo()
-                handle = ctypes.windll.kernel32.GetStdHandle(-11)
-                ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
-                ci.visible = True
-                ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
-            elif os.name == 'posix':
-                sys.stdout.write("\033[?25h")
-                sys.stdout.flush()
-
-
-
 class ProgressBarHandler():
 
     def __init__(self, args, header_height, lock):
@@ -821,7 +697,7 @@ class ProgressBarHandler():
             total=self.num_generated_units, # the unit_scale arg in tqdm shows wrong rate for sdxl
             unit=' ' + self.unit,
             position=await self.positions.new(job_id) + current_header_height + 2,
-            desc=f'{job_id[:WIDTH_COLUMN_JOB_ID]:<{WIDTH_COLUMN_JOB_ID}}',
+            desc=f'{format_job_id(job_id)[:WIDTH_COLUMN_JOB_ID]:<{WIDTH_COLUMN_JOB_ID}}',
             leave=False,
             bar_format=f'{{desc}} | {{percentage:3.0f}}% {{bar}}| {{n:.{self.unit_precision}f}} / {{total:.{self.unit_precision}f}} |   {{elapsed}} < {{remaining}}  | ' '{rate_noinv_fmt} {postfix}',
             dynamic_ncols=True,
@@ -1022,10 +898,10 @@ class JobHandler():
         return self.num_finished == self.args.total_requests + self.num_first_batch
 
 
-    async def update(self, progress_bar_dict):
+    async def update(self, progress_bar_dict, update_interval=0.5):
         async with self.lock:
             self.num_running = sum([1 for progress_bar in progress_bar_dict.values() if 0 < progress_bar.n])
-            if (time.time() - self.last_update_time) > 1:
+            if (time.time() - self.last_update_time) > update_interval:
                 self.last_update_time = time.time()
                 if self.last_update_num_running == self.num_running and self.num_running > self.max_num_running:
                     self.max_num_running = self.num_running
@@ -1113,19 +989,417 @@ class JobHandler():
             return mean_dict
 
 
+class BenchmarkRoutineHandler():
+
+    def __init__(self):
+        self.args = self.load_flags()
+        self.model_api = ModelAPI(
+            self.args.api_server,
+            self.args.endpoint_name,
+            self.args.user_name,
+            self.args.login_key
+        )
+        try:
+            self.model_api.init_api_key()
+        except ConnectionError as error:
+            exit(error)
+        self.endpoint_details = self.model_api.get_endpoint_details(self.args.endpoint_name)
+        self.gpu_name, self.model_name = BenchmarkRoutineHandler.get_gpu_and_model_name(self.endpoint_details)
+        self.checkpoint_params = self.load_checkpoint() if self.args.load_checkpoint else None
+        self.base_num_units = self.args.num_units
+        self.error = None
+        self.batch_size_too_big = False
+        self.max_num_running_jobs = int()
+        self.current_screen_width= int()
+
+
+    def run(self):
+        self.hide_cursor()
+        try:
+            if self.args.run_routine:
+                self.run_complete_routine()
+            elif self.args.run_spectrum:
+                self.run_spectrum()
+            else:
+                self.run_single_benchmark()
+        finally:
+            self.shutdown()
+
+
+    def run_single_benchmark(self, args=None):
+        args = args or self.args
+        benchmark_api = BenchmarkApiEndpoint(args, self.model_api, self.endpoint_details)
+        try:
+            benchmark_api.run()
+        finally:
+            self.error = benchmark_api.error
+            self.batch_size_too_big = benchmark_api.batch_size_too_big
+            self.max_num_running_jobs = benchmark_api.jobs.max_num_running
+            self.current_screen_width = benchmark_api.current_screen_width
+            for title_bar in benchmark_api.progress_bars.title_bar_list:
+                title_bar.clear()
+            for header_line in benchmark_api.header:
+                header_line.clear()
+            for progress_bar in benchmark_api.progress_bars.current_jobs.values():
+                progress_bar.clear()
+            
+
+    def run_spectrum(self):
+        batch_size_range = self.make_batch_size_range()
+        print(f'Start measuring batch size spectrum for input context length {self.args.prompt_template}')
+        for batch_size in batch_size_range:
+            if self.error:
+                break
+            else:
+                self.run_single_benchmark(self.prepare_args(batch_size))
+                time.sleep(2)
+            if self.args.auto_max_batch_size and self.batch_size_too_big:
+                maximum_even_batch_size = self.max_num_running_jobs - self.max_num_running_jobs % 2
+                if maximum_even_batch_size not in batch_size_range:
+                    self.run_single_benchmark(self.prepare_args(maximum_even_batch_size))
+                    time.sleep(2)
+                    break
+        print(
+            f'\nSpectra for input context length {self.args.prompt_template} finished. '
+            f'Find the results in {Path.cwd() / self.args.output}.'
+            f'\n\n{"-" * self.current_screen_width}\n'
+        )
+
+
+    def run_complete_routine(self):
+        print(f'Start measuring benchmark routine with batch size spectra for input context length until {self.args.max_context_length}')
+        for prompt_template in self.get_prompt_templates():
+            self.batch_size_too_big = False
+            if prompt_template is None or int(prompt_template.strip('K')) <= int(self.args.max_context_length.strip('K')):
+                if not self.error:
+                    self.args.prompt_template = prompt_template
+                    self.run_spectrum()
+        print(f'Benchmark routine finished.')
+
+    def get_prompt_templates(self):
+        prompt_templates = [None, *PROMPT_TEMPLATES.keys()]
+        if self.checkpoint_params:
+            prompt_templates = prompt_templates[prompt_templates.index(self.checkpoint_params.get('prompt_template')):]
+        return prompt_templates
+
+
+    def prepare_args(self, batch_size):
+        context_length = self.args.prompt_template or '0K'
+        args = self.args
+        args.json = Path.cwd() / self.args.output / self.gpu_name / self.model_name / context_length / f'{batch_size}.json'
+        Path.mkdir(args.json.parent, exist_ok=True, parents=True)
+        args.concurrent_requests = args.total_requests = args.batch_size = batch_size
+        args.num_units = self.get_num_units(batch_size)
+        return args
+
+
+    def make_batch_size_range(self):
+        max_batch_size = self.get_max_batch_size()
+        if self.checkpoint_params and self.args.prompt_template == self.checkpoint_params.get('prompt_template'):
+            min_batch_size = self.checkpoint_params.get('batch_size')
+        else:
+            min_batch_size = self.args.min_batch_size
+        return [
+            batch_size
+            for batch_size in range(min_batch_size, max_batch_size + 1)
+            if self.is_valid_batch_size(batch_size, max_batch_size)
+        ]
+
+
+    def get_max_batch_size(self):
+        context_length = int(self.args.prompt_template.strip('K')) if self.args.prompt_template else 1
+        return min(
+            self.args.max_batch_size,
+            int(round(
+                self.args.max_cl_batch_size * int(self.args.max_context_length.strip('K')) / context_length,
+                0
+            )) if self.args.run_routine else self.args.max_batch_size
+        )
+
+
+    def is_valid_batch_size(self, batch_size, max_batch_size):
+        batch_size_step_multiplicator = lambda batch_size: 1 if batch_size <= 128 else 16
+        if batch_size in self.get_essential_batch_sizes(max_batch_size):
+            return True
+        elif batch_size % (self.batch_size_step_multiplicator(batch_size)) == 0:
+            return True
+        else:
+            return False
+
+
+    def get_essential_batch_sizes(self, max_batch_size):
+        essential_batch_sizes = [self.args.min_batch_size, max_batch_size]
+        if max_batch_size <= 4:
+            essential_batch_sizes.append(2)
+        elif max_batch_size <= 32:
+            essential_batch_sizes.extend([22, 23]) # In VLLM here is a performance gap
+        return essential_batch_sizes
+
+
+    def batch_size_step_multiplicator(self, batch_size):
+        if batch_size <= 64:
+            return self.args.step_batch_size
+        elif batch_size <= 128:
+            return 2 * self.args.step_batch_size
+        else:
+            return 16 * self.args.step_batch_size
+
+
+    def get_num_units(self, batch_size):
+
+        if self.args.prompt_template and int(self.args.prompt_template.strip('K')) >= 32:
+            if batch_size < 4:
+                return self.base_num_units
+            elif batch_size <= 8:
+                return int(round(self.base_num_units / 2, 0))
+            else:
+                return int(round(self.base_num_units / 3, 0))
+        elif self.args.prompt_template and int(self.args.prompt_template.strip('K')) >= 4:
+            if batch_size < 4:
+                return int(round(self.base_num_units / 2, 0))
+            elif batch_size <= 8:
+                return int(round(self.base_num_units / 5, 0))
+            else:
+                return int(round(self.base_num_units / 10, 0))
+        elif self.args.prompt_template and int(self.args.prompt_template.strip('K')) > 0:
+            if batch_size < 4:
+                return 3 * self.base_num_units
+            elif batch_size <= 8:
+                return 2 * self.base_num_units
+            else:
+                return self.base_num_units
+        else:
+            if batch_size < 4:
+                return 4 * self.base_num_units
+            elif batch_size <= 8:
+                return 2 * self.base_num_units
+            else:
+                return self.base_num_units
+
+
+    def load_checkpoint(self):
+        try:
+            file_name = Path.cwd() / self.args.load_checkpoint
+            with open(file_name, 'r') as file:
+                params = json.load(file)
+            print(f"Checkpoint loaded from {file_name}")
+            return params
+        except FileNotFoundError:
+            exit(f"No checkpoint found at {file_name}")
+        except json.decoder.JSONDecodeError:
+            (f"Checkpoint is no valid json file {file_name}")
+
+
+    def load_flags(self):
+        """Parsing the command line arguments.
+
+        Returns:
+            argparse.Namespace: The argparse object containing the command line arguments
+        """        
+        parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        parser.add_argument(
+            '-as', '--api_server', type=str, default="http://0.0.0.0:7777",
+            help='Address of the AIME API Server'
+        )
+        parser.add_argument(
+            '-tr', '--total_requests', type=int, default=4, help='Total number of requests. Choose a multiple of the worker\'s batchsize to have a full last batch'
+        )
+        parser.add_argument(
+            '-cr', '--concurrent_requests', type=int, default=40,
+            help='Number of concurrent asynchronous requests limited with asyncio.Semaphore().' \
+                    'With serially processing workers choose at least twice the global batch size of all workers, to have full batches.'
+        )
+        parser.add_argument(
+            '-b', '--batch_size', type=int,
+            help='Specify batch size for a single batch run. Sets --total_requests and --concurrent_requests to --batch_size.'
+        )
+        parser.add_argument(
+            '-ep', '--endpoint_name', type=str, default='llama3_chat',
+            help='Name of the endpoint'
+        )
+        parser.add_argument(
+            '-ut', '--unit', type=str,
+            help='Unit of the generated objects. Default: "tokens" if endpoint_name contains "chat" else  "images"'
+        )
+        parser.add_argument(
+            '-t', '--time_to_get_first_batch_jobs', type=int, default=4,
+            help='Time in seconds after start to get the number of jobs in the first batch'
+        )
+        parser.add_argument(
+            '-u', '--user_name', type=str, default='aime',
+            help='User name to login on AIME API Server'
+        )
+        parser.add_argument(
+            '-k', '--login_key', type=str, default='6a17e2a5-b706-03cb-1a32-94b4a1df67da',
+            help='Login key related to the user name received from AIME to login on AIME API Server'
+        )
+        parser.add_argument(
+            '-nu', '--num_units', default=1, type=int,
+            help='Number of units to generate. Images for stable_diffusion_xl_txt2img'
+        )
+        parser.add_argument(
+            '-ml', '--max_tok_len', default=1024, type=int,
+            help='Maximum length showed in the first batch.'
+        )
+        parser.add_argument(
+            '-i', '--prompt_input_from_files', type=str,
+            help='Load prompt input from text files.'
+        )
+        parser.add_argument(
+            '-nw', '--no_warmup', action='store_true',
+            help='If not set, the first batch doesn\'t count for benchmark result.'
+        )
+        parser.add_argument(
+            '-lf', '--log_file', type=str,
+            help='Add results to given log file. Generates it if not existing.'
+        )
+        parser.add_argument(
+            '-js', '--json', type=str,
+            help='Write benchmark result in given json File.'
+        )
+        parser.add_argument(
+            '-pt', '--prompt_template', choices=PROMPT_TEMPLATES.keys(),
+            help='Download long prompt approximately containing the given number of tokens from AIME'
+        )
+        parser.add_argument(
+            '-dev', '--debug', action='store_true',
+            help='Write debug logs in debug_log.txt.'
+        )
+        parser.add_argument(
+            '-sw', '--serial_processing_worker', action='store_true',
+            help='If the worker processes requests only serially.'
+        )
+        parser.add_argument(
+            '-r', '--resolution', type=str,
+            help='For Image Generators like SD: The target resolution of the generated image. Format: <width>x<height>'
+        )
+        parser.add_argument(
+            '-ww', '--wait_for_idling_worker', action='store_true',
+            help='Wait until worker is idling.'
+        )
+        parser.add_argument(
+            '-rb', '--run_spectrum', action='store_true',
+            help='Benchmark batch_size sprectrum from --min_batch_size to --max_batch_size with increments --step_batch_size.'
+        )
+        parser.add_argument(
+            '-min', '--min_batch_size', type=int, default=1,
+            help='Minimum batch size when using --run_spectrum'
+        )
+        parser.add_argument(
+            '-max', '--max_batch_size', type=int, default=256,
+            help='Maximum batch size when using --run_spectrum'
+        )
+        parser.add_argument(
+            '-st', '--step_batch_size', type=int, default=4,
+            help='Step size for batch_size when using --run_spectrum'
+        )
+        parser.add_argument(
+            '-rr', '--run_routine', action='store_true',
+            help='Start complete benchmark routine with batch_size spectra for each context lengths until --max_context_length'
+        )
+        parser.add_argument(
+            '-mcl', '--max_context_length', choices=PROMPT_TEMPLATES.keys(), default='128K',
+            help='Maximum context length of input prompt when using --run_routine'
+        )
+        parser.add_argument(
+            '-mcb', '--max_cl_batch_size', type=int, default=16,
+            help='Maximum batch size for --max_context_length when using --run_routine. The maximum batch sizes for the shorter input context lengths is calculated antiproportional.'
+        )
+        parser.add_argument(
+            '-o', '--output', type=str,  default='benchmark_result',
+            help='Output folder for benchmark for --run_spectrum or --run_routine'
+        )
+        parser.add_argument(
+            '-am', '--auto_max_batch_size', action='store_true',
+            help='Skip higher batchsizes when the maximum running parallel jobs are lower then the current batchsize, ' +\
+                 'when using --run_spectrum or --run_routine and measure the maximum possible even batch size instead.'
+        )
+        parser.add_argument(
+            '-lc', '--load_checkpoint', type=str, nargs="?", const='checkpoint.js',
+            help='Resume from given checkpoint when using --run_spectrum or --run_routine.'
+        )
+        parser.add_argument(
+            '-sc', '--save_checkpoint', type=str, nargs="?", const='checkpoint.js',
+            help='When using --run_spectrum or --run_routine save the last checkpoint if the run gets interrupted to resume later with --load_checkpoint'
+        )
+        args = parser.parse_args()
+        if args.batch_size:
+            args.total_requests = args.concurrent_requests = args.batch_size
+        if args.run_routine or args.run_spectrum:
+            args.wait_for_idling_worker = args.no_warmup = True
+            args.save_checkpoint = args.save_checkpoint or 'checkpoint.js'
+        return args
+
+
+    def shutdown(self):
+        BenchmarkRoutineHandler.show_cursor()
+        asyncio.run(self.model_api.close_session())
+
+
+    @staticmethod
+    def hide_cursor():
+        if HIDE_CURSOR:
+            if os.name == 'nt':
+                ci = _CursorInfo()
+                handle = ctypes.windll.kernel32.GetStdHandle(-11)
+                ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
+                ci.visible = False
+                ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
+            elif os.name == 'posix':
+                sys.stdout.write("\033[?25l")
+                sys.stdout.flush()
+
+
+    @staticmethod
+    def show_cursor():
+        if HIDE_CURSOR:
+            if os.name == 'nt':
+                ci = _CursorInfo()
+                handle = ctypes.windll.kernel32.GetStdHandle(-11)
+                ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
+                ci.visible = True
+                ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
+            elif os.name == 'posix':
+                sys.stdout.write("\033[?25h")
+                sys.stdout.flush()
+
+
+    @staticmethod
+    def get_gpu_and_model_name(endpoint_details):
+        workers = endpoint_details.get('workers') or [{}]
+        return str(workers[0].get('num_gpus', 1)) + 'x ' + workers[0].get('gpu_name', 'Unknown').replace('_', ' '), workers[0].get('model', {}).get('label', 'Unknown model')
+
+
+def dot_string_generator():
+    """Generator of string with moving dot for server status print output
+
+    Yields:
+        str: '.   ' with dot moving each call
+    """
+    dot_string = '.   '
+    counter = 0
+    last_call = time.time()
+    while True:
+        now = time.time()
+        if now - last_call > 1:
+            last_call = now
+            if (counter//3) % 2 == 0:
+                dot_string = dot_string[-1] + dot_string[:-1]
+            else:
+                dot_string = dot_string[1:] + dot_string[0]
+            counter += 1
+        yield dot_string
+
+
+def format_job_id(job_id):
+    uuid, seperator, counter = job_id.partition('#')
+    return seperator + counter if counter else uuid
+
+
 def main():
-    benchmark_api = BenchmarkApiEndpoint()
-    try:
-        benchmark_api.run()
-    finally:
-        
-        for title_bar in benchmark_api.progress_bars.title_bar_list:
-            title_bar.clear()
-        for header_line in benchmark_api.header:
-            header_line.clear()
-        for progress_bar in benchmark_api.progress_bars.current_jobs.values():
-            progress_bar.clear()
-        benchmark_api.show_cursor()
+    benchmark_routine_handler = BenchmarkRoutineHandler()
+    benchmark_routine_handler.run()
+
 
 
 if __name__ == "__main__":
