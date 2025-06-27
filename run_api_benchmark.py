@@ -256,7 +256,7 @@ class BenchmarkApiEndpoint():
     def make_json_output(self, date_time, warning_str):
         workers = self.endpoint_details.get('workers') or [{}]
         output_dict = {
-            **{key: (value[:30] + '...' if isinstance(value, str) else value) for key, value in self.params.items()},
+            **{key: (value[:30] if isinstance(value, str) else value) for key, value in self.params.items()},
             'total_requests': self.args.total_requests,
             'concurrent_requests': self.args.concurrent_requests,
             'finish_time': date_time,
@@ -478,7 +478,7 @@ class BenchmarkApiEndpoint():
             f'Worker names: {", ".join([worker.get("name") for worker in workers])}',
             f'Maximum worker batch size: {", ".join([str(worker.get("max_batch_size")) for worker in workers])}',
             f'Model name: {self.model_name}',
-            f'GPU(s): {self.gpu_name.replace('_', ' ')}',
+            f'GPU(s): {self.gpu_name.replace("_", " ")}',
             f'Number of {self.unit} to generate: {self.args.num_units}',
             f'Prompt input length: {self.args.prompt_template or "0K"} {self.unit}'
         ])
