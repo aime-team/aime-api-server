@@ -864,8 +864,8 @@ class Worker():
                 self.app.logger.debug(logger_string)
                 self.retry = False
             await self.check_and_update_state()
-            self.max_batch_size = req_json.get('max_job_batch', 1)
-            self.free_slots = self.max_batch_size
+            self.free_slots = req_json.get('max_job_batch', 1)
+            self.max_batch_size = max(self.max_batch_size, self.free_slots)
             self.gpu_name = req_json.get('gpu_name', 'Unknown')
             self.num_gpus = req_json.get('num_gpus', 1)
             self.job_request_timeout = req_json.get('request_timeout', 60)
