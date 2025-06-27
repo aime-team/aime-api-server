@@ -824,6 +824,8 @@ class Worker():
         self.retry = False
         self.max_batch_size = 0
         self.free_slots = 0
+        self.gpu_name = str()
+        self.num_gpus = int()
         self.last_request_time = time.time()
         self.job_request_timeout = req_json.get('request_timeout')
         self.model = WorkerModel(req_json)
@@ -864,6 +866,8 @@ class Worker():
             await self.check_and_update_state()
             self.max_batch_size = req_json.get('max_job_batch', 1)
             self.free_slots = self.max_batch_size
+            self.gpu_name = req_json.get('gpu_name', 'Unknown')
+            self.num_gpus = req_json.get('num_gpus', 1)
             self.job_request_timeout = req_json.get('request_timeout', 60)
 
 
