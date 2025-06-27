@@ -272,7 +272,7 @@ class BenchmarkApiEndpoint():
             'Worker names': ', '.join([worker.get('name') for worker in workers]),
             'worker_interface_version': self.worker_interface_version or 'Unknown',
             'endpoint_version': self.endpoint_details.get('version'),
-            'gpu_name': self.gpu_name,
+            'gpu_name': self.gpu_name.replace('_', ' '),
             'model_name': self.model_name,
             'model_quantization': workers[0].get('model', {}).get('quantization', 'Unknown'),
             'error': str(self.error) if self.error else None,
@@ -478,7 +478,7 @@ class BenchmarkApiEndpoint():
             f'Worker names: {", ".join([worker.get("name") for worker in workers])}',
             f'Maximum worker batch size: {", ".join([str(worker.get("max_batch_size")) for worker in workers])}',
             f'Model name: {self.model_name}',
-            f'GPU(s): {self.gpu_name}',
+            f'GPU(s): {self.gpu_name.replace('_', ' ')}',
             f'Number of {self.unit} to generate: {self.args.num_units}',
             f'Prompt input length: {self.args.prompt_template or "0K"} {self.unit}'
         ])
@@ -1367,7 +1367,7 @@ class BenchmarkRoutineHandler():
     @staticmethod
     def get_gpu_and_model_name(endpoint_details):
         workers = endpoint_details.get('workers') or [{}]
-        return str(workers[0].get('num_gpus', 1)) + 'x ' + workers[0].get('gpu_name', 'Unknown').replace('_', ' '), workers[0].get('model', {}).get('label', 'Unknown model')
+        return str(workers[0].get('num_gpus', 1)) + 'x ' + workers[0].get('gpu_name', 'Unknown'), workers[0].get('model', {}).get('label', 'Unknown model')
 
 
 def dot_string_generator():
