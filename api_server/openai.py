@@ -269,7 +269,7 @@ class OpenAI():
                 for item in content:
                     content_type = item.get('type', None)
                     if content_type == 'text' or content_type == 'output_text':
-                        text += item.get('text', "")
+                        text += item.get('text', "") + "\n"
                     else:
                         OpenAI.logger.info(f'OpenAI not supported content type: {content_type}')
                 message['content'] = text
