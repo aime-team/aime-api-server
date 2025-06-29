@@ -256,8 +256,6 @@ class OpenAI():
 
 
     def __convert_chat_context_from_openai(self, messages, default_system_prompt=None):
-        last_message = messages.pop()
-        prompt_input = last_message.get('content')
         chat_context = []
         has_system_prompt = False
         for message in messages:
@@ -265,10 +263,24 @@ class OpenAI():
             if role == 'developer' or role == 'system':
                 message['role'] = 'system'
                 has_system_prompt = True
+            content = message.get('content', {})
+            if isinstance(content, list):
+                text = ""
+                for item in content:
+                    content_type = item.get('type', None)
+                    if content_type == 'output_text':
+                        text += item.get('text', "")
+                    else:
+                        OpenAI.logger.info(f'OpenAI not supported content type: {content_type}')
+                message['content'] = text
             chat_context.append(message)
         if not has_system_prompt and default_system_prompt:
             message = { 'role': 'system', 'content': default_system_prompt }
             chat_context.insert(0, message)
+
+        last_message = chat_context.pop()
+        prompt_input = last_message.get('content')
+
         return chat_context, prompt_input
 
 

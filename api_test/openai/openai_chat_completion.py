@@ -10,13 +10,19 @@ client = OpenAI(
     base_url=API_SERVER
 )
 
-
 completion = client.chat.completions.create(
   model="gpt-4.1",
   #model="llama3-chat",
   messages=[
     {"role": "developer", "content": "You are a helpful assistant. Your Name is Steve."},
-    {"role": "user", "content": "Who are you?"}
+    {"role": "user", "content": [
+          {
+              "type": "output_text",
+              "text": "Who are you?",
+              "annotations": []
+          }
+      ]
+    }
   ],
   stream=USE_STREAM
 )
