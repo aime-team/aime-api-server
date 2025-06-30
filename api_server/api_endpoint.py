@@ -14,7 +14,7 @@ from pathlib import Path
 import toml
 
 from .job_queue import JobState, WorkerState
-from .utils.misc import StaticRouteHandler, shorten_strings, generate_auth_key
+from .utils.misc import StaticRouteHandler, JinjaRouteHandler, shorten_strings, generate_auth_key
 from .input_validation import InputValidationHandler
 
 
@@ -63,6 +63,7 @@ class APIEndpoint():
         app.add_route(self.client_get_endpoint_details, "/api/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name + "$get_endpoint_details")
 
         self.add_static_routes(config_file)
+        self.add_jinja_routes(config_file)
 
 
     def get_config_from_file(self, config_file):
@@ -96,10 +97,25 @@ class APIEndpoint():
 
 
     def add_static_routes(self, config_file):
+        config_dir = Path(config_file).parent
+
         static_files_config = self.config.get('STATIC', {})
-        static_route_handler = StaticRouteHandler(Path(config_file).parent, self.app, self.endpoint_name)
+        static_route_handler = StaticRouteHandler(config_dir, self.app, self.endpoint_name)
         static_route_handler.setup_static_routes(static_files_config)
 
+
+    def add_jinja_routes(self, config_file):
+        config_dir = Path(config_file).parent
+
+        jinja_files_config = self.config.get('JINJA', {})
+        jinja_route_handler = JinjaRouteHandler(
+            config_file_path=config_dir,
+            app=self.app,
+            endpoint_name=self.endpoint_name
+        )
+        jinja_route_handler.setup_jinja_routes(jinja_files_config)
+    
+    
 
     def get_endpoint_description(self):
         """Loads endpoint description parameters title, name, description, http_methods, version
