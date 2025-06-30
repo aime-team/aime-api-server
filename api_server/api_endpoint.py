@@ -233,6 +233,7 @@ class APIEndpoint():
                                 job.id,
                                 input_args.get('key') or self.app.registered_keys.get(input_args.get('client_session_auth_key')),
                                 self.endpoint_name,
+                                request.path,
                                 job.start_time,
                                 await job.state,
                                 request.headers.get('x-forwarded-for') or request.ip,
@@ -443,7 +444,10 @@ class APIEndpoint():
                         'state': worker.state if worker.state in (WorkerState.OFFLINE, WorkerState.DISABLED) else 'online',
                         'max_batch_size': worker.max_batch_size,
                         'free_slots': worker.free_slots,
-                        'model' : vars(worker.model)
+                        'gpu_name': worker.gpu_name,
+                        'num_gpus': worker.num_gpus,
+                        'model': vars(worker.model),
+                        'state': worker.state
                     }
                     for worker in workers
                 ],
