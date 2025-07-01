@@ -639,7 +639,7 @@ class JobType():
                 await self.app.admin_backend.admin_log_request_start_processing(
                     job.id,
                     job.start_time_compute,
-                    await job.state
+                    JobState.PROCESSING #await job.state
                 )
 
     def get_num_running_jobs(self, endpoint_name=None):
