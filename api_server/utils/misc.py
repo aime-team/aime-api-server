@@ -11,7 +11,9 @@ from sanic.log import logging
 from concurrent.futures import ThreadPoolExecutor
 
 from .markdown_compiler import MarkDownCompiler
-
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound, ChoiceLoader, select_autoescape
+from sanic_ext import render
+from sanic.response import html
 
 logger = logging.getLogger('API')
 thread_pool = ThreadPoolExecutor()
@@ -77,6 +79,51 @@ class StaticRouteHandler:
         else:
             compile_str = ''
         self.app.logger.info(f'Static: {slug} -> {(self.config_file_path / route_path).resolve()}{compile_str}')
+
+
+
+
+class JinjaRouteHandler:
+    def __init__(self, config_file_path, app, endpoint_name=None):
+        self.config_file_path = Path(config_file_path).resolve()
+        self.endpoint_name = endpoint_name or 'app'
+        self.app = app
+        self.num = 0
+ 
+        templates = Path(__file__).resolve().parent.parent.parent / "templates"         # Main Templates Folder
+        endpoint_folder = self.config_file_path                                         # where index.html of endpoint is !
+
+
+        # Setup Jinja environment with multiple template search paths
+        self.jinja_env = Environment(
+            loader=ChoiceLoader([
+                FileSystemLoader(str(templates)),
+                FileSystemLoader(str(endpoint_folder)),
+            ]),
+            autoescape=select_autoescape(['html', 'xml'])
+        )
+
+    def setup_jinja_routes(self, jinja_routes):
+        for slug, route in jinja_routes.items():
+            if route.get("type") == "jinja2":
+                self.setup_jinja_route(slug, route)
+
+    def setup_jinja_route(self, slug, route):
+        file_path = Path(route.get("file"))
+        if not file_path.is_absolute():
+            file_path = (self.config_file_path / file_path).resolve()
+
+        template_name = file_path.name
+
+        async def handler(request):
+            template = self.jinja_env.get_template(template_name)
+            rendered = template.render()                                               # Add context dict mybe ?!
+            return html(rendered)
+
+        self.app.add_route(handler, slug, name=f'{self.endpoint_name}_jinja{self.num}')
+        self.app.logger.info(f'Jinja: {slug} -> {file_path}')
+        self.num += 1
+
 
 
 class EndpointStatus():

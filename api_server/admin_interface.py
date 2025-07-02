@@ -200,20 +200,7 @@ class AdminInterface():
         pass
 
 
-    async def admin_log_invalid_progress_request(
-        self,
-        api_key,
-        request_type:str, 
-        endpoint_name,
-        start_time_utc,
-        request_error_msg,
-        ip_address=None, 
-        http_request_header:dict=None
-        ):
-        # Implemented by Admin BE
-        pass
-
-
+    
     async def api_get_worker_list(self):
         """Retrieve list of all worker names.
 
