@@ -163,7 +163,13 @@ class AdminInterface():
         pass
 
 
-    async def admin_log_request_start_processing(self, job_id, start_time_compute_utc, request_state):
+    async def admin_log_request_start_processing(
+        self,
+        job_id,
+        worker_name,
+        start_time_compute_utc,
+        request_state
+        ):
         # Implemented by Admin BE
         pass
 
@@ -321,13 +327,20 @@ class MinimumAdminBackendImplementation(AdminInterface):
         )
 
 
-    async def admin_log_request_start_processing(self, job_id, start_time_compute_utc, request_state):
+    async def admin_log_request_start_processing(
+        self,
+        job_id,
+        worker_name,
+        start_time_compute_utc,
+        request_state
+        ):
         if not self.jobs.get(job_id):
             self.app.logger.error(f'admin_log_request_start not called before calling admin_log_request_start_processing with job {job_id}')
         if request_state != 'processing':
             self.app.logger.error(f'Wrong state {request_state} when calling admin_log_request_start_processing with job {job_id}')
         self.app.logger.debug(
             f'Admin Backend call to admin_log_request_start_processing from job: {get_job_counter_id(job_id)}'
+            f'worker_name: {worker_name}'
             f'start_time_compute_utc: {start_time_compute_utc}, '
             f'request_state: {request_state}, '
         )

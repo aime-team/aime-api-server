@@ -638,6 +638,7 @@ class JobType():
             if self.app.admin_backend:
                 await self.app.admin_backend.admin_log_request_start_processing(
                     job.id,
+                    worker.auth,
                     job.start_time_compute,
                     JobState.PROCESSING #await job.state
                 )
