@@ -150,6 +150,7 @@ class JobHandler():
         """        
         job_type = self.job_types.get(req_json.get('job_type'))
         if job_type:
+            self.clean_up_worker_double(req_json)
             job_data = await job_type.worker_job_request(req_json)
         else:
             job_data = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
@@ -522,6 +523,13 @@ class JobHandler():
         worker = self.get_worker(auth)
         await worker.set_state(WorkerState.OFFLINE)
 
+
+    def clean_up_worker_double(self, request):
+        for job_type_name, job_type in self.job_types.items():
+            worker_name = request.get('auth')
+            if worker_name in job_type.workers.keys() and request.get('job_type') != job_type_name:
+                del job_type.workers[worker_name]
+                self.app.logger.info(f'Worker {worker_name} changed it\'s job type from {job_type_name} to {request.get("job_type")}')
 
           
 
@@ -997,7 +1005,7 @@ class Job():
         if self.__state == JobState.QUEUED and (now - self.start_time) > self.max_time_in_queue:
             return True
         elif self.__state == JobState.PROCESSING and ((now - self.last_update) > self.job_inactivity_timeout or worker.state == WorkerState.OFFLINE):
-            worker.running_jobs.pop(self.id)
+            worker.running_jobs.pop(self.id, None)
             return True
         else:
             return False
