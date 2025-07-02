@@ -90,7 +90,8 @@ class AdminInterface():
     async def admin_notify_worker_state_changed (
         self,
         worker_name:str,
-        state:str
+        old_state:str,
+        new_state:str
         ):
         pass
 
@@ -420,9 +421,10 @@ class MinimumAdminBackendImplementation(AdminInterface):
     async def admin_notify_worker_state_changed (
         self,
         worker_name:str,
-        state:str
+        old_state:str,
+        new_state:str
         ):
         self.app.logger.debug(
-            f'Worker {worker_name} changed it\'s state to {state}'
+            f'Worker {worker_name} changed it\'s state from {old_state} to {new_state}'
         )
         
