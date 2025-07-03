@@ -75,7 +75,7 @@ class BenchmarkApiEndpoint():
         self.args = args
         self.model_api = model_api
         self.endpoint_details = endpoint_details
-        self.gpu_name, self.model_name = BenchmarkRoutineHandler.get_gpu_and_model_name(endpoint_details)
+        self.gpu_name, self.model_name, self.framework = BenchmarkRoutineHandler.get_worker_details(endpoint_details)
         self.params = self.get_job_parameter()
         self.loop = asyncio.get_event_loop()
         self.lock = asyncio.Lock()
@@ -106,7 +106,7 @@ class BenchmarkApiEndpoint():
 
     def update_endpoint_details(self):
         self.endpoint_details = self.model_api.get_endpoint_details(self.args.endpoint_name)       
-    
+        self.gpu_name, self.model_name, self.framework = BenchmarkRoutineHandler.get_worker_details(self.endpoint_details)
 
     def run(self):
         """Starting the benchmark.
@@ -240,7 +240,8 @@ class BenchmarkApiEndpoint():
                 f'Number of jobs in first batch: {self.jobs.num_first_batch}' if not self.args.no_warmup else '',
                 f'Maximum parallel running jobs: {self.jobs.max_num_running}',
                 f'Worker Interface version: {self.worker_interface_version}',
-                f'Endpoint version: {self.endpoint_details.get("version")}',
+                f'Endpoint version: {self.endpoint_details.get("version") or "Unknown"}',
+                f'Pytorch version: {self.endpoint_details.get("workers", [{}])[0].get("pytorch_version") or "Unknown"}',
                 f'{self.args.total_requests} requests with maximum {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
                 warning_str,
                 *result_table 
@@ -255,8 +256,9 @@ class BenchmarkApiEndpoint():
 
     def make_json_output(self, date_time, warning_str):
         workers = self.endpoint_details.get('workers') or [{}]
+        client_parameters_to_exclude = ['wait_for_result', 'key', 'client_session_auth_key']
         output_dict = {
-            **{key: (value[:30] if isinstance(value, str) else value) for key, value in self.params.items()},
+            **{key: (value[:30] if isinstance(value, str) else value) for key, value in self.params.items() if key not in client_parameters_to_exclude},
             'total_requests': self.args.total_requests,
             'concurrent_requests': self.args.concurrent_requests,
             'finish_time': date_time,
@@ -269,12 +271,14 @@ class BenchmarkApiEndpoint():
             'num_units': self.progress_bars.num_generated_units,
             'prompt_template': self.args.prompt_template,
             'num_workers': len(workers),
-            'Worker names': ', '.join([worker.get('name') for worker in workers]),
+            'worker_names': ', '.join([worker.get('name') for worker in workers]),
             'worker_interface_version': self.worker_interface_version or 'Unknown',
             'endpoint_version': self.endpoint_details.get('version'),
             'gpu_name': self.gpu_name.replace('_', ' '),
             'model_name': self.model_name,
-            'model_quantization': workers[0].get('model', {}).get('quantization', 'Unknown'),
+            'framework': self.framework,
+            'pytorch_version': workers[0].get('pytorch_version') or 'Unknown',
+            'model_quantization': workers[0].get('model', {}).get('quantization') or 'Unknown',
             'error': str(self.error) if self.error else None,
             'warning': warning_str or None
         }
@@ -478,6 +482,7 @@ class BenchmarkApiEndpoint():
             f'Worker names: {", ".join([worker.get("name", "") for worker in workers])}',
             f'Maximum worker batch size: {", ".join([str(worker.get("max_batch_size")) for worker in workers])}',
             f'Model name: {self.model_name}',
+            f'Framework: {self.framework}',
             f'GPU(s): {self.gpu_name.replace("_", " ")}',
             f'Number of {self.unit} to generate: {self.args.num_units}',
             f'Prompt input length: {self.args.prompt_template or "0K"} {self.unit}'
@@ -1004,18 +1009,24 @@ class BenchmarkRoutineHandler():
         except ConnectionError as error:
             exit(error)
         self.endpoint_details = self.model_api.get_endpoint_details(self.args.endpoint_name)
-        self.gpu_name, self.model_name = BenchmarkRoutineHandler.get_gpu_and_model_name(self.endpoint_details)
+        self.gpu_name, self.model_name, self.framework = BenchmarkRoutineHandler.get_worker_details(self.endpoint_details)
         self.checkpoint_params = self.load_checkpoint() if self.args.load_checkpoint else None
         self.base_num_units = self.args.num_units
         self.error = None
         self.batch_size_too_big = False
         self.max_num_running_jobs = int()
         self.current_screen_width= int()
-
+        self.dot_string = dot_string_generator()
 
     def run(self):
+        print()
         self.hide_cursor()
         try:
+            while True:
+                if self.endpoint_details.get('num_active_workers'):
+                    break
+                else:               
+                    print(f'\033[F{BenchmarkApiEndpoint.coloured_output(f"Waiting for available workers{next(self.dot_string)}", YELLOW)}')
             if self.args.run_routine:
                 self.run_complete_routine()
             elif self.args.run_spectrum:
@@ -1086,7 +1097,7 @@ class BenchmarkRoutineHandler():
     def prepare_args(self, batch_size):
         context_length = self.args.prompt_template or '0K'
         args = self.args
-        args.json = Path.cwd() / self.args.output / self.gpu_name / self.model_name / context_length / f'{batch_size}.json'
+        args.json = Path.cwd() / self.args.output / self.framework / self.gpu_name / self.model_name / context_length / f'{batch_size}.json'
         Path.mkdir(args.json.parent, exist_ok=True, parents=True)
         args.concurrent_requests = args.total_requests = args.batch_size = batch_size
         args.num_units = self.get_num_units(batch_size)
@@ -1365,9 +1376,12 @@ class BenchmarkRoutineHandler():
 
 
     @staticmethod
-    def get_gpu_and_model_name(endpoint_details):
+    def get_worker_details(endpoint_details):
         workers = endpoint_details.get('workers') or [{}]
-        return str(workers[0].get('num_gpus', 1)) + 'x' + workers[0].get('gpu_name', 'Unknown'), workers[0].get('model', {}).get('label', 'Unknown model')
+        gpu_name = str(workers[0].get('num_gpus', 1)) + 'x' + workers[0].get('gpu_name', 'Unknown')
+        model_name = workers[0].get('model', {}).get('label', 'Unknown model')
+        framework = f"{workers[0].get('framework', 'Unknown framework')}_{workers[0].get('framework_version')}"
+        return gpu_name, model_name, framework
 
 
 def dot_string_generator():
