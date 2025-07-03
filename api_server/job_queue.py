@@ -990,6 +990,7 @@ class Job():
             if self.app.admin_backend:
                 await self.app.admin_backend.admin_log_request_end(
                     self.id,
+                    self.worker_auth,
                     self.start_time_compute,
                     self.result_received_time,
                     self.__state,
@@ -1068,6 +1069,7 @@ class Job():
         if self.app.admin_backend:
             await self.app.admin_backend.admin_log_request_end(
                 self.id,
+                self.worker_auth,
                 self.start_time_compute,
                 self.result_received_time,
                 'success' if not req_json.get('error') else 'failed',

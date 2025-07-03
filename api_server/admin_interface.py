@@ -178,6 +178,7 @@ class AdminInterface():
     async def admin_log_request_end(
         self,
         job_id,
+        worker_name,
         start_time_compute_utc,
         end_time_utc,
         request_state, # 'success', 'failed', 'canceled' ,
@@ -350,6 +351,7 @@ class MinimumAdminBackendImplementation(AdminInterface):
     async def admin_log_request_end(
         self,
         job_id,
+        worker_name,
         start_time_compute_utc,
         end_time_utc,
         request_state, # 'success', 'failed', 'canceled'
@@ -359,6 +361,7 @@ class MinimumAdminBackendImplementation(AdminInterface):
         self.app.logger.debug(
             f'Admin Backend call to admin_log_request_end from '
             f'job: {get_job_counter_id(job_id)}, '
+            f'worker_name: {worker_name}, '
             f'start_time_compute: {start_time_compute_utc}, '
             f'end_datetime: {end_time_utc}, '
             f'request_state: {request_state}, '
