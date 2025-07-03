@@ -462,6 +462,9 @@ class APIEndpoint():
                         'free_slots': worker.free_slots,
                         'gpu_name': worker.gpu_name,
                         'num_gpus': worker.num_gpus,
+                        'framework':  worker.framework,
+                        'framework_version': worker.framework_version,
+                        'pytorch_version':  worker.pytorch_version,
                         'model': vars(worker.model),
                         
                     }

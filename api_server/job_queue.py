@@ -838,6 +838,9 @@ class Worker():
         self.last_request_time = time.time()
         self.job_request_timeout = req_json.get('request_timeout')
         self.model = WorkerModel(req_json)
+        self.framework = str()
+        self.framework_version = str()
+        self.pytorch_version = str()
         self.running_jobs = dict() # key job_id
         self.mean_compute_duration = int()
 
@@ -875,10 +878,12 @@ class Worker():
             await self.check_and_update_state()
             self.free_slots = req_json.get('max_job_batch', 1)
             self.max_batch_size = max(self.max_batch_size, self.free_slots)
-            self.gpu_name = req_json.get('gpu_name', 'Unknown')
-            self.num_gpus = req_json.get('num_gpus', 1)
+            self.gpu_name = req_json.get('gpu_name') or 'Unknown'
+            self.num_gpus = req_json.get('num_gpus', 1) or 1
+            self.framework = req_json.get('framework') or 'Unknown'
+            self.framework_version = req_json.get('framework_version') or 'Unknown'
+            self.pytorch_version = req_json.get('pytorch_version') or 'Unknown'
             self.job_request_timeout = req_json.get('request_timeout', 60)
-
 
     async def job_request_timed_out(self):
         async with self.lock:
