@@ -60,7 +60,7 @@ class APIEndpoint():
         app.add_route(self.api_request, "/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name)
         app.add_route(self.api_progress, "/" + self.endpoint_name + "/progress", methods=self.http_methods, name=self.endpoint_name + "$progress")
         app.add_route(self.client_login, "/" + self.endpoint_name + "/login", methods=self.http_methods, name=self.endpoint_name + "$login")
-        app.add_route(self.client_get_endpoint_details, "/api/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name + "$get_endpoint_details")
+        app.add_route(self.client_get_endpoint_details, "/api/endpoints/" + self.endpoint_name, methods=self.http_methods, name=self.endpoint_name + "$get_endpoint_details")
 
         self.add_static_routes(config_file)
         self.add_jinja_routes(config_file)
@@ -373,7 +373,7 @@ class APIEndpoint():
 
 
     async def client_get_endpoint_details(self, request):
-        """Route /api/<endpoint_name> to get details about <endpoint_name>. 
+        """Route /api/endpoints/<endpoint_name> to get details about <endpoint_name>. 
 
         Args:
             request (sanic.request.types.Request): Client request
@@ -395,7 +395,7 @@ class APIEndpoint():
                 'workers': [
                     {
                         'name': 'hostname#0_2xNVIDIA_GeForce_RTX_3090',
-                        'state': 'online',
+                        'state': 'waiting',
                         'max_batch_size': 128,
                         'free_slots': 128,
                         'model': {
@@ -457,13 +457,13 @@ class APIEndpoint():
                 'workers': [
                     {
                         'name': worker.auth,
-                        'state': worker.state if worker.state in (WorkerState.OFFLINE, WorkerState.DISABLED) else 'online',
+                        'state': worker.state,
                         'max_batch_size': worker.max_batch_size,
                         'free_slots': worker.free_slots,
                         'gpu_name': worker.gpu_name,
                         'num_gpus': worker.num_gpus,
                         'model': vars(worker.model),
-                        'state': worker.state
+                        
                     }
                     for worker in workers
                 ],
