@@ -150,6 +150,7 @@ class JobHandler():
         """        
         job_type = self.job_types.get(req_json.get('job_type'))
         if job_type:
+            self.clean_up_worker_double(req_json)
             job_data = await job_type.worker_job_request(req_json)
         else:
             job_data = {'cmd': 'error', 'msg': f'No job queue found for job_type {job_type}'}
@@ -523,6 +524,13 @@ class JobHandler():
         await worker.set_state(WorkerState.OFFLINE)
 
 
+    def clean_up_worker_double(self, request):
+        for job_type_name, job_type in self.job_types.items():
+            worker_name = request.get('auth')
+            if worker_name in job_type.workers.keys() and request.get('job_type') != job_type_name:
+                del job_type.workers[worker_name]
+                self.app.logger.info(f'Worker {worker_name} changed it\'s job type from {job_type_name} to {request.get("job_type")}')
+
           
 
 class JobType():
@@ -638,8 +646,9 @@ class JobType():
             if self.app.admin_backend:
                 await self.app.admin_backend.admin_log_request_start_processing(
                     job.id,
+                    worker.auth,
                     job.start_time_compute,
-                    await job.state
+                    JobState.PROCESSING #await job.state
                 )
 
     def get_num_running_jobs(self, endpoint_name=None):
@@ -835,7 +844,7 @@ class Worker():
 
     async def set_state(self, new_state):
         if self.state != new_state:
-            await self.app.admin_backend.admin_notify_worker_state_changed(self.auth, new_state)
+            await self.app.admin_backend.admin_notify_worker_state_changed(self.auth, self.state, new_state)
             self.state = new_state
 
 
@@ -981,6 +990,7 @@ class Job():
             if self.app.admin_backend:
                 await self.app.admin_backend.admin_log_request_end(
                     self.id,
+                    self.worker_auth,
                     self.start_time_compute,
                     self.result_received_time,
                     self.__state,
@@ -996,7 +1006,7 @@ class Job():
         if self.__state == JobState.QUEUED and (now - self.start_time) > self.max_time_in_queue:
             return True
         elif self.__state == JobState.PROCESSING and ((now - self.last_update) > self.job_inactivity_timeout or worker.state == WorkerState.OFFLINE):
-            worker.running_jobs.pop(self.id)
+            worker.running_jobs.pop(self.id, None)
             return True
         else:
             return False
@@ -1059,6 +1069,7 @@ class Job():
         if self.app.admin_backend:
             await self.app.admin_backend.admin_log_request_end(
                 self.id,
+                self.worker_auth,
                 self.start_time_compute,
                 self.result_received_time,
                 'success' if not req_json.get('error') else 'failed',

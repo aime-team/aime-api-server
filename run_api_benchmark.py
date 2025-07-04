@@ -475,7 +475,7 @@ class BenchmarkApiEndpoint():
             f'Total requests: {self.args.total_requests}',
             f'Concurrent requests: {self.args.concurrent_requests}',
             f'Number of detected workers: {len(workers)}',
-            f'Worker names: {", ".join([worker.get("name") for worker in workers])}',
+            f'Worker names: {", ".join([worker.get("name", "") for worker in workers])}',
             f'Maximum worker batch size: {", ".join([str(worker.get("max_batch_size")) for worker in workers])}',
             f'Model name: {self.model_name}',
             f'GPU(s): {self.gpu_name.replace("_", " ")}',
@@ -1367,7 +1367,7 @@ class BenchmarkRoutineHandler():
     @staticmethod
     def get_gpu_and_model_name(endpoint_details):
         workers = endpoint_details.get('workers') or [{}]
-        return str(workers[0].get('num_gpus', 1)) + 'x ' + workers[0].get('gpu_name', 'Unknown'), workers[0].get('model', {}).get('label', 'Unknown model')
+        return str(workers[0].get('num_gpus', 1)) + 'x' + workers[0].get('gpu_name', 'Unknown'), workers[0].get('model', {}).get('label', 'Unknown model')
 
 
 def dot_string_generator():
