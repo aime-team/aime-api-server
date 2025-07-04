@@ -1,12 +1,32 @@
+<!DOCTYPE html>
+<!-- 
+Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
 
+This software may be used and distributed according to the terms of the MIT LICENSE
+-->
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="/example-api/static/favicon.ico" type="image/x-icon">
 
-{% extends 'endpoints/base.html' %}
-{% block content %}
+	<title>AIME API Example</title>
 
+	<link rel="stylesheet" href="/model_api/frontend/css/font.css">
+	<link rel="stylesheet" href="/example-api/static/css/highlight.css">
+	<link rel="stylesheet" href="/example-api/static/css/style.css">
+
+	<script src="/model_api/js/model_api.js"></script>
+	<script src="/example-api/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
+	<script src="/example-api/static/js/highlight.js"></script>
+	<script src="/example-api/static/js/main.js"></script>
+
+</head>
+<body>
 	<div class="pl-5 pr-5 max-w-7xl min-h-screen mx-auto">
         <div id="top">
-            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: {{ endpoint_title }}</h2>
-
+            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: Simple Example</h2>
         </div>
         <div id="layout" class="columns flex flex-col md:flex-row">
 			<!-- LEFT COLUMN -->
@@ -76,29 +96,29 @@
 	
 						<p class="select-label">API Call (Text)</p>
 						<pre><code class="info-field code language-json rounded">
-{
-	"prompt":"Hello World!",
-	"sleep_duration":3,
-	"progress_steps":50,
-	"client_session_auth_key":"1b2...ba3",
-	"wait_for_result":false
-}
+							{
+								"prompt":"Hello World!",
+								"sleep_duration":3,
+								"progress_steps":50,
+								"client_session_auth_key":"1b2...ba3",
+								"wait_for_result":false
+							}
 						</code></pre>
 						<br/>
 						<p class="select-label">Progress</p>
 						<pre><code class="info-field code language-json rounded">
-{
-	"success":true,
-	"job_id":"JID15",
-	"ep_version":0,
-	"job_state":"processing",
-	"progress":{
-		"progress":81,
-		"estimate":7.5,
-		"queue_position":0,
-		"num_workers_online":1
-	}
-}
+							{
+								"success":true,
+								"job_id":"JID15",
+								"ep_version":0,
+								"job_state":"processing",
+								"progress":{
+									"progress":81,
+									"estimate":7.5,
+									"queue_position":0,
+									"num_workers_online":1
+								}
+							}
 						</code></pre>
 					</div>
 				</div>
@@ -106,5 +126,11 @@
 		</div>
 	</div>
 
-{% endblock %}
-
+	<footer class="text-xs p-4 text-center">
+		<div class="flex items-center justify-center space-x-2">
+			<span>&copy; 2024 AIME GmbH | Powered by AIME API</span>
+		</div>
+	</footer>
+	
+</body>
+</html>
