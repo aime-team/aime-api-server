@@ -1,29 +1,8 @@
-<!DOCTYPE html>
-<!-- 
-Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
 
-This software may be used and distributed according to the terms of the MIT LICENSE
--->
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
 
-    <title>AIME Devstral Dev Assistant API Example</title>
+{% extends 'endpoints/base.html' %}
+{% block content %}
 
-    <link rel="stylesheet" href="/model_api/frontend/css/font.css">
-    <link rel="stylesheet" href="/devstral-chat/static/css/highlight.css">
-    <link rel="stylesheet" href="/devstral-chat/static/css/style.css">
-
-    <script src="/model_api/js/model_api.js"></script>
-    <script src="/devstral-chat/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
-    <script src="/devstral-chat/static/js/highlight.js"></script>
-    <script src="/devstral-chat/static/js/main.js"></script>
-</head>
-
-<body>
 	<div class="pl-5 pr-5 max-w-7xl mx-auto min-h-screen">
         <div id="top">
             <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: Devstral - Instruct Chat</h2>
@@ -56,7 +35,7 @@ This software may be used and distributed according to the terms of the MIT LICE
 					<div id="chatbox-fadeout" class="absolute inset-x-0 h-10 bg-gradient-to-t to-transparent from-aime_darkblue no-print" style="bottom:57px;"></div>
 					<div id="chatbox-input" class="no-print">
 						<div class="bg-aime_darkblue p-4 flex items-center rounded-b-md">
-							<input id="chat_input" name="chat_input" type="text" placeholder="Type your message..." class="flex-1 bg-aime_darkblue p-2 rounded-l-md border-1 border-gray-500 focus:outline-none text-white text-sm focus:outline-none focus:border-1 focus:border-gray-500" onkeydown="handleKeyPress(event)">
+							<input id="chat_input" name="chat_input" type="text" placeholder="Type your message..." class="flex-1 bg-aime_darkblue p-2 rounded-l-md border-1 border-gray-500 text-white text-sm focus:outline-none focus:border-1 focus:border-gray-500" onkeydown="handleKeyPress(event)">
 							<button id="chat_send" title="Send" class="bg-gray-500 text-white p-2 rounded-r-md border-gray-500" onclick="onButtonClick();">
 								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
 									<path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
@@ -196,11 +175,4 @@ This software may be used and distributed according to the terms of the MIT LICE
 			</div> <!-- /END RIGHT COLUMN -->
 		</div>
 	</div>
-	<footer class="text-xs p-4 mt-20 text-center">
-		<div class="flex items-center justify-center space-x-2">
-			<span>&copy; 2024 AIME GmbH | Powered by <a href="https://api.aime.info" target="_blank" class="text-aime_darkblue font-bold">AIME API</a> | <a href="https://www.aime.info/imprint" target="_blank" class="text-aime_darkblue font-bold">Imprint</a></span>
-		</div>
-		<div class="text-xs text-gray-400 p-5 leading-3 max-w-2xl mx-auto">Disclaimer: The content provided on this platform is for informational and educational purposes only, and its use is at your own risk. We do not assume any liability for the accuracy, completeness, or usefulness of the information provided. Viewer discretion is advised as the content may contain explicit material. This platform is intended for research and demonstration purposes only and should not be used as a substitute for professional advice. By accessing this platform, you agree to these terms and conditions.</div>
-	</footer>
-</body>
-</html>
+{% endblock %}
