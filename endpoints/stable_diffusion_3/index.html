@@ -1,24 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
-    
-    <title>AIME Stable Diffusion 3 API Example</title>
 
-    <link rel="stylesheet" href="/model_api/frontend/css/font.css">
-    <link rel="stylesheet" href="/sd3/static/css/highlight.css">
-    <link rel="stylesheet" href="/sd3/static/css/style.css">
 
-    <script src="/model_api/js/model_api.js"></script>
-    <script src="/sd3/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
-    <script src="/sd3/static/js/highlight.js"></script>
-    <script src="/sd3/static/js/main.js"></script>
-</head>
-
-<body>
+{% extends 'endpoints/base.html' %}
+{% block content %}
     <div class="pl-5 pr-5 max-w-7xl mx-auto min-h-screen">
         <div id="top">
             <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: Stable Diffusion 3</h2>
@@ -169,11 +152,4 @@
         </div>
     </div>
     
-    <footer class="text-xs p-4 mt-20 text-center">
-		<div class="flex items-center justify-center space-x-2">
-			<span>&copy; 2024 AIME GmbH | Powered by <a href="https://api.aime.info" target="_blank" class="text-aime_darkblue font-bold">AIME API</a> | <a href="https://www.aime.info/imprint" target="_blank" class="text-aime_darkblue font-bold">Imprint</a></span>
-		</div>
-		<div class="text-xs text-gray-400 p-5 leading-3 max-w-2xl mx-auto">Disclaimer: The content provided on this platform is for informational and educational purposes only, and its use is at your own risk. We do not assume any liability for the accuracy, completeness, or usefulness of the information provided. Viewer discretion is advised as the content may contain explicit material. This platform is intended for research and demonstration purposes only and should not be used as a substitute for professional advice. By accessing this platform, you agree to these terms and conditions.</div>
-	</footer>
-</body>
-</html>
+{% endblock %}

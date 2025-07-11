@@ -1,28 +1,8 @@
-<!DOCTYPE html>
-<!-- 
-Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
 
-This software may be used and distributed according to the terms of the MIT LICENSE
--->
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/model_api/frontend/favicon.ico" type="image/x-icon">
-    <title>AIME WhisperX</title>
 
-    <link rel="stylesheet" href="/model_api/frontend/css/font.css">
-    <link rel="stylesheet" href="/whisperx/static/css/highlight.css">
-    <link rel="stylesheet" href="/whisperx/static/css/style.css">
+{% extends 'endpoints/base.html' %}
+{% block content %}
 
-	<script src="/model_api/js/model_api.js"></script>
-	<script src="/whisperx/static/js/tailwind.js"></script>
-	<script src="/whisperx/static/js/highlight.js"></script>
-	<script src="/whisperx/static/js/main.js"></script>
-</head>
-
-<body>
     <div class="pl-5 pr-5 max-w-7xl mx-auto min-h-screen">
         <div id="top">
             <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: WhisperX</h2>
@@ -150,3 +130,5 @@ This software may be used and distributed according to the terms of the MIT LICE
 </body>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </html>
+
+{% endblock %}

@@ -84,8 +84,10 @@ class StaticRouteHandler:
 
 
 class JinjaRouteHandler:
-    def __init__(self, config_file_path, app, endpoint_name=None):
+    def __init__(self, config_file_path, app, endpoint_title, endpoint_demo_url, endpoint_name=None):
         self.config_file_path = Path(config_file_path).resolve()
+        self.endpoint_title = endpoint_title or 'AIME API Endpoint'
+        self.endpoint_demo_url = endpoint_demo_url
         self.endpoint_name = endpoint_name or 'app'
         self.app = app
         self.num = 0
@@ -116,8 +118,13 @@ class JinjaRouteHandler:
         template_name = file_path.name
 
         async def handler(request):
+            context = {
+                "endpoint_title": self.endpoint_title,
+                "endpoint_demo_url": self.endpoint_demo_url,
+                "endpoint_name": self.endpoint_name
+            }
             template = self.jinja_env.get_template(template_name)
-            rendered = template.render()                                               # Add context dict mybe ?!
+            rendered = template.render(context)
             return html(rendered)
 
         self.app.add_route(handler, slug, name=f'{self.endpoint_name}_jinja{self.num}')

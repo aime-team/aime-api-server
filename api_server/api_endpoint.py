@@ -111,7 +111,9 @@ class APIEndpoint():
         jinja_route_handler = JinjaRouteHandler(
             config_file_path=config_dir,
             app=self.app,
-            endpoint_name=self.endpoint_name
+            endpoint_title=self.title,
+            endpoint_demo_url=self.config.get('ENDPOINT', {}).get('demo_url', 'example-api'),                           # Use demo_url from endpoint config or example-api as fallback
+            endpoint_name=self.endpoint_name,
         )
         jinja_route_handler.setup_jinja_routes(jinja_files_config)
     

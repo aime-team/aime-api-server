@@ -1,0 +1,27 @@
+
+<!DOCTYPE html>
+<!-- 
+Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
+
+This software may be used and distributed according to the terms of the MIT LICENSE
+-->
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="/{{ endpoint_demo_url }}/static/favicon.ico" type="image/x-icon">
+
+	<title>{{ endpoint_title }}</title>
+	<link rel="stylesheet" href="/model_api/frontend/css/font.css">
+	<link rel="stylesheet" href="/{{ endpoint_demo_url }}/static/css/highlight.css">
+	<link rel="stylesheet" href="/{{ endpoint_demo_url }}/static/css/style.css">
+
+	<script src="/model_api/js/model_api.js"></script>
+	<script src="/{{ endpoint_demo_url }}/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
+	<script src="/{{ endpoint_demo_url }}/static/js/highlight.js"></script>
+	<script src="/{{ endpoint_demo_url }}/static/js/main.js"></script>
+    
+	{% block extra_static %}     {% endblock %}
+    
+</head>

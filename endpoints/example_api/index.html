@@ -1,33 +1,12 @@
-<!DOCTYPE html>
-<!-- 
-Copyright (c) AIME GmbH and affiliates. Find more info at https://www.aime.info/api
 
-This software may be used and distributed according to the terms of the MIT LICENSE
--->
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="icon" href="/example-api/static/favicon.ico" type="image/x-icon">
 
-	<title>AIME API Example</title>
+{% extends 'endpoints/base.html' %}
+{% block content %}
 
-	<link rel="stylesheet" href="/model_api/frontend/css/font.css">
-	<link rel="stylesheet" href="/example-api/static/css/highlight.css">
-	<link rel="stylesheet" href="/example-api/static/css/style.css">
-
-	<script src="/model_api/js/model_api.js"></script>
-	<script src="/example-api/static/js/tailwind.js"></script>  <!-- from https://cdn.tailwindcss.com -->
-	<script src="/example-api/static/js/highlight.js"></script>
-	<script src="/example-api/static/js/main.js"></script>
-
-</head>
-<body>
 	<div class="pl-5 pr-5 max-w-7xl min-h-screen mx-auto">
         <div id="top">
-            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: Simple Example</h2>
-			{% include 'endpoints/to_add.html' %}
+            <h2 class="text-2xl font-bold text-aime_blue mt-3">AIME API Demo: {{ endpoint_title }}</h2>
+
         </div>
         <div id="layout" class="columns flex flex-col md:flex-row">
 			<!-- LEFT COLUMN -->
@@ -127,11 +106,5 @@ This software may be used and distributed according to the terms of the MIT LICE
 		</div>
 	</div>
 
-	<footer class="text-xs p-4 text-center">
-		<div class="flex items-center justify-center space-x-2">
-			<span>&copy; 2024 AIME GmbH | Powered by AIME API</span>
-		</div>
-	</footer>
-	
-</body>
-</html>
+{% endblock %}
+
