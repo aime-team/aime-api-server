@@ -84,7 +84,7 @@ function onSendAPIRequest() {
                 document.getElementById('progress_bar').value = progress;
                 document.getElementById('progress_label').innerText = progress.toFixed(1) + '% | ' + progressTxt;
                 
-                if(progress_data != null) {
+                if(progress_data != null && progress_data['status'] != null) {
                     log_textarea.value += '\n' + progress_data['status'];
                     log_textarea.scrollTop = log_textarea.scrollHeight;                
                 }
