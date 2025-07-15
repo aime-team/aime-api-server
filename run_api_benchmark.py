@@ -9,7 +9,6 @@ import argparse
 import time
 from datetime import datetime
 from tqdm.auto import tqdm
-from collections import Counter
 import json
 import math
 import statistics
@@ -19,6 +18,7 @@ import os
 from pathlib import Path
 import requests
 import aiofiles
+from itertools import combinations, product
 
 
 if os.name == 'nt':
@@ -70,12 +70,14 @@ class BenchmarkApiEndpoint():
     """Benchmark tool to measure and monitor the performance of GPUs with multiple asynchronous requests on chat and stable_diffusion_xl_txt2img endpoints.
     """    
 
-    def __init__(self, args, model_api, endpoint_details):
+    def __init__(self, args, model_api, endpoint_details, all_files=None, context_batch_pair=None):
         
         self.args = args
         self.model_api = model_api
         self.endpoint_details = endpoint_details
-        self.gpu_name, self.model_name = BenchmarkRoutineHandler.get_gpu_and_model_name(endpoint_details)
+        self.all_files = all_files
+        self.context_batch_pair = context_batch_pair or list()
+        self.gpu_name, self.model_name, self.framework = BenchmarkRoutineHandler.get_worker_details(endpoint_details)
         self.params = self.get_job_parameter()
         self.loop = asyncio.get_event_loop()
         self.lock = asyncio.Lock()
@@ -106,12 +108,13 @@ class BenchmarkApiEndpoint():
 
     def update_endpoint_details(self):
         self.endpoint_details = self.model_api.get_endpoint_details(self.args.endpoint_name)       
-    
+        self.gpu_name, self.model_name, self.framework = BenchmarkRoutineHandler.get_worker_details(self.endpoint_details)
 
     def run(self):
         """Starting the benchmark.
         """
         try:
+
             if self.args.wait_for_idling_worker:
                 while True:
                     self.update_endpoint_details()
@@ -131,8 +134,6 @@ class BenchmarkApiEndpoint():
             self.loop.run_forever()
             return True
         except (KeyboardInterrupt, asyncio.exceptions.CancelledError):
-            if self.args.save_checkpoint and (self.args.run_routine or self.args.run_spectrum):
-                self.save_checkpoint()
             self.error = 'Canceled'
             self.error_event.set()
             self.all_jobs_done_event.set()
@@ -140,12 +141,34 @@ class BenchmarkApiEndpoint():
 
 
     async def run_all_jobs(self):
-        _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=self.loop) for _ in range(self.args.total_requests)]
+        if self.args.save_checkpoint:
+            self.save_checkpoint()
+        if self.args.run_context_mix:
+            counter = 0
+            self.args.total_requests = min(self.args.total_requests, len(self.all_files))
+            for file in self.all_files[:self.args.total_requests]:
+                params = self.params.copy()
+                counter += 1
+                if counter > self.args.total_requests:
+                    break
+                with open(file, 'r') as text_file:
+                    params['prompt_input'] = text_file.read()
+                    asyncio.ensure_future(self.do_request_with_semaphore(params), loop=self.loop)
+        elif self.args.run_context_analysis or self.args.run_context_length_spectrum:
+            for context_window_batch in self.context_batch_pair:
+                for idx, context_length in enumerate(context_window_batch):
+                    params = self.params.copy()
+                    file_index = idx if self.args.run_context_length_spectrum or not self.args.mixed_context_batch else self.args.prompt_file_index
+                    with open(self.get_file(context_length, file_index), 'r') as text_file:
+                        params['prompt_input'] = text_file.read()
+                        asyncio.ensure_future(self.do_request_with_semaphore(params, context_length), loop=self.loop)
+        else:
+            _ = [asyncio.ensure_future(self.do_request_with_semaphore(), loop=self.loop) for _ in range(self.args.total_requests)]
         await self.all_jobs_done_event.wait()
         await self.finish_benchmark()
 
 
-    async def process_progress_result(self, result):
+    async def process_progress_result(self, result, context_length=None):
         """Called when job progress is received from the API Server. Initializes or updates the job related progress bar, 
         updates the title and measures the number of current running jobs.
 
@@ -158,7 +181,7 @@ class BenchmarkApiEndpoint():
             await self.handle_first_batch(result)
             await self.update_header()
             if not self.progress_bars.get(job_id) and result.get('queue_position') == 0:
-                await self.progress_bars.new(job_id, self.header_height)
+                await self.progress_bars.new(job_id, self.header_height, context_length)
             
             await self.progress_bars.update(result, self.header_height)
             await self.jobs.update(self.progress_bars.current_jobs)
@@ -220,7 +243,7 @@ class BenchmarkApiEndpoint():
         else:
             result_table = self.make_benchmark_result_table(final=True)
             time_string = f'Benchmark finished at {now}'    
-            if self.args.concurrent_requests != self.jobs.max_num_running and not self.args.serial_processing_worker:
+            if self.args.concurrent_requests != self.jobs.max_num_running and not (self.args.serial_processing_worker or self.args.run_context_mix):
                 if self.jobs.mean_durations.get('worker_generation') < 1.2:
                     warning_str = self.coloured_output(
                         'Job too short for proper benchmark! Choose higher --num_units',
@@ -240,13 +263,17 @@ class BenchmarkApiEndpoint():
                 f'Number of jobs in first batch: {self.jobs.num_first_batch}' if not self.args.no_warmup else '',
                 f'Maximum parallel running jobs: {self.jobs.max_num_running}',
                 f'Worker Interface version: {self.worker_interface_version}',
-                f'Endpoint version: {self.endpoint_details.get("version")}',
+                f'Endpoint version: {self.endpoint_details.get("version") or "Unknown"}',
+                f'Pytorch version: {self.endpoint_details.get("workers", [{}])[0].get("pytorch_version") or "Unknown"}',
                 f'{self.args.total_requests} requests with maximum {self.args.concurrent_requests} concurrent requests took {tqdm.format_interval(time.time() - self.start_time_second_batch)}.',
                 warning_str,
                 *result_table 
             ))
         if self.args.json:
             self.make_json_output(now, warning_str)
+        if self.args.run_context_mix:
+            with open('context_mix_result.json', 'w') as file:
+                json.dump(self.jobs.all_finished_jobs, file, indent=4)
         print(summary_string)
         self.add_to_logfile(summary_string)
         await self.close_all_tasks()
@@ -255,34 +282,44 @@ class BenchmarkApiEndpoint():
 
     def make_json_output(self, date_time, warning_str):
         workers = self.endpoint_details.get('workers') or [{}]
+        client_parameters_to_exclude = ['wait_for_result', 'key', 'client_session_auth_key']
         output_dict = {
-            **{key: (value[:30] if isinstance(value, str) else value) for key, value in self.params.items()},
+            **{key: (value[:30] if isinstance(value, str) else value) for key, value in self.params.items() if key not in client_parameters_to_exclude},
             'total_requests': self.args.total_requests,
             'concurrent_requests': self.args.concurrent_requests,
+            'start_time': datetime.fromtimestamp(self.start_time_second_batch).isoformat(sep=" ", timespec="seconds") if self.start_time_second_batch else None,
             'finish_time': date_time,
             'mean_durations': self.jobs.mean_durations,
             'mean_batch_rates': self.jobs.mean_batch_rates,
             'mean_single_rates': self.jobs.mean_single_rates,
-            'num_jobs_first_batch': self.jobs.num_first_batch if not self.args.no_warmup else 0,
             'max_num_jobs_running': self.jobs.max_num_running,
             'max_worker_batch_size': workers[0].get('max_batch_size'),
             'num_units': self.progress_bars.num_generated_units,
-            'prompt_template': self.args.prompt_template,
             'num_workers': len(workers),
-            'Worker names': ', '.join([worker.get('name') for worker in workers]),
+            'worker_names': ', '.join([worker.get('name') for worker in workers]),
             'worker_interface_version': self.worker_interface_version or 'Unknown',
             'endpoint_version': self.endpoint_details.get('version'),
             'gpu_name': self.gpu_name.replace('_', ' '),
             'model_name': self.model_name,
-            'model_quantization': workers[0].get('model', {}).get('quantization', 'Unknown'),
+            'framework': self.framework,
+            'pytorch_version': workers[0].get('pytorch_version') or 'Unknown',
+            'model_quantization': workers[0].get('model', {}).get('quantization') or 'Unknown',
             'error': str(self.error) if self.error else None,
             'warning': warning_str or None
         }
+        if self.args.prompt_template:
+            output_dict['prompt_template'] = self.args.prompt_template
+        output_dict['context_batch_pair'] = self.context_batch_pair
+        output_dict['job_stats'] = self.jobs.all_finished_jobs
+        output_dict['mixed_context_batch'] = self.args.mixed_context_batch
+        if self.args.no_warmup:
+            output_dict['num_jobs_first_batch'] = self.jobs.num_first_batch
         json_file = Path(self.args.json)
         if not json_file.parent.is_dir():
             json_file.parent.mkdir()
         with open(json_file, 'w') as file: 
             json.dump(output_dict, file, indent=4)
+        print(f'Results saved to {json_file}')
 
 
     def add_to_logfile(self, content):
@@ -469,8 +506,18 @@ class BenchmarkApiEndpoint():
         """Printing benchmark parameters at the start.
         """
         workers = self.endpoint_details.get('workers') or [{}]
-
-        start_message = '\n'.join([
+        prompt_input_length = [ 
+            context_length
+            for context_window_batch in sorted(self.context_batch_pair)
+            for context_length in sorted(context_window_batch)
+        ]
+        if self.args.run_context_analysis:
+            prompt_input_length_str = ', '.join(str(x) for x in prompt_input_length) + f' = {sum(prompt_input_length)}'
+        elif self.args.run_context_length_spectrum:
+            prompt_input_length_str = f'{len(prompt_input_length)}x{prompt_input_length[0]} = {sum(prompt_input_length)}'
+        else:
+            prompt_input_length_str = self.args.prompt_template or "0K"
+        start_message = [
             f'\nStarting Benchmark on {self.args.api_server}/{self.args.endpoint_name} with',
             f'Total requests: {self.args.total_requests}',
             f'Concurrent requests: {self.args.concurrent_requests}',
@@ -478,12 +525,14 @@ class BenchmarkApiEndpoint():
             f'Worker names: {", ".join([worker.get("name", "") for worker in workers])}',
             f'Maximum worker batch size: {", ".join([str(worker.get("max_batch_size")) for worker in workers])}',
             f'Model name: {self.model_name}',
+            f'Framework: {self.framework}',
             f'GPU(s): {self.gpu_name.replace("_", " ")}',
             f'Number of {self.unit} to generate: {self.args.num_units}',
-            f'Prompt input length: {self.args.prompt_template or "0K"} {self.unit}'
-        ])
+            f'Prompt input length: {prompt_input_length_str} {self.unit}'
+        ]
         if not self.args.no_warmup:
-            start_message += f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s'
+            start_message.append(f'Time after jobs in first batch got checked: {self.args.time_to_get_first_batch_jobs}s')
+        start_message = '\n'.join(start_message)
         print(start_message)
         start_message += f'\nEndpoint version: {self.endpoint_details.get("version", "Unknown")}\n'
         self.add_to_logfile(start_message)
@@ -540,20 +589,19 @@ class BenchmarkApiEndpoint():
         return input_data
 
 
-    async def do_request_with_semaphore(self):
+    async def do_request_with_semaphore(self, params=None, context_length=None):
         """Limiting the concurrent requests using asyncio.Semaphore().
         """
         try:
             async with self.semaphore:
                 start_time = time.time()
-
-                output_generator = self.model_api.get_api_request_generator(self.params)
+                output_generator = self.model_api.get_api_request_generator(params or self.params)
                 async for result in output_generator:
                     if result.get('job_state') == 'done':
                         result['result_data']['request_start_time'] = start_time
                         await self.process_job_result(result)
                     else:
-                        await self.process_progress_result(result)
+                        await self.process_progress_result(result, context_length)
                     if self.error_event.is_set():
                         break
         except AttributeError:
@@ -570,6 +618,12 @@ class BenchmarkApiEndpoint():
             if self.jobs.final_job_finished or self.error_event.is_set():
                 self.all_jobs_done_event.set()
 
+    def get_file(self, context_length, idx):
+        for file in self.all_files:
+            file_context_length, file_idx = file.stem.split('#')
+            if context_length == int(file_context_length) and idx == int(file_idx):
+                return file
+
 
     def save_checkpoint(self):
         file_name = Path.cwd() / self.args.save_checkpoint
@@ -578,6 +632,7 @@ class BenchmarkApiEndpoint():
                 {
                     'prompt_template': self.args.prompt_template,
                     'batch_size': self.args.batch_size,
+                    'context_batch_pair': self.context_batch_pair
                 },
                 file,
                 indent=4
@@ -687,17 +742,18 @@ class ProgressBarHandler():
         self.current_rate_dict = dict()
         self.unit, self.unit_scale, self.unit_precision = BenchmarkApiEndpoint.get_unit(self.args)
 
-    async def new(self, job_id, current_header_height):
+    async def new(self, job_id, current_header_height, context_length=None):
         """Initializing the progress bar of the job with the given job ID.
 
         Args:
             job_id (str): Job ID of the related job
         """
+        description = f'{f"{context_length}" if context_length else ""}{format_job_id(job_id)}'
         self.current_jobs[job_id] = tqdm(
             total=self.num_generated_units, # the unit_scale arg in tqdm shows wrong rate for sdxl
             unit=' ' + self.unit,
             position=await self.positions.new(job_id) + current_header_height + 2,
-            desc=f'{format_job_id(job_id)[:WIDTH_COLUMN_JOB_ID]:<{WIDTH_COLUMN_JOB_ID}}',
+            desc=f'{description[:WIDTH_COLUMN_JOB_ID]:<{WIDTH_COLUMN_JOB_ID}}',
             leave=False,
             bar_format=f'{{desc}} | {{percentage:3.0f}}% {{bar}}| {{n:.{self.unit_precision}f}} / {{total:.{self.unit_precision}f}} |   {{elapsed}} < {{remaining}}  | ' '{rate_noinv_fmt} {postfix}',
             dynamic_ncols=True,
@@ -888,6 +944,7 @@ class JobHandler():
         self.first_batch_jobs = dict()
         self.num_first_batch = 0
         self.finished_job_batches = list()
+        self.all_finished_jobs = list()
         self.mean_durations = dict()
         self.mean_single_rates = dict()
         self.mean_batch_rates = dict()
@@ -933,15 +990,27 @@ class JobHandler():
         durations['total_from_server'] = result.get('total_duration', 0)
         durations['compute_from_server'] = result.get('compute_duration', 0)
         durations['server_pending'] = result.get('start_time_compute', 0) - result.get('start_time', 0)
-        job_stats['durations'] = durations
-        job_stats['rates'] = {
-            key: self.get_rate(
-                num_input_units if key in ('worker_preprocessing', 'transfer_client2server', 'transfer_server2worker')  else num_generated_units,
-                job_stats['durations'][key]
-            ) for key in RATE_TYPES
+
+        job_stats = {
+            'prompt_length': num_input_units,
+            'num_generated_tokens': result.get('num_generated_tokens'),
+            'output': result.get('text'),
+            'start_time': result.get('request_start_time'),
+            'start_time_processing': result.get('start_time_compute'),
+            'worker_arrival_time': result.get('arrival_time', 0),
+            'start_time_generation': result.get('arrival_time', 0) + durations['worker_pending'] + durations['worker_preprocessing'],
+            'finish_time': finish_time,
+            'durations': durations,
+            'rates': {
+                key: self.get_rate(
+                    num_input_units if key in ('worker_preprocessing', 'transfer_client2server', 'transfer_server2worker')  else num_generated_units,
+                    durations[key]
+                ) for key in RATE_TYPES
+            }
         }
         async with self.lock:
             self.num_finished += 1
+            self.all_finished_jobs.append(job_stats)
             if not self.finished_job_batches or (len(self.finished_job_batches[-1]) == self.args.concurrent_requests) or self.args.serial_processing_worker:
                 self.finished_job_batches.append(list())
 
@@ -1004,31 +1073,46 @@ class BenchmarkRoutineHandler():
         except ConnectionError as error:
             exit(error)
         self.endpoint_details = self.model_api.get_endpoint_details(self.args.endpoint_name)
-        self.gpu_name, self.model_name = BenchmarkRoutineHandler.get_gpu_and_model_name(self.endpoint_details)
+        self.gpu_name, self.model_name, self.framework = BenchmarkRoutineHandler.get_worker_details(self.endpoint_details)
         self.checkpoint_params = self.load_checkpoint() if self.args.load_checkpoint else None
         self.base_num_units = self.args.num_units
         self.error = None
         self.batch_size_too_big = False
         self.max_num_running_jobs = int()
         self.current_screen_width= int()
+        self.dot_string = dot_string_generator()
+        self.all_files = self.get_all_files() if self.args.run_context_analysis or self.args.run_context_mix or self.args.run_context_length_spectrum else None
 
 
     def run(self):
+        print()
         self.hide_cursor()
         try:
+            while True:
+                if self.endpoint_details.get('num_active_workers'):
+                    break
+                else:               
+                    print(f'\033[F{BenchmarkApiEndpoint.coloured_output(f"Waiting for available workers{next(self.dot_string)}", YELLOW)}')
+                    time.sleep(1)
+                    self.endpoint_details = self.model_api.get_endpoint_details(self.args.endpoint_name)
+                    self.gpu_name, self.model_name, self.framework = BenchmarkRoutineHandler.get_worker_details(self.endpoint_details)
             if self.args.run_routine:
                 self.run_complete_routine()
             elif self.args.run_spectrum:
                 self.run_spectrum()
+            elif self.args.run_context_analysis:
+                self.run_context_analysis()
+            elif self.args.run_context_length_spectrum:
+                self.run_context_length_spectrum()
             else:
                 self.run_single_benchmark()
         finally:
             self.shutdown()
 
 
-    def run_single_benchmark(self, args=None):
+    def run_single_benchmark(self, args=None, context_batch_pair=None):
         args = args or self.args
-        benchmark_api = BenchmarkApiEndpoint(args, self.model_api, self.endpoint_details)
+        benchmark_api = BenchmarkApiEndpoint(args, self.model_api, self.endpoint_details, self.all_files, context_batch_pair)
         try:
             benchmark_api.run()
         finally:
@@ -1052,10 +1136,10 @@ class BenchmarkRoutineHandler():
                 break
             else:
                 self.run_single_benchmark(self.prepare_args(batch_size))
-                time.sleep(2)
+                time.sleep(20)
             if self.args.auto_max_batch_size and self.batch_size_too_big:
                 maximum_even_batch_size = self.max_num_running_jobs - self.max_num_running_jobs % 2
-                if maximum_even_batch_size not in batch_size_range:
+                if maximum_even_batch_size and maximum_even_batch_size not in batch_size_range:
                     self.run_single_benchmark(self.prepare_args(maximum_even_batch_size))
                     time.sleep(2)
                     break
@@ -1067,14 +1151,62 @@ class BenchmarkRoutineHandler():
 
 
     def run_complete_routine(self):
-        print(f'Start measuring benchmark routine with batch size spectra for input context length until {self.args.max_context_length}')
+        print(f'Start measuring benchmark routine with batch size spectra for input context length until {self.args.max_context_length_template}')
         for prompt_template in self.get_prompt_templates():
             self.batch_size_too_big = False
-            if prompt_template is None or int(prompt_template.strip('K')) <= int(self.args.max_context_length.strip('K')):
+            if prompt_template is None or int(prompt_template.strip('K')) <= int(self.args.max_context_length_template.strip('K')):
                 if not self.error:
                     self.args.prompt_template = prompt_template
                     self.run_spectrum()
         print(f'Benchmark routine finished.')
+
+    def run_context_analysis(self):
+        all_context_window_batches = self.get_context_window_batches()
+        
+        checkpoint_reached = False
+        for context_window_pair in sorted(combinations(all_context_window_batches, 2), key=lambda pair: nested_sum(pair)):
+            self.batch_size_too_big = False
+            for context_batch_pair in sorted(product(*context_window_pair), key=lambda pair: nested_sum(pair)):
+                if self.checkpoint_params:
+                    if context_batch_pair == tuple(self.checkpoint_params.get('context_batch_pair')):
+                        checkpoint_reached = True
+                    if not checkpoint_reached:
+                        continue
+                self.run_single_benchmark(
+                    self.prepare_args(context_batch_pair=context_batch_pair),
+                    context_batch_pair=context_batch_pair
+                )
+                time.sleep(2)
+                if self.args.auto_max_batch_size and self.batch_size_too_big:
+                    break
+
+    def run_context_length_spectrum(self):
+        context_lengths = self.get_available_context_lengths(0, self.args.max_context_length)
+        checkpoint_reached = False
+        for context_length in context_lengths:
+            for context_length_batch in sorted(self.get_sublists([context_length for _ in range(self.args.max_batch_size)]), key=len):
+                if self.checkpoint_params:
+                    if (context_length_batch,) == tuple(self.checkpoint_params.get('context_batch_pair')):
+                        checkpoint_reached = True
+                    if not checkpoint_reached:
+                        continue
+                self.run_single_benchmark(
+                    self.prepare_args(context_batch_pair=[context_length_batch]),
+                    context_batch_pair=[context_length_batch]
+                )
+                time.sleep(2)
+                if self.args.auto_max_batch_size and self.batch_size_too_big:
+                    break
+
+    def get_sublists(self, lst):
+        return [lst[:i+1] for i in range(min(len(lst), self.args.max_batch_size))]
+
+
+    def get_available_context_lengths(self, minimum_context_length, maximum_context_length):
+        return sorted(list(
+            {int(file.stem.split('#')[0]) for file in self.all_files if minimum_context_length < int(file.stem.split('#')[0]) <= maximum_context_length}
+        ))
+
 
     def get_prompt_templates(self):
         prompt_templates = [None, *PROMPT_TEMPLATES.keys()]
@@ -1083,13 +1215,25 @@ class BenchmarkRoutineHandler():
         return prompt_templates
 
 
-    def prepare_args(self, batch_size):
-        context_length = self.args.prompt_template or '0K'
+    def prepare_args(self, batch_size=None, context_batch_pair=None):
+        if not batch_size:
+            batch_size = sum((len(context_window_batch) for context_window_batch in context_batch_pair))
         args = self.args
-        args.json = Path.cwd() / self.args.output / self.gpu_name / self.model_name / context_length / f'{batch_size}.json'
+        output_base_path = Path.cwd() / self.args.output / self.framework / self.gpu_name / self.model_name
+        if self.args.run_context_analysis:
+            mixed_batch_str = '_mixed' if self.args.mixed_context_batch else ''
+            file_name = '+'.join([f'{len(batch)}x{batch[0]}' for batch in context_batch_pair]) + mixed_batch_str + '.json'
+            args.json = output_base_path / 'context_analysis' / file_name
+        else:
+            if self.args.run_context_length_spectrum:
+                context_length = context_batch_pair[0][0]
+                args.json = output_base_path / 'context_length_spectrum' / str(context_length) / f'{batch_size}.json'
+            else:
+                context_length = self.args.prompt_template or '0K'
+                args.json = output_base_path / context_length / f'{batch_size}.json'
         Path.mkdir(args.json.parent, exist_ok=True, parents=True)
         args.concurrent_requests = args.total_requests = args.batch_size = batch_size
-        args.num_units = self.get_num_units(batch_size)
+        args.num_units = self.get_num_units(batch_size) if self.args.dynamic_num_units else args.num_units
         return args
 
 
@@ -1111,7 +1255,7 @@ class BenchmarkRoutineHandler():
         return min(
             self.args.max_batch_size,
             int(round(
-                self.args.max_cl_batch_size * int(self.args.max_context_length.strip('K')) / context_length,
+                self.args.max_cl_batch_size * int(self.args.max_context_length_template.strip('K')) / context_length,
                 0
             )) if self.args.run_routine else self.args.max_batch_size
         )
@@ -1219,23 +1363,23 @@ class BenchmarkRoutineHandler():
         )
         parser.add_argument(
             '-ut', '--unit', type=str,
-            help='Unit of the generated objects. Default: "tokens" if endpoint_name contains "chat" else  "images"'
+            help='Unit of the generated objects. Default: "tokens" if endpoint_name contains "chat" else  "images".'
         )
         parser.add_argument(
             '-t', '--time_to_get_first_batch_jobs', type=int, default=4,
-            help='Time in seconds after start to get the number of jobs in the first batch'
+            help='Time in seconds after start to get the number of jobs in the first batch.'
         )
         parser.add_argument(
             '-u', '--user_name', type=str, default='aime',
-            help='User name to login on AIME API Server'
+            help='User name to login on AIME API Server.'
         )
         parser.add_argument(
             '-k', '--login_key', type=str, default='6a17e2a5-b706-03cb-1a32-94b4a1df67da',
-            help='Login key related to the user name received from AIME to login on AIME API Server'
+            help='Login key related to the user name received from AIME to login on AIME API Server.'
         )
         parser.add_argument(
             '-nu', '--num_units', default=1, type=int,
-            help='Number of units to generate. Images for stable_diffusion_xl_txt2img'
+            help='Number of units to generate. Images for stable_diffusion_xl_txt2img.'
         )
         parser.add_argument(
             '-ml', '--max_tok_len', default=1024, type=int,
@@ -1259,7 +1403,7 @@ class BenchmarkRoutineHandler():
         )
         parser.add_argument(
             '-pt', '--prompt_template', choices=PROMPT_TEMPLATES.keys(),
-            help='Download long prompt approximately containing the given number of tokens from AIME'
+            help='Download long prompt approximately containing the given number of tokens from AIME.'
         )
         parser.add_argument(
             '-dev', '--debug', action='store_true',
@@ -1271,7 +1415,7 @@ class BenchmarkRoutineHandler():
         )
         parser.add_argument(
             '-r', '--resolution', type=str,
-            help='For Image Generators like SD: The target resolution of the generated image. Format: <width>x<height>'
+            help='For Image Generators like SD: The target resolution of the generated image. Format: <width>x<height>.'
         )
         parser.add_argument(
             '-ww', '--wait_for_idling_worker', action='store_true',
@@ -1283,27 +1427,27 @@ class BenchmarkRoutineHandler():
         )
         parser.add_argument(
             '-min', '--min_batch_size', type=int, default=1,
-            help='Minimum batch size when using --run_spectrum'
+            help='Minimum batch size when using --run_spectrum.'
         )
         parser.add_argument(
             '-max', '--max_batch_size', type=int, default=256,
-            help='Maximum batch size when using --run_spectrum'
+            help='Maximum batch size when using --run_spectrum or --run_context_analysis.'
         )
         parser.add_argument(
             '-st', '--step_batch_size', type=int, default=4,
-            help='Step size for batch_size when using --run_spectrum'
+            help='Step size for batch_size when using --run_spectrum.'
         )
         parser.add_argument(
             '-rr', '--run_routine', action='store_true',
-            help='Start complete benchmark routine with batch_size spectra for each context lengths until --max_context_length'
+            help='Start complete benchmark routine with batch_size spectra for each context lengths until --max_context_length_template.'
         )
         parser.add_argument(
-            '-mcl', '--max_context_length', choices=PROMPT_TEMPLATES.keys(), default='128K',
-            help='Maximum context length of input prompt when using --run_routine'
+            '-mct', '--max_context_length_template', choices=PROMPT_TEMPLATES.keys(), default='128K',
+            help='Maximum context length of input prompt when using --run_routine.'
         )
         parser.add_argument(
             '-mcb', '--max_cl_batch_size', type=int, default=16,
-            help='Maximum batch size for --max_context_length when using --run_routine. The maximum batch sizes for the shorter input context lengths is calculated antiproportional.'
+            help='Maximum batch size for --max_context_length_template when using --run_routine. The maximum batch sizes for the shorter input context lengths is calculated antiproportional.'
         )
         parser.add_argument(
             '-o', '--output', type=str,  default='benchmark_result',
@@ -1315,12 +1459,48 @@ class BenchmarkRoutineHandler():
                  'when using --run_spectrum or --run_routine and measure the maximum possible even batch size instead.'
         )
         parser.add_argument(
-            '-lc', '--load_checkpoint', type=str, nargs="?", const='checkpoint.js',
+            '-lc', '--load_checkpoint', type=str, nargs="?", const='checkpoint.json',
             help='Resume from given checkpoint when using --run_spectrum or --run_routine.'
         )
         parser.add_argument(
-            '-sc', '--save_checkpoint', type=str, nargs="?", const='checkpoint.js',
-            help='When using --run_spectrum or --run_routine save the last checkpoint if the run gets interrupted to resume later with --load_checkpoint'
+            '-sc', '--save_checkpoint', type=str, nargs="?", const='checkpoint.json',
+            help='When using --run_spectrum or --run_routine save the last checkpoint if the run gets interrupted to resume later with --load_checkpoint.'
+        )
+        parser.add_argument(
+            '-cm', '--run_context_mix', action='store_true',
+            help='Start complete benchmark routine with multiple requests as once using given input file folder.'
+        )
+        parser.add_argument(
+            '-mcl', '--max_context_length', type=int, default=128000,
+            help='Maximum context length when using --run_context_mix.'
+        )
+        parser.add_argument(
+            '-ca', '--run_context_analysis', action='store_true',
+            help='Start context_analysis.'
+        )
+        parser.add_argument(
+            '-cmb', '--mixed_context_batch', action='store_true',
+            help='Use a mix of different context lengths when using --run_context_analysis.'
+        )
+        parser.add_argument(
+            '-dn', '--dynamic_num_units', action='store_true',
+            help='Adjust num_units depending on batch_size and prompt_template.'
+        )
+        parser.add_argument(
+            '-cwc', '--context_window_center', action='store_true',
+            help='Start batches from the center of the context windows when using --run_context_analysis.'
+        )
+        parser.add_argument(
+            '-cwl', '--context_window_limits', type=int, nargs='+', default=[int(2000 * 2**n) for n in range(7)],
+            help='Context window limits when using --run_context_mix.'
+        )
+        parser.add_argument(
+            '-idx', '--prompt_file_index', type=int, default=0,
+            help='Choose given index of prompt files.'
+        )
+        parser.add_argument(
+            '-rcs', '--run_context_length_spectrum', action='store_true',
+            help='Start context_analysis.'
         )
         args = parser.parse_args()
         if args.batch_size:
@@ -1334,6 +1514,46 @@ class BenchmarkRoutineHandler():
     def shutdown(self):
         BenchmarkRoutineHandler.show_cursor()
         asyncio.run(self.model_api.close_session())
+
+
+    def get_all_files(self):
+        return [file for file in Path('../output/').iterdir() if file.is_file() and int(file.stem.split('#')[0]) <= self.args.max_context_length]
+
+
+    def get_context_window_batches(self):
+        if self.args.mixed_context_batch:
+            return self.get_mixed_context_window_batches()
+        else:
+            return [self.get_sublists([limit for _ in range(self.args.max_batch_size)]) for limit in self.args.context_window_limits]
+
+
+    def get_mixed_context_window_batches(self):
+        context_window_batches = list()
+        lower_limit = 0
+        for limit in self.args.context_window_limits:
+            available_context_lengths = self.get_available_context_lengths(lower_limit, limit)
+            if lower_limit < self.args.max_context_length:
+                context_window_batch = list()
+                for batch_size in range(self.args.max_batch_size):
+                    # make range in evenly distributed across the entire context window at regular intervals
+                    if self.args.context_window_center:
+                        center = (lower_limit + limit) / 2
+                        step_size = (limit - lower_limit) / self.args.max_batch_size
+                        context_length = center +  ((batch_size + 1) // 2) * step_size * (-1) ** batch_size
+                    else:
+                        batch_size = self.args.max_batch_size - batch_size - 1 # start from max
+                        upper_limit = min(limit, self.args.max_context_length)
+                        context_length = lower_limit + (upper_limit - lower_limit) * (batch_size + 1) / self.args.max_batch_size
+                    # Append the value of the nearest available prompt template for the context length
+                    context_window_batch.append(
+                        min(available_context_lengths, key= lambda x: abs(x - context_length))
+                    )
+                context_window_batches.append(self.get_sublists(context_window_batch))
+                lower_limit = limit
+                
+
+
+        return context_window_batches
 
 
     @staticmethod
@@ -1365,9 +1585,12 @@ class BenchmarkRoutineHandler():
 
 
     @staticmethod
-    def get_gpu_and_model_name(endpoint_details):
+    def get_worker_details(endpoint_details):
         workers = endpoint_details.get('workers') or [{}]
-        return str(workers[0].get('num_gpus', 1)) + 'x' + workers[0].get('gpu_name', 'Unknown'), workers[0].get('model', {}).get('label', 'Unknown model')
+        gpu_name = str(workers[0].get('num_gpus', 1)) + 'x' + workers[0].get('gpu_name', 'Unknown')
+        model_name = workers[0].get('model', {}).get('label', 'Unknown model')
+        framework = f"{workers[0].get('framework', 'Unknown framework')}_{workers[0].get('framework_version')}"
+        return gpu_name, model_name, framework
 
 
 def dot_string_generator():
@@ -1394,6 +1617,15 @@ def dot_string_generator():
 def format_job_id(job_id):
     uuid, seperator, counter = job_id.partition('#')
     return seperator + counter if counter else uuid
+
+def nested_sum(lst):
+    total = 0
+    for item in lst:
+        if isinstance(item, list):
+            total += nested_sum(item)
+        else:
+            total += item
+    return total
 
 
 def main():

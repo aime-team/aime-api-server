@@ -7,7 +7,7 @@ from sanic import response as sanic_response
 
 from sanic.response import json as sanic_json
 from sanic.log import logging
-
+from sanic.worker.manager import WorkerManager
 
 from http import HTTPStatus
 import os
@@ -371,7 +371,7 @@ class APIServer(Sanic):
         )
 
 
-    def load_server_configuration(self, app):
+    def load_server_configuration(self):
         """Parses server configuration file.
         """
         config_file = APIServer.args.server_config
@@ -380,13 +380,14 @@ class APIServer(Sanic):
         with open(config_file, "r") as f:
             APIServer.server_config = toml.load(f)
           
-        self.set_server_sanic_config(APIServer.server_config, app)
-        if not self.args.ep_config:
-            self.args.ep_config = APIServer.server_config.get('SERVER').get('endpoint_configs', './endpoints')
+        self.set_server_sanic_config(APIServer.server_config)
+        if not APIServer.args.ep_config:
+            APIServer.args.ep_config = APIServer.server_config.get('SERVER').get('endpoint_configs', './endpoints')
         APIServer.input_param_config = APIServer.server_config.get('INPUTS', {})
         APIServer.static_routes = APIServer.server_config.get('STATIC', {})
         APIServer.worker_config = APIServer.server_config.get('WORKERS', {})
         APIServer.openai_config = APIServer.server_config.get('OPENAI', {})
+
 
 
     def init_endpoint(self, config_file):
@@ -479,9 +480,8 @@ class APIServer(Sanic):
 
 
     def init(self, args):
-        
+        self.load_server_configuration()
         self.__setup_worker_interface() # has to be done before app.run() is called
-        self.register_listener(self.load_server_configuration, 'before_server_start') # maybe better without listener to have config in every main and worker process?
         self.register_listener(self.setup_static_routes, 'before_server_start')
         self.register_listener(self.init_all_endpoints, 'before_server_start')
         self.register_listener(self.init_openai, 'before_server_start')
@@ -507,9 +507,10 @@ class APIServer(Sanic):
         static_route_handler.setup_static_routes(app.static_routes)
 
 
-    def set_server_sanic_config(self, server_config, app):
+    def set_server_sanic_config(self, server_config):
         config = server_config.get('SANIC', {})
-        app.update_config({key.upper(): value for key, value in config.items()})
+        WorkerManager.THRESHOLD = config.pop('worker_manager_threshold', 30)
+        self.update_config({key.upper(): value for key, value in config.items()})
 
 
     async def start_job_clean_up_background_task(self, app, loop):
