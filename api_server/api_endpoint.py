@@ -53,7 +53,7 @@ class APIEndpoint():
         self.ep_input_param_config['client_session_auth_key'] = { 'type': 'string'}     # add implicit input 
         self.ep_input_param_config['key'] = { 'type': 'string'}  # add implicit input 
         self.ep_input_param_config['wait_for_result'] = { 'type': 'bool'}     # add implicit input 
-        self.worker_job_type, self.worker_auth_key = self.get_worker_params()
+        self.worker_job_type, self.worker_auth_key, self.request_timeout = self.get_worker_params()
         self.lock = asyncio.Lock()
         self.__status_data = self.init_ep_status_data()
 
@@ -211,8 +211,7 @@ class APIEndpoint():
             APIEndpoint.logger.error("No job_type for worker configured!")
         else:
             APIEndpoint.logger.info("Worker job type: " + job_type)
-        worker_auth_key = worker_config.get('auth_key')
-        return job_type, worker_auth_key   
+        return job_type, worker_config.get('auth_key'), worker_config.get('request_timeout')
 
 
     async def api_request(self, request):
