@@ -181,8 +181,13 @@ const CHAT_TEMPLATES = {
 
 function onSendAPIRequest() {
 	params = new Object();
+    currentChatContext.push(
+                {
+                    "role": "user",
+                    "content": document.getElementById('chat_input').value
+                }
+            )
 	params.chat_context = currentChatContext;
-    params.prompt_input = document.getElementById('chat_input').value
 	params.top_k = parseInt(document.getElementById('top_k_range').value);
 	params.top_p = parseFloat(document.getElementById('top_p_range').value);
 	params.temperature = parseFloat(document.getElementById('temperature_range').value);
