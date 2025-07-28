@@ -574,12 +574,13 @@ class JobHandler():
         await worker.set_state(WorkerState.OFFLINE)
 
 
-    def clean_up_worker_double(self, request):
+    def clean_up_worker_double(self, req_json):
+        worker_parameters = req_json.get('worker_parameters')
         for job_type_name, job_type in self.job_types.items():
-            worker_name = request.get('auth')
-            if worker_name in job_type.workers.keys() and request.get('job_type') != job_type_name:
+            worker_name = worker_parameters.get('auth')
+            if worker_name in job_type.workers.keys() and worker_parameters.get('job_type') != job_type_name:
                 del job_type.workers[worker_name]
-                self.app.logger.info(f'Worker {worker_name} changed it\'s job type from {job_type_name} to {request.get("job_type")}')
+                self.app.logger.info(f'Worker {worker_name} changed it\'s job type from {job_type_name} to {worker_parameters.get("job_type")}')
 
 
     def convert_to_login_request(self, req_json):
