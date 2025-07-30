@@ -144,15 +144,21 @@ class OpenAI():
         if not model_config:            
             return self.__error_response('model_not_found', 'Requested model is not supported.')
 
-        chat_context, prompt_input = self.__convert_chat_context_from_openai(messages, model_config.get('default_system_prompt', None))
+        chat_context = self.__convert_chat_context_from_openai(messages, model_config.get('default_system_prompt', None))
 
+        if model_config.get('legacy_context_format'):
+            last_message = chat_context.pop()
+            prompt_input = last_message.get('content')
+        else:
+            prompt_input = None
+            
         request_params = {
             "key": api_key,
             "chat_context": json.dumps(chat_context),
-            "prompt_input": prompt_input,
             "wait_for_result": not stream
         }
-
+        if prompt_input:
+            request_params['prompt_input'] = prompt_input
         if max_tokens:
             request_params['max_gen_tokens'] = max_tokens
         if temperature:
@@ -278,10 +284,7 @@ class OpenAI():
             message = { 'role': 'system', 'content': default_system_prompt }
             chat_context.insert(0, message)
 
-        last_message = chat_context.pop()
-        prompt_input = last_message.get('content')
-
-        return chat_context, prompt_input
+        return chat_context
 
 
     def  __create_chat_completion_response(self, model, job_id, content, prompt_tokens, completion_tokens, total_tokens):
