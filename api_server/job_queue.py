@@ -939,7 +939,7 @@ class Worker():
                 pass
         new_worker_model = WorkerModel.from_json(req_json)
         if self.model != new_worker_model:
-            self.app.logger.info(f'Attention: Model attributes of worker {new_worker_parameters.get("auth")} changed from {worker.model} to {new_worker_model}')
+            self.app.logger.info(f'Attention: Model attributes of worker {new_worker_parameters.get("auth")} changed from {self.model} to {new_worker_model}')
             self.model = new_worker_model
 
     async def set_state(self, new_state):
