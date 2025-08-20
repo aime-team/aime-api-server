@@ -271,18 +271,41 @@ class OpenAI():
                 has_system_prompt = True
             content = message.get('content', {})
             if isinstance(content, list):
-                text = ""
+                content_converted = list()
                 for item in content:
-                    content_type = item.get('type', None)
-                    if content_type == 'text' or content_type == 'output_text':
-                        text += item.get('text', "") + "\n"
+                    content_type = item.get('type')
+                    if content_type in ('text', 'output_text'):
+                        content_converted.append(item)
+                    elif content_type == 'image_url':
+                        image = item.get('image_url', {}).get('url')
+                        content_converted.append(
+                            {
+                                'type': 'image',
+                                'image': image
+                            }
+                        )
+                    elif content_type == 'audio_url':
+                        audio = item.get('audio_url', {}).get('url')
+                        content_converted.append(
+                            {
+                                'type': 'audio',
+                                'audio': audio
+                            }
+                        )
+                    elif content_type == 'video_url':
+                        video = item.get('video_url', {}).get('url')
+                        content_converted.append(
+                            {
+                                'type': 'video',
+                                'video': video
+                            }
+                        )
                     else:
                         OpenAI.logger.info(f'OpenAI not supported content type: {content_type}')
-                message['content'] = text
+                message['content'] = content_converted
             chat_context.append(message)
         if not has_system_prompt and default_system_prompt:
-            message = { 'role': 'system', 'content': default_system_prompt }
-            chat_context.insert(0, message)
+            chat_context.insert(0, { 'role': 'system', 'content': default_system_prompt })
 
         return chat_context
 

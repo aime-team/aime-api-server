@@ -73,7 +73,7 @@ class InputValidationHandler():
                     elif self.param_type == 'json':
                         job_data[ep_input_param_name] = self.validate_and_convert_json(value)
                     elif self.param_type == 'chat_context':
-                        job_data[ep_input_param_name] = self.validate_chat_context(value)
+                        job_data[ep_input_param_name] = await self.validate_chat_context(value)
                     elif self.param_type == 'text_context':
                         job_data[ep_input_param_name] = self.validate_text_context(value)
                     elif self.param_type in ('audio', 'image'):
@@ -165,7 +165,7 @@ class InputValidationHandler():
                 self.validation_errors.append(f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} has invalid json format!')
 
 
-    def validate_chat_context(self, value):
+    async def validate_chat_context(self, value):
         if value:
             try:
                 chat_context = json.loads(value)
@@ -175,28 +175,52 @@ class InputValidationHandler():
                     )
                     return
                 valid_roles = {'system', 'user', 'assistant'}
-                for item in chat_context:
-                    if not isinstance(item, dict):
+                for message in chat_context:
+                    if not isinstance(message, dict):
                         self.validation_errors.append(
                             f'Input parameter {self.ep_input_param_name}={shorten_strings(chat_context)} has invalid chat context format!'
                         )
                         return
-                    if 'content' not in item or 'role' not in item:
+                    if 'content' not in message or 'role' not in message:
                         self.validation_errors.append(
                             f'Input parameter {self.ep_input_param_name}={shorten_strings(chat_context)} has an item without the required keys \'role\' and \'content\''
                         )
                         return
-                    elif item.get('role') not in valid_roles:
+                    elif message.get('role') not in valid_roles:
                         self.validation_errors.append(
                             f'Input parameter {self.ep_input_param_name}={shorten_strings(chat_context)} has an item with an invalid value for key \'role\'. Only {valid_roles} are allowed!'
                         )
                         return
+                    else:
+                        content = message.get('content')
+                        if isinstance(content, list):
+                            converted_content = list()
+                            for item in content:
+                                converted_item = await self.validate_chat_context_media(item)
+                                if self.validation_errors:
+                                    return
+                                else:
+                                    converted_content.append(converted_item)
+                            message['content'] = converted_content
+
                 return chat_context
             except (TypeError, json.decoder.JSONDecodeError):
                 self.validation_errors.append(
                     f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} has invalid json format!'
                 )
 
+    async def validate_chat_context_media(self, item):
+        self.param_type = item.get('type')
+        if self.param_type != 'text':
+            self.param_config = self.param_config.get(self.param_type)
+            if not self.param_config:
+                self.validation_errors.append(
+                    f'Media of type {self.param_type} is not allowed in input parameter {self.ep_input_param_name}'
+                )
+                return
+            elif not isinstance(self.param_config, bool):
+                item[self.param_type] = await self.validate_media_base64_string(item.get(self.param_type))
+        return item
 
     def validate_text_context(self, value):
         if isinstance(value, str):
@@ -208,7 +232,7 @@ class InputValidationHandler():
 
 
 
-    async def validate_media_base64_string(self, media_base64):
+    async def validate_media_base64_string(self, media_base64, media_type=None):
         """Validation of given base64 representation of media input parameter. Checks the media attributes with ffprobe and validates it with the server and the endpoint configuration. 
         If auto_convert is True in endpoint configuration, media input parameter will be converted to valid target media attributes with ffmpeg defined in the endpoint config.
 
@@ -218,7 +242,13 @@ class InputValidationHandler():
         Returns:
             str: Base64 representation of validated and converted media input parameter
         """        
-        ffmpeg_media = FFmpeg(self.ep_input_param_name, media_base64, self.param_config, self.validation_errors)
+        ffmpeg_media = FFmpeg(
+            self.ep_input_param_name,
+            media_base64,
+            self.param_config,
+            self.validation_errors,
+            arg_type=self.param_type
+        )
         await ffmpeg_media.analyze()
         if not self.validation_errors:
             await run_in_executor(
