@@ -64,27 +64,43 @@ class InputValidationHandler():
             value = self.validate_input_type(value)
             if self.param_type == 'selection':
                 job_data[ep_input_param_name] = self.validatate_selection_parameter(value)
-            else:
-                if isinstance(value, (int, float)):
-                    job_data[ep_input_param_name] = self.validate_number(value)
-                elif isinstance(value, str):
-                    if self.param_type == 'string':
-                        job_data[ep_input_param_name] = self.validate_string(value)
-                    elif self.param_type == 'json':
-                        job_data[ep_input_param_name] = self.validate_and_convert_json(value)
-                    elif self.param_type == 'chat_context':
-                        job_data[ep_input_param_name] = await self.validate_chat_context(value)
-                    elif self.param_type == 'text_context':
+            elif isinstance(value, (int, float)):
+                job_data[ep_input_param_name] = self.validate_number(value)
+            elif isinstance(value, str):
+                if self.param_type == 'string':
+                    job_data[ep_input_param_name] = self.validate_string(value)
+                elif self.param_type == 'json':
+                    job_data[ep_input_param_name] = self.validate_and_convert_json(value)
+                elif self.param_type == 'chat_context':
+                    job_data[ep_input_param_name] = await self.validate_chat_context(value)
+                elif self.param_type == 'text_context':
+                    chat_context_parameters = self.get_all_parameters_of_type_chat_context()
+                    if chat_context_parameters:
+                        self.validation_errors.append(
+                            f'Parameter \'{ep_input_param_name}\' is of type \'text_context\', but the parameter(s) '
+                            f'of type \'chat_context\' were also provided: {", ".join(chat_context_parameters)}. '
+                            f'Only one type of parameter, either \'chat_context\' or \'text_context\', can be included '
+                            f'in the request. Please remove the conflicting parameter(s) and try again.'
+                        )
+                    else:
                         job_data[ep_input_param_name] = self.validate_text_context(value)
-                    elif self.param_type in ('audio', 'image'):
-                        if FFmpeg.ffmpeg_installed:
-                            job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
-                        else:
-                            self.validation_errors.append('Media input parameters like "image" and "audio" are disabled since FFmpeg is not installed on the API Server!')
+                elif self.param_type in ('audio', 'image'):
+                    if FFmpeg.ffmpeg_installed:
+                        job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
+                    else:
+                        self.validation_errors.append('Media input parameters like "image" and "audio" are disabled since FFmpeg is not installed on the API Server!')
 
         return job_data, self.validation_errors
 
+
+    def get_all_parameters_of_type_chat_context(self):
+        chat_context_parameters = list()
+        for param_name, param_value in self.input_params.items():
+            if param_value and self.ep_input_param_config.get(param_name, {}).get('type') == 'chat_context':
+                chat_context_parameters.append(param_name)
+        return chat_context_parameters
     
+
     def check_for_unknown_parameters(self):
         unknown_params = list()
         for param in self.input_params.keys():
