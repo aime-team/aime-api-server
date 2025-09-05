@@ -1060,9 +1060,9 @@ class Job():
         self.job_data = job_data
         self.app = app
         self.worker_auth = str()
-        self.job_inactivity_timeout = self.app.endpoints.get(self.endpoint_name).clients_config.get('job_inactivity_timeout')
+        self.job_inactivity_timeout = self.app.endpoints.get(self.endpoint_name).config.get('ENDPOINT', {}).get('job_inactivity_timeout')
         self.max_time_in_queue = self.app.endpoints.get(self.endpoint_name).max_time_in_queue
-        self.result_lifetime = self.app.endpoints.get(self.endpoint_name).clients_config.get('result_lifetime')
+        self.result_lifetime = self.app.endpoints.get(self.endpoint_name).config.get('ENDPOINT', {}).get('result_lifetime')
         self.last_update = time.time()
         self.__state = JobState.QUEUED
         self.progress_state = dict()
