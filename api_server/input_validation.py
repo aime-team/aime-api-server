@@ -236,13 +236,13 @@ class InputValidationHandler():
         for media_type in MEDIA_TYPES:
             multimodal_data = item.get(media_type)
             if multimodal_data:
-                if media_type in self.param_config.get('support'):
+                if media_type in self.param_config.get('support', []):
                     self.param_type = media_type
                     self.param_config = self.param_config.get(media_type, {})
                     item[media_type] = await self.validate_media_base64_string(multimodal_data)
                 else:
                     self.validation_errors.append(
-                        f'Media of type {self.param_type} is not allowed in input parameter {self.ep_input_param_name}'
+                        f'Media of type {media_type} is not allowed in input parameter {self.ep_input_param_name}'
                     )
                     return
 
