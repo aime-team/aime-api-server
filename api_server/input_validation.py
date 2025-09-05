@@ -14,10 +14,12 @@ TYPES_DICT = {
     'boolean': bool,
     'image': str, 
     'audio': str,
+    'video': str,
     'json': str,
     'chat_context': str,
     'text_context': str
     }
+MEDIA_TYPES = ['image', 'audio', 'video']
 
 
 class InputValidationHandler():
@@ -84,7 +86,7 @@ class InputValidationHandler():
                         )
                     else:
                         job_data[ep_input_param_name] = self.validate_text_context(value)
-                elif self.param_type in ('audio', 'image'):
+                elif self.param_type in MEDIA_TYPES:
                     if FFmpeg.ffmpeg_installed:
                         job_data[ep_input_param_name] = await self.validate_media_base64_string(value)
                     else:
@@ -212,30 +214,38 @@ class InputValidationHandler():
                         if isinstance(content, list):
                             converted_content = list()
                             for item in content:
-                                converted_item = await self.validate_chat_context_media(item)
+                                converted_item = await self.validate_chat_context_multimodal_content(item)
                                 if self.validation_errors:
                                     return
                                 else:
                                     converted_content.append(converted_item)
                             message['content'] = converted_content
-
                 return chat_context
             except (TypeError, json.decoder.JSONDecodeError):
                 self.validation_errors.append(
                     f'Input parameter {self.ep_input_param_name}={shorten_strings(value)} has invalid json format!'
                 )
 
-    async def validate_chat_context_media(self, item):
-        self.param_type = item.get('type')
-        if self.param_type != 'text':
-            self.param_config = self.param_config.get(self.param_type)
-            if not self.param_config:
-                self.validation_errors.append(
-                    f'Media of type {self.param_type} is not allowed in input parameter {self.ep_input_param_name}'
-                )
-                return
-            elif not isinstance(self.param_config, bool):
-                item[self.param_type] = await self.validate_media_base64_string(item.get(self.param_type))
+    async def validate_chat_context_multimodal_content(self, item):
+        if self.contains_multiple_media_types(item):
+            self.validation_errors.append(
+                f'Each element of Multimodal chat context content must contain only one element of (\'text\', \'image\', \'audio\', \'video\')'
+            )
+            return
+
+        for media_type in MEDIA_TYPES:
+            multimodal_data = item.get(media_type)
+            if multimodal_data:
+                if media_type in self.param_config.get('support'):
+                    self.param_type = media_type
+                    self.param_config = self.param_config.get(media_type, {})
+                    item[media_type] = await self.validate_media_base64_string(multimodal_data)
+                else:
+                    self.validation_errors.append(
+                        f'Media of type {self.param_type} is not allowed in input parameter {self.ep_input_param_name}'
+                    )
+                    return
+
         return item
 
     def validate_text_context(self, value):
@@ -247,8 +257,7 @@ class InputValidationHandler():
                 )
 
 
-
-    async def validate_media_base64_string(self, media_base64, media_type=None):
+    async def validate_media_base64_string(self, media_base64):
         """Validation of given base64 representation of media input parameter. Checks the media attributes with ffprobe and validates it with the server and the endpoint configuration. 
         If auto_convert is True in endpoint configuration, media input parameter will be converted to valid target media attributes with ffmpeg defined in the endpoint config.
 
@@ -442,3 +451,5 @@ class InputValidationHandler():
         return param_value
 
 
+    def contains_multiple_media_types(self, item):
+        return sum(media_type in item for media_type in [*MEDIA_TYPES, 'text']) > 1
