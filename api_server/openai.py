@@ -123,9 +123,9 @@ class OpenAI():
         error, api_key = await self.check_authorization("/v1/chat/completions", request)
         if error:
             return error
-
+        
         input_params = json.loads(request.body)
-
+        print('input_params', input_params)
         messages = input_params.get('messages', [])
         stream = input_params.get('stream', False)
 
@@ -276,30 +276,11 @@ class OpenAI():
                     content_type = item.get('type')
                     if content_type in ('text', 'output_text'):
                         content_converted.append(item)
-                    elif content_type == 'image_url':
-                        image = item.get('image_url', {}).get('url')
-                        content_converted.append(
-                            {
-                                'type': 'image',
-                                'image': image
-                            }
-                        )
-                    elif content_type == 'audio_url':
-                        audio = item.get('audio_url', {}).get('url')
-                        content_converted.append(
-                            {
-                                'type': 'audio',
-                                'audio': audio
-                            }
-                        )
-                    elif content_type == 'video_url':
-                        video = item.get('video_url', {}).get('url')
-                        content_converted.append(
-                            {
-                                'type': 'video',
-                                'video': video
-                            }
-                        )
+                    elif content_type in ('image', 'audio', 'video', 'image_url', 'audio_url', 'video_url'):
+                        media_type = content_type.replace('_url', '')
+                        url = item.get(content_type, {}).get('url')
+                        if url:
+                            content_converted.append({media_type: url})
                     else:
                         OpenAI.logger.info(f'OpenAI not supported content type: {content_type}')
                 message['content'] = content_converted
