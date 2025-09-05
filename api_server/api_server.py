@@ -162,13 +162,15 @@ class APIServer(Sanic):
         APIServer.logger.debug(f'Request on /worker_job_request: {shorten_strings(req_json)}')
         try:
             response_cmd = await APIServer.job_handler.worker_job_request(req_json)
+            status_code = 200
         except (asyncio.CancelledError, BrokenPipeError, ConnectionResetError):
             await APIServer.job_handler.set_worker_offline(req_json.get('auth'))
             response_cmd = {
                 'cmd': 'error',
-                'error_msg': 'Worker - Server connection broke'
+                'error_msg': 'Worker - Server connection broke',
             }
-        return sanic_json(response_cmd)
+            status_code = 503
+        return sanic_json(response_cmd, status=status_code)
 
 
     async def worker_job_result_json(self, request):
