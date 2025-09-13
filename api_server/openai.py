@@ -146,7 +146,7 @@ class OpenAI():
 
         chat_context = self.__convert_chat_context_from_openai(messages, model_config.get('default_system_prompt', None))
 
-        if model_config.get('legacy_context_format'):
+        if model_config.get('legacy_context_format', False):
             last_message = chat_context.pop()
             prompt_input = last_message.get('content')
         else:
